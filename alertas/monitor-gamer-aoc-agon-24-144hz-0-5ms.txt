@@ -1,0 +1,4 @@
+produto: monitor-gamer-aoc-agon-24-144hz-0-5ms
+nome: Monitor Gamer AOC AGON 24" 144Hz 0,5ms
+avisar_quando: promocao top
+preco_maximo: 
