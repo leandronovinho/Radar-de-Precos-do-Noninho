@@ -1,6 +1,6 @@
 {
  "upandosetup": {
-  "antes": 26050,
+  "antes": 25541,
   "completo": false
  },
  "HardTecPromocoes": {
@@ -8,15 +8,15 @@
   "completo": true
  },
  "grape_tec": {
-  "antes": 220297,
+  "antes": 219726,
   "completo": false
  },
  "IskandarSouza": {
-  "antes": 191055,
+  "antes": 190527,
   "completo": false
  },
  "gtOFERTAS": {
-  "antes": 184320,
+  "antes": 183810,
   "completo": false
  },
  "cuponsjersu": {
@@ -24,11 +24,11 @@
   "completo": true
  },
  "TJGOFERTASs": {
-  "antes": 96339,
+  "antes": 95829,
   "completo": false
  },
  "PROMOSGERAISTJ": {
-  "antes": 30081,
+  "antes": 29578,
   "completo": false
  }
 }
