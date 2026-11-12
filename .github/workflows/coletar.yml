@@ -18,8 +18,8 @@ jobs:
       - run: python coletor.py
       - name: Salvar ofertas novas
         run: |
-          git config user.name "radar-de-precos"
-          git config user.email "radar@users.noreply.github.com"
-          git add dados/ofertas.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A dados
           git diff --cached --quiet || git commit -m "Atualiza ofertas"
           git push
