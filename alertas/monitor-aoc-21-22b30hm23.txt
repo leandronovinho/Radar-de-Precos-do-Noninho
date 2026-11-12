@@ -1,0 +1,4 @@
+produto: monitor-aoc-21-22b30hm23
+nome: Monitor AOC 21" 22B30HM23
+avisar_quando: preco
+preco_maximo: 300
