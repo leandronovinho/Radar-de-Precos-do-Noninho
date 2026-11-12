@@ -3,6 +3,9 @@
 Uso:  python coletor.py
 Dependências:  pip install requests beautifulsoup4
 """
+import base64
+import hashlib
+import hmac
 import json
 import re
 import statistics
@@ -493,6 +496,158 @@ def telegram(token, metodo, **dados):
     return r.json()
 
 
+ARQ_PESSOAS = PASTA_DADOS / "pessoas.bin"
+MAX_ALERTAS_PESSOA = 10
+PREFIXOS_MODELO = {"rtx", "gtx", "rx", "ryzen", "i3", "i5", "i7", "i9", "ultra", "core", "galaxy", "iphone", "redmi", "moto",
+                   "ps", "xbox", "arc", "a", "s", "tv", "monitor", "gen"}
+AJUDA = ("Me mande o nome do produto e o preço máximo, assim:\n\n"
+         "ak400 até 150\nrx 9060 xt até 2500\nfonte 650w até 300\n\n"
+         "Se não mandar preço, eu aviso quando entrar em Promoção top (o menor preço já visto ou bem abaixo do normal).\n\n"
+         "Outros comandos:\n/meusalertas mostra os seus alertas\n/parar 1 apaga o alerta número 1\n\n"
+         "Eu leio as mensagens a cada 10 minutos, então a resposta pode demorar um pouquinho.")
+
+
+def _chaves(token):
+    base = hashlib.sha256(("radar-de-precos|" + token).encode()).digest()
+    return hashlib.sha256(base + b"cifra").digest(), hashlib.sha256(base + b"selo").digest()
+
+
+def _fluxo(chave, nonce, n):
+    saida, i = bytearray(), 0
+    while len(saida) < n:
+        saida += hashlib.sha256(chave + nonce + i.to_bytes(8, "big")).digest()
+        i += 1
+    return bytes(saida[:n])
+
+
+def guardar_pessoas(pessoas, token):
+    """Grava a lista de pessoas e alertas cifrada: o projeto é público, mas ninguém sem a chave do robô consegue ler."""
+    ce, cm = _chaves(token)
+    dados = json.dumps(pessoas, ensure_ascii=False).encode()
+    nonce = os.urandom(16)
+    cifra = bytes(a ^ b for a, b in zip(dados, _fluxo(ce, nonce, len(dados))))
+    selo = hmac.new(cm, nonce + cifra, hashlib.sha256).digest()
+    ARQ_PESSOAS.write_bytes(base64.b64encode(nonce + selo + cifra))
+
+
+def ler_pessoas(token):
+    if not ARQ_PESSOAS.exists():
+        return {}
+    bruto = base64.b64decode(ARQ_PESSOAS.read_bytes())
+    nonce, selo, cifra = bruto[:16], bruto[16:48], bruto[48:]
+    ce, cm = _chaves(token)
+    if not hmac.compare_digest(selo, hmac.new(cm, nonce + cifra, hashlib.sha256).digest()):
+        print("pessoas: a chave do robô mudou, a lista antiga foi guardada à parte e começa uma nova")
+        ARQ_PESSOAS.rename(ARQ_PESSOAS.with_suffix(".antigo.bin"))
+        return {}
+    return json.loads(bytes(a ^ b for a, b in zip(cifra, _fluxo(ce, nonce, len(cifra)))))
+
+
+def entender_pedido(texto):
+    """'ak400 até 150' -> ('ak400', 150.0). Sem preço -> (texto, None), que vira alerta de Promoção top."""
+    texto = re.sub(r"\s+", " ", texto.strip())
+    m = re.search(r"^(.*?)\s*(?:at[eé]|max(?:imo)?|r\$|por)\s*:?\s*r?\$?\s*(\d[\d.,]*)\s*(?:reais)?\s*$", texto, re.I)
+    if m and m.group(1).strip():
+        return m.group(1).strip(), numero(m.group(2).rstrip(".,"))
+    partes = texto.split(" ")
+    if len(partes) >= 2 and re.fullmatch(r"\d{2,6}(?:[.,]\d{1,2})?", partes[-1]):
+        valor = numero(partes[-1])
+        if valor >= 50 and partes[-2].lower() not in PREFIXOS_MODELO:
+            return " ".join(partes[:-1]), valor
+    return texto, None
+
+
+def ler_inicio(carga, por_id):
+    """Botão do site: /start b_ak400_deepcool_p150 (busca) ou /start i_<produto>_top."""
+    partes = carga.split("_")
+    if len(partes) < 3 or partes[0] not in ("b", "i"):
+        return None
+    fim = partes[-1]
+    top, maximo = fim == "top", (float(fim[1:]) if re.fullmatch(r"p\d+", fim) else None)
+    if not top and maximo is None:
+        return None
+    if partes[0] == "b":
+        return {"busca": " ".join(partes[1:-1]), "produto": "", "nome": "", "top": top, "maximo": maximo}
+    prod = por_id.get("_".join(partes[1:-1]))
+    return {"busca": "", "produto": prod["id"], "nome": prod["nome"], "top": top, "maximo": maximo} if prod else None
+
+
+def descrever(a):
+    alvo = f"\"{a['busca']}\"" if a["busca"] else a["nome"]
+    regra = f"até {reais_txt(a['maximo'])}" if a["maximo"] else "quando entrar em Promoção top"
+    return f"{alvo} {regra}"
+
+
+def candidatos_do_alerta(a, indice, por_id):
+    if a["busca"]:
+        ts = termos_busca(a["busca"])
+        return [p for p in indice["produtos"] if ts and all(t in texto_busca(p) for t in ts)]
+    prod = por_id.get(a["produto"])
+    if not prod and a["nome"]:  # o produto pode ter mudado de nome no radar
+        tk = tokens(a["nome"])
+        prod = next((p for p in indice["produtos"] if mesmo_produto(tk, tokens(p["nome"]))), None)
+    return [prod] if prod else []
+
+
+def responder_mensagens(token, tg, pessoas, indice, por_id):
+    """Lê o que as pessoas mandaram ao robô desde a última coleta e responde."""
+    site = tg.get("site", "")
+    resp = telegram(token, "getUpdates", offset=tg.get("offset", 0), timeout=0)
+    for upd in resp.get("result", []):
+        tg["offset"] = upd["update_id"] + 1
+        msg = upd.get("message") or {}
+        chat, texto = msg.get("chat", {}), (msg.get("text") or "").strip()
+        if chat.get("type") != "private" or not texto:
+            continue
+        cid = str(chat["id"])
+        if not tg.get("chat"):
+            tg["chat"] = chat["id"]  # o primeiro a falar com o robô é o dono, que recebe os alertas criados pelo site no GitHub
+        pessoa = pessoas.setdefault(cid, {"nome": msg.get("from", {}).get("first_name", ""), "alertas": [], "avisos": {}})
+        baixo = texto.lower()
+        novo, resposta = None, None
+        if baixo.startswith("/start"):
+            carga = texto[6:].strip()
+            novo = ler_inicio(carga, por_id) if carga else None
+            if not novo:
+                resposta = f"Oi, {pessoa['nome'] or 'tudo bem'}! 👋 Eu sou o Radar de Preços e te aviso quando um produto ficar barato.\n\n" + AJUDA
+                if site:
+                    resposta += f"\n\nVocê também pode escolher pelo site: {site}"
+        elif baixo in ("/meusalertas", "meus alertas", "alertas", "/alertas"):
+            if pessoa["alertas"]:
+                linhas = [f"{i}. {descrever(a)}" for i, a in enumerate(pessoa["alertas"], 1)]
+                resposta = "🔔 Seus alertas:\n\n" + "\n".join(linhas) + "\n\nPara apagar um, mande: parar e o número (ex.: parar 1)."
+            else:
+                resposta = "Você ainda não tem alertas.\n\n" + AJUDA
+        elif re.match(r"^/?(parar|apagar|remover|excluir)\b", baixo):
+            n = re.search(r"\d+", baixo)
+            if n and 1 <= int(n.group()) <= len(pessoa["alertas"]):
+                tirado = pessoa["alertas"].pop(int(n.group()) - 1)
+                resposta = f"🗑 Apaguei o alerta: {descrever(tirado)}."
+            else:
+                resposta = "Me diga o número do alerta, assim: parar 1. Para ver os números, mande /meusalertas."
+        elif baixo in ("/ajuda", "ajuda", "/help", "oi", "olá", "ola"):
+            resposta = AJUDA
+        else:
+            busca, maximo = entender_pedido(texto)
+            novo = {"busca": busca, "produto": "", "nome": "", "top": maximo is None, "maximo": maximo}
+        if novo:
+            if len(pessoa["alertas"]) >= MAX_ALERTAS_PESSOA:
+                resposta = f"Você já tem {MAX_ALERTAS_PESSOA} alertas, o máximo. Apague um com /meusalertas e parar."
+            else:
+                pessoa["alertas"].append(novo)
+                achados = candidatos_do_alerta(novo, indice, por_id)
+                resposta = f"✅ Alerta criado: {descrever(novo)}.\n\n"
+                if achados:
+                    mais_barato = min(achados, key=lambda p: p["ult"][1])
+                    resposta += (f"Hoje o radar acompanha {len(achados)} {'produto' if len(achados) == 1 else 'produtos'} assim. "
+                                 f"O último preço mais baixo foi {reais_txt(mais_barato['ult'][1])} ({mais_barato['nome']}).\n\n")
+                else:
+                    resposta += "Ainda não vi nenhum produto com esse nome nos canais, mas deixei o alerta ligado.\n\n"
+                resposta += "Te aviso aqui quando aparecer uma oferta assim. Se não era isso, mande /meusalertas para ver e apagar."
+        if resposta:
+            telegram(token, "sendMessage", chat_id=chat["id"], text=resposta)
+
+
 def verificar_alertas(indice, estado):
     token = os.environ.get("TELEGRAM_TOKEN", "").strip()
     alertas = ler_alertas()
@@ -501,46 +656,39 @@ def verificar_alertas(indice, estado):
             print("alertas: falta o segredo TELEGRAM_TOKEN no GitHub, nenhum aviso enviado")
         return
     tg = estado.setdefault("_telegram", {})
+    repo = os.environ.get("GITHUB_REPOSITORY", "")
+    tg["site"] = site = f"https://{repo.split('/')[0].lower()}.github.io/{repo.split('/')[1]}/" if "/" in repo else ""
+    por_id = {p["id"]: p for p in indice["produtos"]}
+    pessoas = ler_pessoas(token)
     try:
-        if not tg.get("chat"):
-            for upd in telegram(token, "getUpdates").get("result", []):
-                msg = upd.get("message") or {}
-                if msg.get("chat", {}).get("type") == "private" and msg.get("text", "").startswith("/start"):
-                    tg["chat"] = msg["chat"]["id"]
-                    telegram(token, "sendMessage", chat_id=tg["chat"],
-                             text="Pronto! O Radar de preços vai te avisar aqui quando um produto que você marcou ficar barato.")
-                    print("alertas: Telegram conectado")
-                    break
-            if not tg.get("chat"):
-                print("alertas: abra o seu robô no Telegram e toque em Iniciar (/start) para conectar")
-                return
-    except requests.RequestException as erro:
+        if not tg.get("robo"):
+            tg["robo"] = telegram(token, "getMe")["result"]["username"]
+            telegram(token, "setMyCommands", commands=[{"command": "meusalertas", "description": "Ver os seus alertas"},
+                                                       {"command": "ajuda", "description": "Como criar um alerta"}])
+            telegram(token, "setMyDescription", description="Te aviso no Telegram quando um produto de tecnologia ficar barato. "
+                     "Toque em Iniciar e me mande o produto e o preço, por exemplo: ak400 até 150.")
+            telegram(token, "setMyShortDescription", short_description="Alertas de preço de tecnologia, eletrônicos e eletrodomésticos.")
+        responder_mensagens(token, tg, pessoas, indice, por_id)
+    except (requests.RequestException, KeyError) as erro:
         print(f"alertas: falha ao falar com o Telegram ({erro})", file=sys.stderr)
-        return
+    indice["robo"] = tg.get("robo", "")
 
     agora = datetime.now(timezone.utc)
-    repo = os.environ.get("GITHUB_REPOSITORY", "")
-    site = f"https://{repo.split('/')[0].lower()}.github.io/{repo.split('/')[1]}/" if "/" in repo else ""
-    por_id = {p["id"]: p for p in indice["produtos"]}
-    avisos = estado.setdefault("_avisos", {})
-    for a in alertas:
-        if a["busca"]:
-            ts = termos_busca(a["busca"])
-            candidatos = [p for p in indice["produtos"] if ts and all(t in texto_busca(p) for t in ts)]
-        else:
-            prod = por_id.get(a["produto"])
-            if not prod and a["nome"]:  # o produto pode ter mudado de nome no radar
-                tk = tokens(a["nome"])
-                prod = next((p for p in indice["produtos"] if mesmo_produto(tk, tokens(p["nome"]))), None)
-            if not prod:
-                print(f"alertas: produto do alerta {a['arquivo']} não encontrado")
-                continue
-            candidatos = [prod]
-        for prod in candidatos:
-            avisar(a, prod, agora, site, avisos, token, tg)
+    if tg.get("chat"):  # alertas do dono, criados como arquivo no GitHub
+        avisos = estado.setdefault("_avisos", {})
+        for a in alertas:
+            for prod in candidatos_do_alerta(a, indice, por_id):
+                avisar(a, prod, a["arquivo"], agora, site, avisos, token, tg["chat"])
+    for cid, pessoa in pessoas.items():
+        for i, a in enumerate(pessoa["alertas"]):
+            base = f"{a['busca'] or a['produto']}|{a['maximo']}|{a['top']}"
+            for prod in candidatos_do_alerta(a, indice, por_id):
+                avisar(a, prod, base, agora, site, pessoa["avisos"], token, int(cid))
+    guardar_pessoas(pessoas, token)
+    print(f"alertas: {len(pessoas)} pessoas, {sum(len(p['alertas']) for p in pessoas.values())} alertas pelo Telegram, {len(alertas)} pelo GitHub")
 
 
-def avisar(a, prod, agora, site, avisos, token, tg):
+def avisar(a, prod, base, agora, site, avisos, token, chat):
     """Manda a mensagem de um produto se ele bater a regra do alerta e ainda não tiver sido avisado."""
     quando = datetime.fromisoformat(prod["ult"][0])
     if agora - quando > timedelta(hours=3):
@@ -549,7 +697,7 @@ def avisar(a, prod, agora, site, avisos, token, tg):
     v, queda = veredito(prod, agora)
     if not ((a["top"] and v == "top") or (a["maximo"] and preco <= a["maximo"])):
         return
-    chave = a["arquivo"] + ("|" + prod["id"] if a["busca"] else "")
+    chave = base + "|" + prod["id"]
     ant = avisos.get(chave, {})
     if ant.get("quando") == prod["ult"][0]:
         return
@@ -566,14 +714,13 @@ def avisar(a, prod, agora, site, avisos, token, tg):
     if site:
         partes.append(f"📈 Histórico: {site}#p-{prod['id']}")
     if a["busca"]:
-        partes.append(f"(alerta da busca \"{a['busca']}\")")
+        partes.append(f"(alerta: \"{a['busca']}\")")
     try:
-        telegram(token, "sendMessage", chat_id=tg["chat"], text="\n".join(partes))
+        telegram(token, "sendMessage", chat_id=chat, text="\n".join(partes))
         avisos[chave] = {"quando": prod["ult"][0], "preco": preco, "enviado": agora.isoformat()}
         print(f"alertas: aviso enviado para {prod['nome']} ({reais_txt(preco)})")
     except requests.RequestException as erro:
         print(f"alertas: falha ao enviar aviso ({erro})", file=sys.stderr)
-
 
 def main():
     canais = [l.strip() for l in ARQ_CANAIS.read_text(encoding="utf-8").splitlines()

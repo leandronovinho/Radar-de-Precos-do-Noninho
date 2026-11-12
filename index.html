@@ -238,6 +238,7 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
       <a href="#quedas" data-aba="quedas">Maiores quedas</a>
       <a href="#comparar" data-aba="comparar">Comparador</a>
       <a href="#como" data-aba="como">Como funciona</a>
+      <a id="link-robo" href="#como" hidden>🔔 Alertas</a>
     </nav>
   </div>
 </header>
@@ -318,7 +319,7 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
       <div class="caixa"><h3>Preço-alvo</h3><p>O valor que fica entre os 25% mais baratos do histórico do produto. Aparece depois de 5 dias com oferta.</p></div>
       <div class="caixa"><h3>Mediana</h3><p>O preço do meio: metade das ofertas foi mais barata e metade mais cara. Não se deixa levar por um erro de preço isolado.</p></div>
       <div class="caixa"><h3>Placas de vídeo e processadores</h3><p>São agrupados pelo modelo, como RX 9060 XT 16GB, qualquer que seja a marca. Os outros produtos se agrupam pela semelhança do nome.</p></div>
-      <div class="caixa"><h3>Alertas no Telegram</h3><p>Na página de um produto, toque em "Me avisar no Telegram" e escolha quando quer o aviso: quando entrar em Promoção top ou quando custar até um valor seu. O alerta é salvo no GitHub com um clique e vale a partir da próxima coleta.</p></div>
+      <div class="caixa"><h3>Alertas no Telegram</h3><p id="como-robo">Qualquer pessoa pode receber alertas. Na busca ou na página de um produto, toque em "Abrir no Telegram" e depois em Iniciar. Ou mande direto para o robô o produto e o preço, por exemplo "ak400 até 150". Ele responde em até 10 minutos.</p></div>
       <div class="caixa"><h3>Especificações</h3><p>No comparador, memória, capacidade, velocidade, tamanho e frequência são lidos do nome do produto. Se o canal não escreveu, aparece um traço.</p></div>
     </div>
   </section>
@@ -433,6 +434,8 @@ function repositorio() {
   return repo ? {dono: location.hostname.split(".")[0], repo} : null;
 }
 let alertaPorProduto = new Map();
+function linkRobo(carga) { return dados.robo ? `https://t.me/${dados.robo}?start=${carga}` : ""; }
+function cargaPreco(top, valor) { return top ? "top" : "p" + Math.round(valor); }
 function montarAlerta(p, aberto) {
   const caixa = $("d-alerta"), r = repositorio(), ativo = alertaPorProduto.get(p.id);
   caixa.hidden = !aberto && !ativo;
@@ -440,7 +443,7 @@ function montarAlerta(p, aberto) {
   const partes = [];
   if (ativo) {
     const regra = [ativo.top && "quando entrar em Promoção top", ativo.maximo && "quando custar até " + reais(ativo.maximo)].filter(Boolean).join(" ou ");
-    partes.push(el("div", {class: "alerta-ativo"}, el("strong", {}, "🔔 Alerta ligado"), el("span", {}, `Você recebe uma mensagem no Telegram ${regra}.`),
+    partes.push(el("div", {class: "alerta-ativo"}, el("strong", {}, "🔔 Alerta do GitHub ligado"), el("span", {}, `Você recebe uma mensagem no Telegram ${regra}.`),
       r ? el("a", {class: "botao", href: `https://github.com/${r.dono}/${r.repo}/delete/main/alertas/${encodeURIComponent(ativo.arquivo)}`, target: "_blank", rel: "noopener noreferrer"}, "Desligar alerta") : null));
     if (!aberto) { caixa.replaceChildren(...partes); return; }
   }
@@ -448,16 +451,17 @@ function montarAlerta(p, aberto) {
   const campoValor = el("input", {type: "text", inputmode: "decimal", value: String(sugestao), "aria-label": "Preço máximo em reais"});
   const opTop = el("input", {type: "radio", name: "quando", value: "top", checked: ""}), opValor = el("input", {type: "radio", name: "quando", value: "valor"});
   campoValor.addEventListener("focus", () => { opValor.checked = true; });
-  const criar = el("button", {class: "botao cheio", type: "button"}, "Criar alerta no GitHub");
+  const aviso = el("small", {}, "Abre o Telegram no robô do radar. Toque em Iniciar e pronto: ele confirma em até 10 minutos.");
+  const criar = el("button", {class: "botao cheio", type: "button"}, "Abrir no Telegram");
   criar.addEventListener("click", () => {
-    if (!r) { aviso.textContent = "Os alertas funcionam no seu site publicado no GitHub, não nesta demonstração."; return; }
-    const valor = parseFloat(campoValor.value.replace(/\./g, "").replace(",", "."));
-    const conteudo = [`produto: ${p.id}`, `nome: ${p.nome}`, `avisar_quando: ${opTop.checked ? "promocao top" : "preco"}`, `preco_maximo: ${opValor.checked && valor > 0 ? valor : ""}`].join("\n") + "\n";
-    window.open(`https://github.com/${r.dono}/${r.repo}/new/main?filename=${encodeURIComponent("alertas/" + p.id + ".txt")}&value=${encodeURIComponent(conteudo)}`, "_blank", "noopener");
-    aviso.textContent = "Abriu o GitHub numa aba nova com o alerta pronto. Clique em Confirmar alterações lá. Ele vale a partir da próxima coleta.";
+    const valor = parseFloat(campoValor.value.replace(/[^\d,.]/g, "").replace(/\./g, "").replace(",", "."));
+    if (opValor.checked && !(valor > 0)) { aviso.textContent = "Digite o preço máximo, por exemplo 300."; return; }
+    const link = linkRobo(`i_${p.id}_${cargaPreco(opTop.checked, valor)}`);
+    if (!link) { aviso.textContent = "Os alertas funcionam no site publicado, depois que o robô do Telegram estiver ligado."; return; }
+    window.open(link, "_blank", "noopener");
+    aviso.textContent = "No Telegram, toque em Iniciar. Em até 10 minutos o robô confirma o alerta.";
   });
-  const aviso = el("small", {}, "Abre o GitHub com o alerta já preenchido. É só clicar em Confirmar alterações.");
-  partes.push(el("div", {class: "alerta-form"}, el("h3", {style: "font-family:var(--titulo);margin:0"}, ativo ? "Trocar o alerta" : "Me avisar no Telegram quando:"),
+  partes.push(el("div", {class: "alerta-form"}, el("h3", {style: "font-family:var(--titulo);margin:0"}, "Me avisar no Telegram quando:"),
     el("label", {}, opTop, "entrar em Promoção top (menor preço ou bem abaixo da mediana)"),
     el("label", {}, opValor, "custar até R$", campoValor),
     el("div", {}, criar), aviso));
@@ -480,16 +484,17 @@ function montarAlertaBusca(termos) {
   const quando = el("select", {"aria-label": "Quando avisar"}, el("option", {value: "valor"}, "custar até"), el("option", {value: "top"}, "entrar em Promoção top"));
   const valor = el("input", {type: "text", inputmode: "decimal", placeholder: "R$ 200", "aria-label": "Preço máximo em reais"});
   quando.addEventListener("change", () => { valor.hidden = quando.value === "top"; });
-  const msg = el("small", {style: "color:var(--suave);flex-basis:100%"}, "Um alerta só para todos os modelos que aparecem nesta busca, inclusive os que surgirem depois.");
-  const criar = el("button", {class: "botao cheio", type: "button"}, "Criar alerta");
+  const msg = el("small", {style: "color:var(--suave);flex-basis:100%"}, "Um alerta só para todos os modelos desta busca, inclusive os que surgirem depois. Abre o Telegram: é só tocar em Iniciar.");
+  const criar = el("button", {class: "botao cheio", type: "button"}, "Abrir no Telegram");
   criar.addEventListener("click", () => {
-    if (!r) { msg.textContent = "Os alertas funcionam no seu site publicado no GitHub, não nesta demonstração."; return; }
     const v = parseFloat(valor.value.replace(/[^\d,.]/g, "").replace(/\./g, "").replace(",", "."));
     if (quando.value === "valor" && !(v > 0)) { msg.textContent = "Digite o preço máximo, por exemplo 200."; valor.focus(); return; }
-    const nome = "busca-" + termos.join("-").slice(0, 50) + ".txt";
-    const conteudo = [`busca: ${texto}`, `avisar_quando: ${quando.value === "top" ? "promocao top" : "preco"}`, `preco_maximo: ${quando.value === "valor" ? v : ""}`].join("\n") + "\n";
-    window.open(`https://github.com/${r.dono}/${r.repo}/new/main?filename=${encodeURIComponent("alertas/" + nome)}&value=${encodeURIComponent(conteudo)}`, "_blank", "noopener");
-    msg.textContent = "Abriu o GitHub numa aba nova com o alerta pronto. Clique em Confirmar alterações lá.";
+    let corpo = termos.join("_");
+    while (corpo.length > 50 && corpo.includes("_")) corpo = corpo.slice(0, corpo.lastIndexOf("_"));
+    const link = linkRobo(`b_${corpo.slice(0, 50)}_${cargaPreco(quando.value === "top", v)}`);
+    if (!link) { msg.textContent = "Os alertas funcionam no site publicado, depois que o robô do Telegram estiver ligado."; return; }
+    window.open(link, "_blank", "noopener");
+    msg.textContent = "No Telegram, toque em Iniciar. Em até 10 minutos o robô confirma o alerta.";
   });
   caixa.replaceChildren(el("div", {class: "alerta-linha"}, el("strong", {}, `🔔 Avisar no Telegram quando qualquer produto de "${texto}"`), quando, valor, criar, msg));
 }
@@ -964,6 +969,10 @@ let espera; addEventListener("resize", () => { clearTimeout(espera); espera = se
   produtos.forEach(preparar);
   porId = new Map(produtos.map(p => [p.id, p]));
   selecao = ler("radar-selecao", []).filter(i => porId.has(i));
+  if (dados.robo) {
+    const lr = $("link-robo"); lr.href = "https://t.me/" + dados.robo; lr.target = "_blank"; lr.rel = "noopener noreferrer"; lr.hidden = false;
+    $("como-robo").append(" Robô: ", el("a", {href: "https://t.me/" + dados.robo, target: "_blank", rel: "noopener noreferrer", style: "color:var(--neon)"}, "@" + dados.robo));
+  }
   for (const a of dados.alertas || []) { if (a.busca) alertasBusca.push(a); else if (porId.has(a.produto)) alertaPorProduto.set(a.produto, a); }
   $("atualizado").textContent = "ao vivo · " + referencia.toLocaleString("pt-BR", {day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"});
   if (dados.canais && dados.canais.length) $("como-intro").textContent = `O radar lê ${dados.canais.length} canais de promoção do Telegram (${dados.canais.join(", ")}) a cada 15 minutos, guarda cada oferta e monta o histórico de preço de cada produto.`;
