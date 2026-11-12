@@ -1,0 +1,25 @@
+name: Coletar ofertas
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: coletar
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests beautifulsoup4
+      - run: python coletor.py
+      - name: Salvar ofertas novas
+        run: |
+          git config user.name "radar-de-precos"
+          git config user.email "radar@users.noreply.github.com"
+          git add dados/ofertas.json
+          git diff --cached --quiet || git commit -m "Atualiza ofertas"
+          git push
