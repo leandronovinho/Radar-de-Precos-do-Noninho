@@ -1,0 +1,3 @@
+busca: netac 500gb ssd
+avisar_quando: preco
+preco_maximo: 200
