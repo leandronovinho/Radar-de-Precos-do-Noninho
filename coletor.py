@@ -390,7 +390,7 @@ def montar_indice(todos, canais):
             continue
         g["ofertas"].append({"quando": quando, "preco": info["preco"], "cupom": info["cupom"],
                              "pag": info["pagamento"], "link": info["link"], "loja": loja,
-                             "canal": p["canal"], "canais": {p["canal"]}, "posts": 1})
+                             "canal": p["canal"], "canais": {p["canal"]}, "posts": 1, "post": pid})
 
     produtos, usados = [], set()
     for chave, g in grupos.items():
@@ -414,7 +414,7 @@ def montar_indice(todos, canais):
             dia = o["quando"].astimezone(FUSO).date().isoformat()
             if dia not in por_dia or o["preco"] < por_dia[dia]["preco"]:
                 por_dia[dia] = o
-        linha = lambda o: [round(o["preco"], 2), o["loja"], o["cupom"], o["pag"], o["link"], o["canal"]]
+        linha = lambda o: [round(o["preco"], 2), o["loja"], o["cupom"], o["pag"], o["link"], o["canal"], o.get("post", "")]
         ult = validas[-1]
         produtos.append({
             "id": pid, "nome": nome, "cat": g["cat"], "posts": sum(o["posts"] for o in validas),
@@ -613,6 +613,19 @@ def h(t):
     return html.escape(str(t), quote=False)
 
 
+def links_oferta(p):
+    """Links da última oferta: a página do produto na loja e o post original no canal, com os cupons."""
+    link, post = p["ult"][5], p["ult"][7] if len(p["ult"]) > 7 else ""
+    partes = []
+    if p["ult"][3]:
+        partes.append(f"🎟 <code>{h(p['ult'][3])}</code>")
+    if link:
+        partes.append(f'<a href="{h(link)}">🛒 Comprar</a>')
+    if post:
+        partes.append(f'<a href="https://t.me/{h(post)}">📣 Post no canal</a>')
+    return "     " + " · ".join(partes) if partes else ""
+
+
 def linha_produto(p, agora, site, extra=""):
     v, queda = veredito(p, agora)
     nome = f'<a href="{site}#p-{p["id"]}">{h(p["nome"])}</a>' if site else h(p["nome"])
@@ -621,7 +634,8 @@ def linha_produto(p, agora, site, extra=""):
     if v != "sem":
         partes.append(f"{'−' if queda >= 0 else '+'}{abs(queda):.0%} vs mediana".replace(".", ","))
     partes += [x for x in (p["ult"][2], quando, extra) if x]
-    return f"{ICONE_V[v]} {nome}\n     {' · '.join(partes)}"
+    links = links_oferta(p)
+    return f"{ICONE_V[v]} {nome}\n     {' · '.join(partes)}" + (f"\n{links}" if links else "")
 
 
 def ofertas_do_dia(indice, agora, site, limite=10):
@@ -876,7 +890,9 @@ def avisar(a, prod, base, agora, site, avisos, token, chat):
     if loja:
         partes.append(f"🏬 {loja}")
     if link:
-        partes.append(f"🔗 {link}")
+        partes.append(f"🛒 Comprar: {link}")
+    if len(prod["ult"]) > 7 and prod["ult"][7]:
+        partes.append(f"📣 Post no canal (com os cupons): https://t.me/{prod['ult'][7]}")
     if site:
         partes.append(f"📈 Histórico: {site}#p-{prod['id']}")
     if a["busca"]:
