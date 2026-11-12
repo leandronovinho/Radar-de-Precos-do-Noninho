@@ -16,6 +16,8 @@ jobs:
           python-version: "3.12"
       - run: pip install requests beautifulsoup4
       - run: python coletor.py
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       - name: Salvar ofertas novas
         run: |
           git config user.name "github-actions[bot]"
