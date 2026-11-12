@@ -1,0 +1,3 @@
+busca: rx 7600
+avisar_quando: preco
+preco_maximo: 1650
