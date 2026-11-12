@@ -1,0 +1,4 @@
+produto: fonte-msi-mag-a650bn-650w
+nome: Fonte MSI Mag A650BN 650W
+avisar_quando: promocao top
+preco_maximo: 
