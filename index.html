@@ -6,205 +6,339 @@
 <title>Radar de preços</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --fundo:#F2F5F3; --papel:#FFFFFF; --papel2:#F3F6F4; --tinta:#0E1512; --suave:#5D6964; --linha:#DCE3DF;
-  --etiqueta:#0B9F55; --etiqueta-tinta:#FFFFFF; --linha-graf:#0B9F55; --area:rgba(11,159,85,.14); --brilho:rgba(11,159,85,.25);
-  --verde:#0B8A4A; --verde-fundo:#E0F5EA; --ambar:#9A5B00; --ambar-fundo:#FFF0D6; --alerta:#A86B00;
-  --azul:#2563C9; --tg:#229ED9; --wa:#1DA851;
-  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --fundo:#EEF3F0; --papel:#FFFFFF; --papel2:#F2F6F4; --tinta:#0C1410; --suave:#5A6762; --linha:#D5DED9;
+  --neon:#0A9E54; --neon-tinta:#FFFFFF; --brilho:rgba(10,158,84,.22); --area:rgba(10,158,84,.10);
+  --top:#0A9E54; --compensa:#2E8B57; --razoavel:#B07800; --caro:#D02A44; --cinza:#6B7772;
+  --serie2:#1F6FD1; --serie3:#9B3FD6; --grade-fundo:rgba(10,30,20,.035);
+  --titulo:"Chakra Petch",Archivo,system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){ color-scheme:dark;
-    --fundo:#06080A; --papel:#0C1013; --papel2:#12181C; --tinta:#E9F2EE; --suave:#7C8985; --linha:#1C252B;
-    --etiqueta:#39FF8F; --etiqueta-tinta:#03140A; --linha-graf:#39FF8F; --area:rgba(57,255,143,.10); --brilho:rgba(57,255,143,.35);
-    --verde:#39FF8F; --verde-fundo:rgba(57,255,143,.08); --ambar:#FFB547; --ambar-fundo:rgba(255,181,71,.08);
-    --alerta:#FFD23F; --azul:#7FB0FF; --tg:#2AABEE; --wa:#25D366; }
+    --fundo:#05080A; --papel:#0A0F12; --papel2:#0F161A; --tinta:#E6F2EC; --suave:#7A8A84; --linha:#18232A;
+    --neon:#39FF8F; --neon-tinta:#02130A; --brilho:rgba(57,255,143,.32); --area:rgba(57,255,143,.09);
+    --top:#39FF8F; --compensa:#8BF5B8; --razoavel:#FFC94A; --caro:#FF4D6A; --cinza:#7A8A84;
+    --serie2:#5CC8FF; --serie3:#D58BFF; --grade-fundo:rgba(57,255,143,.035); }
 }
 :root[data-theme="dark"]{ color-scheme:dark;
-  --fundo:#06080A; --papel:#0C1013; --papel2:#12181C; --tinta:#E9F2EE; --suave:#7C8985; --linha:#1C252B;
-  --etiqueta:#39FF8F; --etiqueta-tinta:#03140A; --linha-graf:#39FF8F; --area:rgba(57,255,143,.10); --brilho:rgba(57,255,143,.35);
-  --verde:#39FF8F; --verde-fundo:rgba(57,255,143,.08); --ambar:#FFB547; --ambar-fundo:rgba(255,181,71,.08);
-  --alerta:#FFD23F; --azul:#7FB0FF; --tg:#2AABEE; --wa:#25D366; }
+  --fundo:#05080A; --papel:#0A0F12; --papel2:#0F161A; --tinta:#E6F2EC; --suave:#7A8A84; --linha:#18232A;
+  --neon:#39FF8F; --neon-tinta:#02130A; --brilho:rgba(57,255,143,.32); --area:rgba(57,255,143,.09);
+  --top:#39FF8F; --compensa:#8BF5B8; --razoavel:#FFC94A; --caro:#FF4D6A; --cinza:#7A8A84;
+  --serie2:#5CC8FF; --serie3:#D58BFF; --grade-fundo:rgba(57,255,143,.035); }
 *,*::before,*::after{box-sizing:inherit}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--fundo);color:var(--tinta);
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 4rem);height:100%}
+body{margin:0;min-height:100%;background-color:var(--fundo);color:var(--tinta);
+  background-image:radial-gradient(60rem 30rem at 50% -10rem,var(--area),transparent 70%),
+    linear-gradient(var(--grade-fundo) 1px,transparent 1px),linear-gradient(90deg,var(--grade-fundo) 1px,transparent 1px);
+  background-size:auto,44px 44px,44px 44px;background-attachment:fixed;
   font:400 1rem/1.5 Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
-main{max-width:64rem;margin:0 auto;padding:1.75rem 1rem 4rem}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--fundo)}
 button,select,input{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--etiqueta);outline-offset:2px}
+:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
 [hidden]{display:none!important}
-.rotulo,.card .cat,.detalhe .cat,.numeros dt,.selo,.achado .tipo,.olho{text-transform:uppercase;letter-spacing:.08em}
+.caps{text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);font-size:.66rem}
 
-/* topo */
-.topo h1{font-size:clamp(2rem,5vw,2.75rem);line-height:1;font-weight:800;font-stretch:118%;margin:0;letter-spacing:-.015em}
-.topo h1 span{color:var(--etiqueta);text-shadow:0 0 18px var(--brilho)}
-.topo p{color:var(--suave);margin:.6rem 0 0;max-width:36rem}
-.topo .atual{font-size:.8rem;margin-top:.35rem;font-family:var(--mono)}
-.aviso{background:var(--verde-fundo);color:var(--etiqueta);border:1px solid var(--etiqueta);padding:.6rem .85rem;border-radius:.5rem;font-size:.88rem;margin:1rem 0 0}
+/* efeito de seleção: degradê que sobe ao passar o mouse */
+.realce{position:relative;isolation:isolate}
+.realce::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;
+  background:linear-gradient(to top,var(--brilho),transparent 75%);opacity:0;transform:translateY(8%);transition:opacity .25s,transform .25s}
+.realce::after{content:"";position:absolute;left:12%;right:12%;top:-1px;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--neon),transparent);opacity:0;transition:opacity .25s}
+.realce:hover::before,.realce:focus-visible::before,.realce.ativo::before{opacity:1;transform:none}
+.realce:hover::after,.realce:focus-visible::after,.realce.ativo::after{opacity:1}
+.realce:hover,.realce:focus-visible{border-color:var(--neon)!important}
 
-.busca{margin:1.5rem 0 .9rem;position:relative}
-.busca svg{position:absolute;left:.95rem;top:50%;transform:translateY(-50%);width:1.05rem;height:1.05rem;color:var(--suave)}
-.busca input{width:100%;padding:.85rem 2.6rem .85rem 2.6rem;border:1px solid var(--linha);border-radius:.6rem;background:var(--papel);font-size:1rem}
-.busca input:focus{border-color:var(--etiqueta);outline:none;box-shadow:0 0 0 3px var(--area),0 0 22px var(--area)}
+/* topo e navegação */
+.barra{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--fundo) 82%,transparent);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--linha)}
+.barra-in{max-width:68rem;margin:0 auto;padding:.55rem 1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.marca{font-family:var(--titulo);font-weight:700;font-size:1.25rem;letter-spacing:.02em;text-decoration:none;color:var(--tinta);white-space:nowrap}
+.marca b{color:var(--neon);text-shadow:0 0 14px var(--brilho)}
+.ao-vivo{display:flex;align-items:center;gap:.4rem;color:var(--suave);white-space:nowrap}
+.ao-vivo i{width:.5rem;height:.5rem;border-radius:50%;background:var(--neon);box-shadow:0 0 10px var(--neon)}
+@media (prefers-reduced-motion:no-preference){.ao-vivo i{animation:pulso 2s ease-in-out infinite}}
+@keyframes pulso{50%{opacity:.35}}
+nav.abas-topo{display:flex;gap:.2rem;overflow-x:auto;margin-left:auto;scrollbar-width:none}
+nav.abas-topo a{position:relative;text-decoration:none;color:var(--suave);font-family:var(--titulo);font-weight:600;font-size:.92rem;
+  padding:.45rem .75rem;border-radius:.4rem;white-space:nowrap;border:1px solid transparent}
+nav.abas-topo a[aria-current="page"]{color:var(--neon);border-color:var(--linha);background:var(--papel)}
+nav.abas-topo a[aria-current="page"]::after{content:"";position:absolute;left:.75rem;right:.75rem;bottom:-1px;height:2px;background:var(--neon);box-shadow:0 0 10px var(--neon)}
+@media (max-width:46rem){nav.abas-topo{margin-left:0;width:100%}.ao-vivo{margin-left:auto}.barra-in{gap:.4rem 1rem}}
+
+main{max-width:68rem;margin:0 auto;padding:1.6rem 1rem 6rem}
+.cabeca h1{font-family:var(--titulo);font-size:clamp(1.9rem,4.5vw,2.7rem);line-height:1.05;font-weight:700;margin:0;letter-spacing:.01em}
+.cabeca p{color:var(--suave);margin:.5rem 0 0;max-width:40rem}
+.aviso{border:1px solid var(--neon);color:var(--neon);background:var(--area);padding:.55rem .8rem;border-radius:.4rem;font-size:.86rem;margin:1rem 0 0}
+
+/* controles da lista */
+.busca{margin:1.3rem 0 .8rem;position:relative}
+.busca svg{position:absolute;left:.95rem;top:50%;transform:translateY(-50%);width:1.05rem;height:1.05rem;color:var(--neon)}
+.busca input{width:100%;padding:.85rem 2.6rem;border:1px solid var(--linha);border-radius:.5rem;background:var(--papel);font-size:1rem}
+.busca input:focus{border-color:var(--neon);outline:none;box-shadow:0 0 0 3px var(--area),0 0 26px var(--area)}
 .busca button{position:absolute;right:.4rem;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--suave);font-size:1.3rem;padding:.3rem .5rem;cursor:pointer}
-.chips{display:flex;flex-wrap:wrap;gap:.4rem}
-.chip{border:1px solid var(--linha);background:var(--papel);border-radius:.45rem;padding:.3rem .65rem;font-size:.82rem;cursor:pointer;color:var(--suave)}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem}
+.chip{border:1px solid var(--linha);background:var(--papel);border-radius:.35rem;padding:.28rem .62rem;font-size:.82rem;cursor:pointer;color:var(--suave)}
 .chip b{font-weight:600;color:var(--tinta);margin-right:.3rem}
-.chip[aria-pressed="true"]{background:var(--etiqueta);border-color:var(--etiqueta);color:var(--etiqueta-tinta);box-shadow:0 0 16px var(--brilho)}
-.chip[aria-pressed="true"] b{color:var(--etiqueta-tinta)}
+.chip[aria-pressed="true"]{background:var(--neon);border-color:var(--neon);color:var(--neon-tinta);box-shadow:0 0 16px var(--brilho)}
+.chip[aria-pressed="true"] b{color:var(--neon-tinta)}
+.filtros{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:space-between;align-items:center;margin-top:.8rem}
+.seg{display:flex;flex-wrap:wrap;gap:.2rem;border:1px solid var(--linha);border-radius:.45rem;padding:.2rem;background:var(--papel)}
+.seg button{border:0;background:none;border-radius:.3rem;padding:.3rem .6rem;font-size:.82rem;color:var(--suave);cursor:pointer;display:flex;align-items:center;gap:.35rem}
+.seg button[aria-pressed="true"]{background:var(--papel2);color:var(--tinta);font-weight:700;box-shadow:0 0 0 1px var(--linha)}
+.ponto{display:inline-block;width:.5rem;height:.5rem;border-radius:50%}
+.ordem{display:flex;align-items:center;gap:.45rem;font-size:.82rem;color:var(--suave)}
+select{padding:.38rem .55rem;border:1px solid var(--linha);border-radius:.4rem;background:var(--papel)}
 
-/* cards de produto */
-.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(14.5rem,1fr));gap:.7rem;margin-top:1.25rem}
-.card{display:flex;flex-direction:column;text-align:left;border:1px solid var(--linha);background:var(--papel);border-radius:.7rem;padding:.9rem .95rem .85rem;cursor:pointer;min-width:0}
-.card:hover,.card:focus-visible{border-color:var(--etiqueta);box-shadow:0 0 0 1px var(--etiqueta),0 0 26px var(--area);outline:none}
-.card .cat{font-size:.66rem;color:var(--suave)}
-.card .nome{font-weight:700;line-height:1.25;margin:.2rem 0 .6rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
-.card .preco{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem}
-.card .preco strong{font-size:1.4rem;font-weight:800;font-stretch:92%;line-height:1}
-.card .preco{flex-direction:column;align-items:flex-start;gap:.2rem}
-.card .rodape>span:first-child{white-space:nowrap}
-.card .preco span{font-size:.72rem;color:var(--suave);white-space:nowrap}
-.card svg{width:100%;height:2.75rem;margin:.6rem 0 .5rem;display:block;overflow:visible}
-.card svg text{font-family:inherit}
+/* cores do veredito */
+.v-top{--v:var(--top)} .v-compensa{--v:var(--compensa)} .v-razoavel{--v:var(--razoavel)} .v-caro{--v:var(--caro)} .v-sem{--v:var(--cinza)}
+.selo{display:inline-flex;align-items:center;gap:.3rem;font-family:var(--mono);font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  padding:.24rem .5rem;border-radius:.25rem;white-space:nowrap;color:var(--v);border:1px solid var(--v);background:color-mix(in srgb,var(--v) 9%,transparent)}
+.selo.v-top{background:var(--v);color:var(--neon-tinta);box-shadow:0 0 14px var(--brilho)}
+.cor-v{color:var(--v)}
+
+/* cards */
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.7rem;margin-top:1.2rem}
+.card{display:flex;flex-direction:column;border:1px solid var(--linha);background:var(--papel);border-radius:.55rem;padding:.85rem .9rem .8rem;cursor:pointer;min-width:0;transition:border-color .2s,box-shadow .2s}
+.card:hover{box-shadow:0 0 0 1px var(--neon),0 10px 30px -12px var(--brilho)}
+.card .topo-card{display:flex;justify-content:space-between;align-items:center;gap:.4rem}
+.card .cat{color:var(--suave)}
+.cmp{border:1px solid var(--linha);background:var(--papel2);border-radius:.3rem;font-size:.7rem;padding:.12rem .45rem;cursor:pointer;color:var(--suave);font-family:var(--mono);white-space:nowrap}
+.cmp:hover{color:var(--neon);border-color:var(--neon)}
+.cmp[aria-pressed="true"]{color:var(--neon-tinta);background:var(--neon);border-color:var(--neon)}
+.card .nome{font-weight:700;line-height:1.25;margin:.35rem 0 .55rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
+.card .preco{font-family:var(--titulo);font-size:1.5rem;font-weight:700;line-height:1}
+.card .sub{font-family:var(--mono);font-size:.68rem;color:var(--suave);margin-top:.3rem}
+.card .sub b{font-weight:700}
+.card svg{width:100%;height:2.6rem;margin:.55rem 0 .5rem;display:block;overflow:visible}
 .card svg .linha{filter:drop-shadow(0 0 3px var(--brilho))}
-.card .rodape{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.75rem;color:var(--suave)}
-.card .rodape b{color:var(--tinta);font-weight:700}
-.selo{display:inline-block;font-size:.62rem;font-weight:700;padding:.22rem .5rem;border-radius:.3rem;white-space:nowrap;background:var(--papel2);color:var(--suave);border:1px solid var(--linha)}
-.selo.verde{background:var(--verde-fundo);color:var(--verde);border-color:var(--verde)}
-.selo.ambar{background:var(--ambar-fundo);color:var(--ambar);border-color:var(--ambar)}
-.mais{display:block;margin:1rem auto 0;border:1px solid var(--linha);background:var(--papel);border-radius:.5rem;padding:.6rem 1.2rem;cursor:pointer;font-weight:600}
-.mais:hover{border-color:var(--etiqueta)}
-.vazio{border:1px dashed var(--linha);border-radius:.7rem;padding:1.5rem;color:var(--suave);text-align:center;margin-top:1.25rem}
+.card .rodape{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.74rem;color:var(--suave)}
+.card .rodape b{color:var(--tinta)}
+.card .rodape>span:first-child{white-space:nowrap}
+.mais{display:block;margin:1.1rem auto 0;border:1px solid var(--linha);background:var(--papel);border-radius:.45rem;padding:.6rem 1.2rem;cursor:pointer;font-weight:600}
+.vazio{border:1px dashed var(--linha);border-radius:.55rem;padding:1.4rem;color:var(--suave);text-align:center;margin-top:1.2rem;grid-column:1/-1}
 
-/* quem estava no canal pegou */
-.pegou{margin-top:3.5rem}
-.olho{font-family:var(--mono);font-size:.72rem;color:var(--etiqueta);margin:0 0 .35rem}
-.pegou h2,.detalhe h2{font-size:clamp(1.5rem,3.5vw,2rem);line-height:1.1;font-weight:800;font-stretch:112%;margin:0}
-.pegou>p{color:var(--suave);margin:.4rem 0 0;max-width:36rem}
-.pegou .grade{grid-template-columns:repeat(auto-fill,minmax(13.5rem,1fr))}
-.achado{display:flex;flex-direction:column;min-width:0;border:1px solid var(--linha);background:var(--papel);border-radius:.7rem;padding:.8rem .9rem;text-align:left;cursor:pointer}
-.achado:hover{border-color:var(--etiqueta)}
-.achado .tipo{display:flex;justify-content:space-between;gap:.5rem;font-size:.64rem;font-weight:700}
-.achado .tipo.erro{color:var(--alerta)} .achado .tipo.menor{color:var(--verde)}
-.achado .tipo b{color:var(--verde);font-family:var(--mono);letter-spacing:0}
-.achado .nome{display:block;font-weight:700;margin:.35rem 0 .1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.achado strong{display:block;font-size:1.4rem;font-weight:800;font-stretch:92%}
-.achado small{display:block;color:var(--suave);font-size:.7rem;font-family:var(--mono)}
+/* títulos de seção */
+.secao{margin-top:2.5rem}
+.secao h2,.detalhe h2{font-family:var(--titulo);font-size:clamp(1.4rem,3.4vw,1.9rem);line-height:1.1;font-weight:700;margin:.2rem 0 0}
+.secao>p,.detalhe .intro{color:var(--suave);margin:.4rem 0 0;max-width:40rem}
+.olho{color:var(--neon);margin:0}
+
+/* lista de quedas */
+.linhas{margin-top:1rem;border:1px solid var(--linha);border-radius:.55rem;overflow:hidden;background:var(--papel)}
+.linha-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:1rem;align-items:center;padding:.7rem .9rem;border-bottom:1px solid var(--linha);cursor:pointer}
+.linha-item:last-child{border-bottom:0}
+.linha-item .n{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.linha-item .n small{display:block;font-weight:400;color:var(--suave);font-family:var(--mono);font-size:.68rem}
+.linha-item .p{font-family:var(--titulo);font-weight:700;font-size:1.15rem;text-align:right}
+.linha-item .m{font-family:var(--mono);font-size:.72rem;color:var(--suave);text-align:right}
+.linha-item .q{font-family:var(--mono);font-weight:700;text-align:right;min-width:4.5rem}
+@media (max-width:40rem){.linha-item{grid-template-columns:minmax(0,1fr) auto}.linha-item .m,.linha-item .selo{display:none}}
 
 /* detalhe */
-.voltar{border:0;background:none;color:var(--etiqueta);font-weight:600;padding:.4rem 0;cursor:pointer}
-.detalhe .cat{color:var(--suave);font-size:.72rem;margin-top:.5rem}
-.detalhe h2{margin:.15rem 0 1.1rem}
-.numeros{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem}
-.numeros div{background:var(--papel);border:1px solid var(--linha);border-radius:.6rem;padding:.75rem .85rem;min-width:0}
-.numeros dt{font-size:.64rem;color:var(--suave)}
-.numeros dd{margin:.15rem 0 0;font-size:1.4rem;font-weight:800;font-stretch:92%;line-height:1.2}
-.numeros dd.verde,.numeros dd.alvo{color:var(--verde)}
-.numeros dd.alvo{font-family:var(--mono);font-weight:700;font-size:1.25rem;text-shadow:0 0 14px var(--brilho)}
-.numeros small{display:block;font-size:.7rem;color:var(--suave);line-height:1.3;margin-top:.15rem;font-family:var(--mono)}
-@media (max-width:40rem){.numeros{grid-template-columns:repeat(2,1fr)}}
-
-.painel{background:var(--papel);border:1px solid var(--linha);border-radius:.8rem;padding:.9rem;margin-top:.7rem}
+.voltar{border:0;background:none;color:var(--neon);font-weight:600;padding:.3rem 0;cursor:pointer;font-family:var(--titulo)}
+.detalhe .cat{color:var(--suave);margin-top:.6rem}
+.numeros{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-top:1rem}
+.caixa{background:var(--papel);border:1px solid var(--linha);border-radius:.5rem;padding:.75rem .85rem;min-width:0}
+.numeros dt{color:var(--suave)}
+.numeros dd{margin:.2rem 0 0;font-family:var(--titulo);font-size:1.45rem;font-weight:700;line-height:1.15}
+.numeros small{display:block;font-size:.68rem;color:var(--suave);line-height:1.3;margin-top:.2rem;font-family:var(--mono)}
+.numeros dd.neon{color:var(--neon);text-shadow:0 0 14px var(--brilho)}
+@media (max-width:44rem){.numeros{grid-template-columns:repeat(2,1fr)}}
+.veredito{margin-top:.7rem;border:1px solid var(--v);border-left-width:4px;border-radius:.5rem;padding:.85rem 1rem;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--v) 14%,transparent),transparent 65%);display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center}
+.veredito strong{font-family:var(--titulo);font-size:1.3rem;color:var(--v);text-shadow:0 0 16px color-mix(in srgb,var(--v) 40%,transparent)}
+.veredito p{margin:0;flex:1 1 20rem}
+.veredito .acoes{display:flex;gap:.5rem;flex-wrap:wrap}
+.botao{display:inline-flex;align-items:center;gap:.4rem;border:1px solid var(--neon);color:var(--neon);background:transparent;text-decoration:none;font-weight:700;
+  padding:.5rem .9rem;border-radius:.4rem;cursor:pointer;font-family:var(--titulo)}
+.botao.cheio{background:var(--neon);color:var(--neon-tinta);box-shadow:0 0 18px var(--brilho)}
+.painel{background:var(--papel);border:1px solid var(--linha);border-radius:.6rem;padding:.9rem;margin-top:.7rem}
 .controles{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem;align-items:center}
-.abas{display:flex;gap:.2rem;border:1px solid var(--linha);border-radius:.5rem;padding:.2rem}
-.abas button{border:0;background:none;padding:.3rem .65rem;border-radius:.35rem;cursor:pointer;font-size:.82rem;color:var(--suave)}
-.abas button[aria-pressed="true"]{background:var(--papel2);color:var(--tinta);font-weight:700;box-shadow:0 0 0 1px var(--linha)}
-.comparar{display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:var(--suave)}
-.comparar select{max-width:14rem;padding:.35rem .5rem;border:1px solid var(--linha);border-radius:.4rem;background:var(--papel2)}
-.legenda{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.75rem;color:var(--suave);margin:.8rem 0 .25rem}
+.legenda{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-size:.74rem;color:var(--suave);margin:.8rem 0 .2rem}
 .legenda i{display:inline-block;width:1rem;height:0;border-top:2px solid;vertical-align:middle;margin-right:.4rem}
-.grafico{position:relative;overflow-x:auto}
+.grafico{position:relative}
 .grafico svg{display:block;width:100%;height:auto;touch-action:pan-y}
 .grafico text{font-family:var(--mono);paint-order:stroke;stroke:var(--papel);stroke-width:4px;stroke-linejoin:round}
 .grafico .linha{filter:drop-shadow(0 0 5px var(--brilho))}
-.dica{position:absolute;pointer-events:none;background:var(--papel2);border:1px solid var(--linha);border-radius:.45rem;padding:.4rem .6rem;font-size:.78rem;line-height:1.35;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.35)}
-.dica .d{font-family:var(--mono);font-size:.68rem;color:var(--suave)}
-.dica b{font-size:1rem;font-weight:800;color:var(--etiqueta)}
-.dica .c2{color:var(--azul)}
+.dica{position:absolute;pointer-events:none;background:var(--papel2);border:1px solid var(--neon);border-radius:.4rem;padding:.4rem .6rem;font-size:.78rem;line-height:1.35;white-space:nowrap;box-shadow:0 0 22px var(--area);z-index:2}
+.dica .d{font-family:var(--mono);font-size:.66rem;color:var(--suave)}
+.dica b{font-family:var(--titulo);font-size:1.02rem}
+.duas{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-top:.7rem}
+@media (max-width:44rem){.duas{grid-template-columns:1fr}}
+.caixa h3{font-family:var(--titulo);font-size:1rem;margin:0 0 .5rem}
+.tabela{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.85rem}
+th,td{text-align:left;padding:.45rem .55rem;border-bottom:1px solid var(--linha);white-space:nowrap}
+th{color:var(--suave);font-weight:600;font-family:var(--mono);font-size:.64rem;text-transform:uppercase;letter-spacing:.08em}
+tbody tr{position:relative}
+tbody tr:hover td{background:linear-gradient(to top,var(--area),transparent)}
+td.num{font-family:var(--mono);text-align:right} th.num{text-align:right}
+td code{color:var(--neon);border:1px solid var(--neon);padding:.02rem .35rem;border-radius:.2rem;font-weight:700;font-family:var(--mono);font-size:.74rem}
+details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:600;font-size:.88rem;font-family:var(--titulo)}
 
-.conselho{margin-top:.9rem;border-radius:.6rem;padding:.9rem;border:1px solid var(--linha);background:var(--papel2)}
-.conselho p{margin:.5rem 0 .85rem;max-width:40rem}
-.botoes{display:flex;flex-wrap:wrap;gap:.5rem}
-.botoes a{display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;font-weight:700;padding:.6rem 1rem;border-radius:.5rem}
-.botoes svg{width:1.1rem;height:1.1rem}
-.botoes .oferta{background:var(--etiqueta);color:var(--etiqueta-tinta);box-shadow:0 0 18px var(--brilho)}
-.botoes .tg{background:var(--tg);color:#fff}
-.botoes .wa{background:var(--wa);color:#fff}
-details{margin-top:.9rem}
-summary{cursor:pointer;color:var(--etiqueta);font-weight:600;font-size:.85rem}
-.tabela{overflow-x:auto;margin-top:.5rem}
-table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:30rem}
-th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--linha);white-space:nowrap}
-th{color:var(--suave);font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}
-td code{background:var(--verde-fundo);color:var(--verde);border:1px solid var(--verde);padding:.02rem .35rem;border-radius:.2rem;font-weight:700;font-family:var(--mono);font-size:.75rem}
+/* comparador */
+.escolha{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:1rem}
+@media (max-width:44rem){.escolha{grid-template-columns:1fr}}
+.vaga{border:1px dashed var(--linha);border-radius:.5rem;padding:.7rem;background:var(--papel)}
+.vaga label{display:block;margin-bottom:.35rem}
+.vaga input{width:100%;padding:.55rem .65rem;border:1px solid var(--linha);border-radius:.4rem;background:var(--papel2)}
+.vaga input:focus{outline:none;border-color:var(--neon);box-shadow:0 0 0 3px var(--area)}
+.vaga .cor{display:inline-block;width:.8rem;height:3px;vertical-align:middle;margin-right:.35rem;box-shadow:0 0 6px currentColor}
+.resumo{margin-top:.9rem;padding:.9rem 1rem;border-radius:.5rem;border:1px solid var(--neon);background:linear-gradient(90deg,var(--area),transparent 70%)}
+.resumo p{margin:.2rem 0}
+.comp-tabela td{vertical-align:top}
+.comp-tabela td small{display:block;font-family:var(--mono);font-size:.68rem;margin-top:.1rem}
+.mais-barato{color:var(--top)} .mais-caro{color:var(--caro)}
+
+/* bandeja de comparação */
+.bandeja{position:fixed;left:50%;transform:translateX(-50%);bottom:0;z-index:25;width:min(40rem,calc(100% - 1.5rem));
+  padding:.6rem .7rem calc(.6rem + env(safe-area-inset-bottom,0px));background:var(--papel2);border:1px solid var(--neon);border-bottom:0;
+  border-radius:.6rem .6rem 0 0;box-shadow:0 -6px 30px var(--area);display:flex;align-items:center;gap:.6rem}
+.bandeja span{flex:1;font-size:.86rem;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bandeja .limpar{border:0;background:none;color:var(--suave);cursor:pointer}
+
+/* como funciona */
+.guia{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin-top:1rem}
+@media (max-width:44rem){.guia{grid-template-columns:1fr}}
+.guia .caixa p{margin:.35rem 0 0;color:var(--suave);font-size:.92rem}
 @media (max-width:40rem){
   .grade{grid-template-columns:1fr 1fr;gap:.5rem}
-  .card{padding:.75rem .75rem .7rem}
-  .card .nome{font-size:.92rem;-webkit-line-clamp:3;min-height:3.75em}
-  .card .preco{flex-direction:column;align-items:flex-start;gap:.15rem}
-  .card .preco strong{font-size:1.2rem}
-  .card .rodape{flex-direction:column;align-items:flex-start;gap:.35rem}
-  .pegou .grade{grid-template-columns:1fr}
+  .card{padding:.7rem}
+  .card .nome{font-size:.9rem;-webkit-line-clamp:3;min-height:3.75em}
+  .card .preco{font-size:1.25rem}
+  .card .rodape{flex-direction:column;align-items:flex-start;gap:.3rem}
 }
-@media (prefers-reduced-motion:no-preference){.card,.achado,.chip{transition:border-color .15s,box-shadow .15s}}
+@media (prefers-reduced-motion:reduce){.realce::before,.realce::after{transition:none}}
 </style>
 </head>
 <body>
+<header class="barra">
+  <div class="barra-in">
+    <a class="marca" href="#ofertas">RADAR<b>//</b>PREÇOS</a>
+    <span class="ao-vivo caps"><i></i><span id="atualizado">carregando</span></span>
+    <nav class="abas-topo" aria-label="Seções">
+      <a href="#ofertas" data-aba="ofertas">Ofertas</a>
+      <a href="#top" data-aba="top">Promoções top</a>
+      <a href="#quedas" data-aba="quedas">Maiores quedas</a>
+      <a href="#comparar" data-aba="comparar">Comparador</a>
+      <a href="#como" data-aba="como">Como funciona</a>
+    </nav>
+  </div>
+</header>
 <main>
-  <header class="topo">
-    <h1>Radar de <span>preços</span></h1>
-    <p id="intro">Preços de oferta postados nos canais de promoção do Telegram. Toque num produto para ver a curva completa, o preço-alvo e comparar com outro.</p>
-    <p class="atual" id="atualizado">Carregando…</p>
-    <p class="aviso" id="aviso" hidden>Estes são dados de exemplo. No seu site, aparecem as ofertas reais coletadas dos canais.</p>
-  </header>
+  <p class="aviso" id="aviso" hidden>Estes são dados de exemplo. No seu site, aparecem as ofertas reais coletadas dos canais.</p>
 
-  <section id="inicio">
+  <section id="v-ofertas" class="vista">
+    <div class="cabeca">
+      <h1>Todas as ofertas</h1>
+      <p id="intro">Preços de oferta postados nos canais de promoção do Telegram, com o histórico de cada produto e se vale a pena comprar agora.</p>
+    </div>
     <div class="busca">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="busca" type="search" placeholder="RX 9060, 7800X3D, SSD 1TB, gabinete…" autocomplete="off" aria-label="Buscar produto">
+      <input id="busca" type="search" placeholder="RX 9060, 7800X3D, SSD 1TB, air fryer…" autocomplete="off" aria-label="Buscar produto">
       <button id="limpar" type="button" aria-label="Limpar busca" hidden>×</button>
     </div>
     <div class="chips" id="chips" role="group" aria-label="Categorias"></div>
+    <div class="filtros">
+      <div class="seg" id="filtro-v" role="group" aria-label="Filtrar por veredito"></div>
+      <label class="ordem">Ordenar por
+        <select id="ordem">
+          <option value="recentes">Mais recentes</option>
+          <option value="desconto">Maior desconto</option>
+          <option value="barato">Menor preço</option>
+          <option value="caro">Maior preço</option>
+          <option value="postados">Mais postados</option>
+        </select>
+      </label>
+    </div>
+    <p class="caps" id="conta" style="color:var(--suave);margin:.9rem 0 0"></p>
     <div class="grade" id="grade"></div>
-    <button class="mais" id="mais" type="button" hidden>Mostrar mais produtos</button>
-
-    <section class="pegou" id="pegou">
-      <p class="olho">Prova real</p>
-      <h2>Quem estava no canal pegou</h2>
-      <p>Preços dos últimos 7 dias que ficaram bem abaixo do histórico. Oferta boa dura minutos, por isso vale estar no canal.</p>
-      <div class="grade" id="achados"></div>
-    </section>
+    <button class="mais realce" id="mais" type="button" hidden>Mostrar mais produtos</button>
   </section>
 
-  <section class="detalhe" id="detalhe" hidden>
-    <button class="voltar" id="voltar" type="button">‹ Todos os produtos</button>
-    <p class="cat" id="d-cat"></p>
+  <section id="v-top" class="vista" hidden>
+    <div class="cabeca">
+      <p class="olho caps">Aproveite agora</p>
+      <h1>Promoções top</h1>
+      <p>Produtos cujo último preço está no menor valor já registrado, ou bem abaixo da mediana dos últimos 60 dias.</p>
+    </div>
+    <div class="chips" id="chips-top" role="group" aria-label="Categorias" style="margin-top:1.2rem"></div>
+    <div class="grade" id="grade-top"></div>
+  </section>
+
+  <section id="v-quedas" class="vista" hidden>
+    <div class="cabeca">
+      <p class="olho caps">Prova real</p>
+      <h1>Quem estava no canal pegou</h1>
+      <p>Preços que passaram nos canais bem abaixo do histórico do produto. Oferta boa dura minutos.</p>
+    </div>
+    <div class="filtros"><div class="seg" id="periodo-quedas" role="group" aria-label="Período"></div></div>
+    <div class="linhas" id="lista-quedas"></div>
+  </section>
+
+  <section id="v-comparar" class="vista" hidden>
+    <div class="cabeca">
+      <p class="olho caps">Lado a lado</p>
+      <h1>Comparador</h1>
+      <p>Escolha até 3 produtos da mesma categoria para ver a diferença de preço, de especificações e o histórico no mesmo gráfico.</p>
+    </div>
+    <div class="filtros"><label class="ordem">Categoria <select id="comp-cat"></select></label></div>
+    <div class="escolha" id="vagas"></div>
+    <div id="comp-saida"></div>
+  </section>
+
+  <section id="v-como" class="vista" hidden>
+    <div class="cabeca">
+      <p class="olho caps">Entenda o radar</p>
+      <h1>Como funciona</h1>
+      <p id="como-intro">O radar lê os canais de promoção do Telegram a cada 15 minutos, guarda cada oferta e monta o histórico de preço de cada produto.</p>
+    </div>
+    <div class="guia">
+      <div class="caixa v-top"><span class="selo v-top">Promoção top</span><p>O preço está no menor valor já registrado, ou pelo menos 15% abaixo da mediana dos últimos 60 dias. Se você queria esse produto, é a hora.</p></div>
+      <div class="caixa v-compensa"><span class="selo v-compensa">Compensa</span><p>Abaixo do preço-alvo, ou pelo menos 5% abaixo da mediana. É um bom preço para o histórico.</p></div>
+      <div class="caixa v-razoavel"><span class="selo v-razoavel">Preço razoável</span><p>Perto da mediana. Não é caro, mas também não é promoção. Dá para esperar.</p></div>
+      <div class="caixa v-caro"><span class="selo v-caro">Não compensa</span><p>Acima da mediana dos últimos 60 dias. Melhor esperar uma oferta de verdade.</p></div>
+      <div class="caixa"><h3>Preço-alvo</h3><p>O valor que fica entre os 25% mais baratos do histórico do produto. Aparece depois de 5 dias com oferta.</p></div>
+      <div class="caixa"><h3>Mediana</h3><p>O preço do meio: metade das ofertas foi mais barata e metade mais cara. Não se deixa levar por um erro de preço isolado.</p></div>
+      <div class="caixa"><h3>Placas de vídeo e processadores</h3><p>São agrupados pelo modelo, como RX 9060 XT 16GB, qualquer que seja a marca. Os outros produtos se agrupam pela semelhança do nome.</p></div>
+      <div class="caixa"><h3>Especificações</h3><p>No comparador, memória, capacidade, velocidade, tamanho e frequência são lidos do nome do produto. Se o canal não escreveu, aparece um traço.</p></div>
+    </div>
+  </section>
+
+  <section id="v-produto" class="vista detalhe" hidden>
+    <button class="voltar" id="voltar" type="button">‹ Voltar</button>
+    <p class="cat caps" id="d-cat"></p>
     <h2 id="d-nome"></h2>
     <dl class="numeros">
-      <div><dt>Último preço</dt><dd id="n-ult"></dd><small id="n-ult-s"></small></div>
-      <div><dt>Menor do período</dt><dd id="n-menor" class="verde"></dd><small id="n-menor-s"></small></div>
-      <div><dt id="n-med-t">Mediana do mês</dt><dd id="n-med"></dd><small id="n-med-s"></small></div>
-      <div><dt>Meu preço-alvo</dt><dd id="n-alvo" class="alvo"></dd><small id="n-alvo-s"></small></div>
+      <div class="caixa realce"><dt class="caps">Último preço</dt><dd id="n-ult"></dd><small id="n-ult-s"></small></div>
+      <div class="caixa realce"><dt class="caps">Menor do período</dt><dd id="n-menor" class="neon"></dd><small id="n-menor-s"></small></div>
+      <div class="caixa realce"><dt class="caps">Mediana do período</dt><dd id="n-med"></dd><small id="n-med-s"></small></div>
+      <div class="caixa realce"><dt class="caps">Meu preço-alvo</dt><dd id="n-alvo" class="neon"></dd><small id="n-alvo-s"></small></div>
     </dl>
+    <div class="veredito" id="d-veredito"></div>
     <div class="painel">
       <div class="controles">
-        <div class="abas" id="abas" role="group" aria-label="Período"></div>
-        <label class="comparar">Comparar com <select id="comparar"></select></label>
+        <div class="seg" id="abas-periodo" role="group" aria-label="Período"></div>
+        <label class="ordem">Comparar com <select id="comparar" style="max-width:15rem"></select></label>
       </div>
       <p class="legenda" id="legenda"></p>
       <div class="grafico" id="grafico"></div>
-      <div class="conselho">
-        <span class="selo" id="c-selo"></span>
-        <p id="c-texto"></p>
-        <div class="botoes" id="c-botoes"></div>
-      </div>
-      <details><summary>Ver tabela dia a dia</summary><div class="tabela"><table id="tabela"></table></div></details>
     </div>
+    <div class="duas">
+      <div class="caixa"><h3>Menor preço por loja</h3><div class="tabela"><table id="t-lojas"></table></div></div>
+      <div class="caixa"><h3>Especificações lidas do nome</h3><div class="tabela"><table id="t-specs"></table></div></div>
+    </div>
+    <details class="painel"><summary>Tabela dia a dia</summary><div class="tabela"><table id="t-dias"></table></div></details>
   </section>
 </main>
+<div class="bandeja" id="bandeja" hidden>
+  <span id="bandeja-txt"></span>
+  <button class="limpar" id="bandeja-limpar" type="button">Limpar</button>
+  <a class="botao cheio" href="#comparar">Comparar</a>
+</div>
 
 <script>
 const ORDEM = ["Placas de vídeo","Processadores","Placas-mãe","Memória RAM","SSD e HDs","Fontes","Gabinetes","Coolers",
@@ -212,33 +346,41 @@ const ORDEM = ["Placas de vídeo","Processadores","Placas-mãe","Memória RAM","
   "Consoles","TVs","Celulares, tablets e relógios","Câmeras e casa inteligente","Eletrodomésticos","Jogos e software","Outros"];
 const MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 const DIA = 864e5;
+const VEREDITOS = {
+  top: {txt: "Promoção top", cls: "v-top"}, compensa: {txt: "Compensa", cls: "v-compensa"},
+  razoavel: {txt: "Preço razoável", cls: "v-razoavel"}, caro: {txt: "Não compensa", cls: "v-caro"}, sem: {txt: "Acompanhando", cls: "v-sem"},
+};
+const CORES_SERIE = ["var(--neon)", "var(--serie2)", "var(--serie3)"];
 
-/* ---------- dados de exemplo (só aparecem quando não há dados/indice.json) ---------- */
+/* ---------- dados de exemplo (só quando não existe dados/indice.json) ---------- */
 function exemplo() {
-  let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  const fim = new Date(2026, 10, 11, 12), dias = 75;
-  const lojas = ["KaBuM!", "Mercado Livre", "Shopee", "Amazon", "Pichau", "Terabyte"];
+  let sem = 11; const rnd = () => (sem = (sem * 16807) % 2147483647) / 2147483647;
+  const fim = new Date(2026, 10, 12, 12), dias = 95, lojas = ["KaBuM!", "Mercado Livre", "Shopee", "Amazon", "Pichau", "Terabyte"];
   const base = [
-    ["RX 9060 XT 16GB", "Placas de vídeo", 3560, [[38, .71]]], ["RX 9060 XT 8GB", "Placas de vídeo", 2700, [[2, .9]]],
-    ["RTX 5060 Ti 16GB", "Placas de vídeo", 3350, [[20, .86]]], ["RTX 5070 12GB", "Placas de vídeo", 4400, []],
-    ["Ryzen 7 7800X3D", "Processadores", 2350, [[1, .58]]], ["Ryzen 5 7600", "Processadores", 1090, [[50, .85]]],
-    ["SSD Kingston NV3 1TB M.2 NVMe", "SSD e HDs", 430, [[4, .82]]], ["Gabinete Gamer Jonsbo C6 Preto Mini Torre M-ATX", "Gabinetes", 330, []],
-    ["Mouse Gamer Sem Fio Attack Shark X8 Ultimate", "Mouses", 250, [[0, .8]]], ["Monitor Gamer LG UltraGear 27\" 180Hz IPS", "Monitores", 1150, [[16, .87]]],
-    ["Smart TV 65\" 4K Philips Ambilight", "TVs", 3200, [[0, .86]]], ["Caixa de Som JBL Boombox 4", "Setup e acessórios", 2350, [[3, .89]]],
+    ["RX 9060 XT 16GB", "Placas de vídeo", 3560, [[40, .71]]], ["RX 9060 XT 8GB", "Placas de vídeo", 2700, [[0, .88]]],
+    ["RTX 5060 Ti 16GB", "Placas de vídeo", 3350, [[0, 1.08]]], ["RTX 5060 8GB", "Placas de vídeo", 2150, [[0, .97]]],
+    ["RTX 5070 12GB", "Placas de vídeo", 4400, [[22, .84]]], ["Ryzen 7 7800X3D", "Processadores", 2350, [[0, .62]]],
+    ["Ryzen 5 7600", "Processadores", 1090, [[0, 1.02]]], ["Ryzen 5 9600X", "Processadores", 1450, [[0, .9]]],
+    ["Memória Kingston Fury Beast 16GB DDR5 5600MHz", "Memória RAM", 420, [[0, .9]]], ["Memória XPG Lancer 32GB (2x16GB) DDR5 6000MHz", "Memória RAM", 820, [[0, 1.07]]],
+    ["Memória Corsair Vengeance 16GB DDR4 3200MHz", "Memória RAM", 260, []],
+    ["SSD Kingston NV3 1TB M.2 NVMe Leitura 6000MB/s", "SSD e HDs", 430, [[0, .8]]], ["SSD WD Black SN7100 2TB NVMe 7250MB/s", "SSD e HDs", 980, [[0, 1.05]]],
+    ["Monitor Gamer LG UltraGear 27\" 180Hz IPS QHD", "Monitores", 1450, [[0, .93]]], ["Monitor AOC 24\" 165Hz VA Full HD", "Monitores", 780, [[0, 1.1]]],
+    ["Fonte MSI MAG A650BN 650W 80 Plus Bronze", "Fontes", 360, [[0, .96]]], ["Air Fryer Mondial 5L 1500W", "Eletrodomésticos", 330, [[0, .74]]],
+    ["Smart TV 65\" 4K Philips Ambilight", "TVs", 3200, [[0, .99]]],
   ];
   const produtos = base.map(([nome, cat, preco, quedas], i) => {
     const lista = [];
     for (let d = dias; d >= 0; d--) {
-      if (rnd() < .38 && d !== 0) continue;
+      if (rnd() < .4 && d !== 0) continue;
       const q = quedas.find(([dd]) => dd === d);
-      const p = Math.round(preco * (q ? q[1] : 1 + (rnd() - .45) * .12) * 100) / 100;
-      const data = new Date(fim - d * DIA), iso = data.toISOString().slice(0, 10);
+      const p = Math.round(preco * (q ? q[1] : 1 + (rnd() - .45) * .1) * 100) / 100;
+      const iso = new Date(fim - d * DIA).toISOString().slice(0, 10);
       lista.push([iso, p, lojas[Math.floor(rnd() * lojas.length)], rnd() < .3 ? "CUPOM" + (10 + Math.floor(rnd() * 40)) : "", rnd() < .4 ? "pix" : "", "", "exemplo"]);
     }
     const u = lista[lista.length - 1];
     return {id: "ex-" + i, nome, cat, posts: lista.length * 2 + 3, dias: lista, ult: [u[0] + "T21:30Z", ...u.slice(1)]};
   });
-  return {atualizado: "2026-11-11T23:10:00Z", canais: [], produtos, exemplo: true};
+  return {atualizado: "2026-11-12T23:10:00Z", canais: [], produtos, exemplo: true};
 }
 
 /* ---------- utilidades ---------- */
@@ -246,15 +388,16 @@ const $ = id => document.getElementById(id);
 function el(tag, props = {}, ...filhos) {
   const n = document.createElement(tag);
   for (const [k, v] of Object.entries(props)) {
+    if (v === undefined || v === null || v === false) continue;
     if (k === "class") n.className = v; else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v);
   }
-  n.append(...filhos.filter(f => f !== null && f !== undefined && f !== false)); return n;
+  n.append(...filhos.flat().filter(f => f !== null && f !== undefined && f !== false)); return n;
 }
 const NS = "http://www.w3.org/2000/svg";
 function s(tag, a = {}, txt) { const n = document.createElementNS(NS, tag); for (const k in a) n.setAttribute(k, a[k]); if (txt !== undefined) n.textContent = txt; return n; }
 const reais = v => v.toLocaleString("pt-BR", {style: "currency", currency: "BRL"});
 const reaisRedondo = v => "R$ " + Math.round(v).toLocaleString("pt-BR");
-const pctTxt = v => (v * 100).toLocaleString("pt-BR", {maximumFractionDigits: 1}) + "%";
+const pct = v => (v * 100).toLocaleString("pt-BR", {maximumFractionDigits: 1}) + "%";
 const dataDia = iso => { const [a, m, d] = iso.split("-").map(Number); return new Date(a, m - 1, d, 12); };
 const isoDia = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const ddmm = d => d.toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit"});
@@ -264,9 +407,40 @@ const mediana = a => { const o = [...a].sort((x, y) => x - y), m = o.length >> 1
 const percentil = (a, q) => { const o = [...a].sort((x, y) => x - y), i = (o.length - 1) * q, b = Math.floor(i); return o[b] + (o[Math.min(b + 1, o.length - 1)] - o[b]) * (i - b); };
 const linkSeguro = u => /^https?:\/\//.test(u || "") ? u : "";
 function blackFriday(ano) { const d = new Date(ano, 10, 1, 12); d.setDate(1 + ((11 - d.getDay()) % 7) + 22); return d; }
+const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sem armazenamento */ } };
+const ler = (k, padrao) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? padrao; } catch (e) { return padrao; } };
 
-/* ---------- preparação ---------- */
-let dados, produtos = [], porId = new Map(), referencia, categoria = "Todos", limite = 48;
+/* ---------- especificações lidas do nome ---------- */
+function specs(p) {
+  const n = p.nome, r = {};
+  const cap = [...n.matchAll(/(\d+(?:[.,]\d+)?)\s*(TB|GB)\b/gi)].map(m => parseFloat(m[1].replace(",", ".")) * (m[2].toUpperCase() === "TB" ? 1000 : 1));
+  const kit = n.match(/(\d)\s*x\s*(\d+)\s*GB/i);
+  if (cap.length) r.capacidade = kit ? +kit[1] * +kit[2] : Math.max(...cap);
+  let m;
+  if ((m = n.match(/DDR(\d)X?/i))) r.ddr = m[0].toUpperCase();
+  if ((m = n.match(/(\d{4,5})\s*(MHz|MT\/s)/i))) r.freq = +m[1];
+  if ((m = n.match(/(\d{3,5})\s*MB\/s/i))) r.leitura = +m[1];
+  if (/nvme/i.test(n)) r.interface = "NVMe"; else if (/sata/i.test(n)) r.interface = "SATA";
+  if ((m = n.match(/(\d{2}(?:[.,]\d)?)\s*(?:"|''|”|pol)/i))) r.tela = parseFloat(m[1].replace(",", "."));
+  if ((m = n.match(/(\d{2,3})\s*Hz/i))) r.hz = +m[1];
+  if ((m = n.match(/\b(8K|4K|UHD|QHD|2K|WQHD|Full ?HD|FHD|1440p|1080p)\b/i))) r.resolucao = m[1].toUpperCase().replace("FULL HD", "Full HD").replace("FULLHD", "Full HD");
+  if ((m = n.match(/\b(OLED|QLED|Mini ?LED|IPS|VA|TN)\b/i))) r.painel = m[1].toUpperCase();
+  if ((m = n.match(/(\d{3,4})\s*W\b/))) r.watts = +m[1];
+  if ((m = n.match(/80\s*Plus\s*(\w+)/i))) r.selo80 = "80 Plus " + m[1][0].toUpperCase() + m[1].slice(1).toLowerCase();
+  if ((m = n.match(/(\d+(?:[.,]\d+)?)\s*L\b/))) r.litros = parseFloat(m[1].replace(",", "."));
+  if (/X3D/i.test(n)) r.x3d = "Sim";
+  return r;
+}
+const ROTULOS_SPECS = [
+  ["capacidade", p => p.cat === "Placas de vídeo" ? "Memória de vídeo" : "Capacidade", v => v >= 1000 ? (v / 1000).toLocaleString("pt-BR") + " TB" : v + " GB"],
+  ["ddr", () => "Tipo de memória", v => v], ["freq", () => "Frequência", v => v + " MHz"], ["leitura", () => "Leitura", v => v.toLocaleString("pt-BR") + " MB/s"],
+  ["interface", () => "Interface", v => v], ["tela", () => "Tela", v => v + "\""], ["hz", () => "Taxa de atualização", v => v + " Hz"],
+  ["resolucao", () => "Resolução", v => v], ["painel", () => "Painel", v => v], ["watts", () => "Potência", v => v + " W"],
+  ["selo80", () => "Certificação", v => v], ["litros", () => "Capacidade", v => v + " L"], ["x3d", () => "3D V-Cache", v => v],
+];
+
+/* ---------- preparação e veredito ---------- */
+let dados, produtos = [], porId = new Map(), referencia;
 
 function preparar(p) {
   p.serie = p.dias.map(([dia, preco, loja, cupom, pag, link, canal]) => ({dia, data: dataDia(dia), preco, loja, cupom, pag, link, canal}));
@@ -274,288 +448,419 @@ function preparar(p) {
   p.u = {data: new Date(quando), preco, loja, cupom, pag, link, canal};
   const precos = p.serie.map(d => d.preco);
   p.menor = Math.min(...precos);
-  p.menorDia = p.serie.find(d => d.preco === p.menor);
+  const recentes = p.serie.filter(d => d.data >= referencia - 60 * DIA).map(d => d.preco);
+  p.med = mediana(recentes.length >= 3 ? recentes : precos);
   p.alvo = p.serie.length >= 5 ? Math.round(percentil(precos, .25) / 10) * 10 : null;
-  p.busca = semAcento(p.nome + " " + p.cat);
-  p.buscaJunta = p.busca.replace(/[^a-z0-9]/g, "");
-  p.status = status(p);
+  p.queda = 1 - p.u.preco / p.med;
+  p.busca = semAcento(p.nome + " " + p.cat).replace(/[^a-z0-9]/g, "");
+  p.spec = specs(p);
+  p.v = veredito(p);
 }
 
-function status(p) {
-  if (p.serie.length < 3) return {cls: "", txt: "Acompanhando"};
-  if (p.u.preco <= p.menor * 1.01) return {cls: "verde", txt: "No menor preço"};
-  if (p.alvo && p.u.preco <= p.alvo) return {cls: "verde", txt: "Abaixo do alvo"};
-  const bf = blackFriday(referencia.getFullYear()), faltam = (bf - referencia) / DIA;
-  if (faltam > 0 && faltam <= 30) return {cls: "ambar", txt: "Espera a Black"};
-  return {cls: "", txt: "Só abaixo do alvo"};
+function veredito(p) {
+  if (p.serie.length < 3) return "sem";
+  const u = p.u.preco;
+  if (u <= p.menor * 1.02 || p.queda >= .15) return "top";
+  if ((p.alvo && u <= p.alvo) || p.queda >= .05) return "compensa";
+  if (u <= p.med * 1.04) return "razoavel";
+  return "caro";
 }
 
-function achados() {
-  const lista = [], desde = referencia - 7 * DIA;
-  for (const p of produtos) p.serie.forEach((d, i) => {
-    if (d.data < desde || i < 3) return;
-    const antes = p.serie.slice(0, i).map(x => x.preco), med = mediana(antes), queda = 1 - d.preco / med;
-    if (queda >= .4) lista.push({p, d, tipo: "erro", rotulo: "Possível erro de preço", queda});
-    else if (d.preco < Math.min(...antes)) lista.push({p, d, tipo: "menor", rotulo: "Menor preço do período", queda});
-  });
-  return lista.sort((a, b) => b.d.data - a.d.data || b.queda - a.queda).slice(0, 8);
+function frase(p) {
+  const bf = blackFriday(referencia.getFullYear()), faltam = Math.ceil((bf - referencia) / DIA);
+  const black = faltam > 0 && faltam <= 30 ? ` A Black Friday é em ${faltam} ${faltam === 1 ? "dia" : "dias"}.` : "";
+  const dif = Math.abs(p.queda);
+  return {
+    top: `${reais(p.u.preco)} é ${p.u.preco <= p.menor * 1.02 ? "o menor preço já registrado para este produto" : pct(dif) + " abaixo da mediana dos últimos 60 dias"}. Promoção para aproveitar agora, antes de acabar.`,
+    compensa: `Está ${pct(dif)} abaixo da mediana${p.alvo ? " e perto do preço-alvo de " + reais(p.alvo) : ""}. É um bom preço, mas já passou por ${reais(p.menor)}.`,
+    razoavel: `Está perto da mediana de ${reais(p.med)}. Não é caro, mas também não é promoção.${black || " Dá para esperar uma queda."}`,
+    caro: `Está ${pct(dif)} acima da mediana de ${reais(p.med)}. Não compensa agora: já passou por ${reais(p.menor)}.${black}`,
+    sem: "Ainda há poucos dias de histórico. O veredito aparece depois de 3 dias com oferta.",
+  }[p.v];
 }
 
-/* ---------- tela inicial ---------- */
+const selo = v => el("span", {class: "selo " + VEREDITOS[v].cls}, VEREDITOS[v].txt);
+const variacaoTxt = p => p.v === "sem" ? "sem histórico" : p.queda >= 0 ? `−${pct(p.queda)} vs mediana` : `+${pct(-p.queda)} vs mediana`;
+
+/* ---------- seleção para comparar ---------- */
+let selecao = [];
+function alternarSelecao(p) {
+  if (selecao.includes(p.id)) selecao = selecao.filter(i => i !== p.id);
+  else {
+    const cat0 = selecao.length ? porId.get(selecao[0]).cat : p.cat;
+    if (cat0 !== p.cat) selecao = [];
+    selecao = [...selecao, p.id].slice(-3);
+  }
+  guardar("radar-selecao", selecao);
+  atualizarBandeja();
+  document.querySelectorAll(".cmp").forEach(b => b.setAttribute("aria-pressed", String(selecao.includes(b.dataset.id))));
+}
+function atualizarBandeja() {
+  const nomes = selecao.map(i => porId.get(i)).filter(Boolean);
+  $("bandeja").hidden = !nomes.length || aba === "comparar";
+  $("bandeja-txt").textContent = nomes.length === 1 ? `1 produto: ${nomes[0].nome}. Escolha mais um da mesma categoria.` : `${nomes.length} produtos para comparar: ${nomes.map(p => p.nome).join(" × ")}`;
+}
+
+/* ---------- cards ---------- */
+function sparkline(p) {
+  const ult = p.serie.slice(-45);
+  const svg = s("svg", {viewBox: "0 0 200 44", preserveAspectRatio: ult.length < 2 ? "xMinYMid meet" : "none", "aria-hidden": "true"});
+  if (ult.length < 2) {
+    svg.append(s("line", {x1: 0, x2: 200, y1: 30, y2: 30, stroke: "var(--linha)", "stroke-dasharray": "3 4"}),
+      s("text", {x: 0, y: 20, "font-size": 11, fill: "var(--suave)", "font-family": "inherit"}, "1 dia de histórico, o gráfico vem com os próximos"));
+    return svg;
+  }
+  const v = ult.map(d => d.preco), meio = (Math.min(...v) + Math.max(...v)) / 2, r = Math.max(Math.max(...v) - Math.min(...v), meio * .12), lo = meio - r / 2;
+  const t0 = +ult[0].data, t1 = +ult[ult.length - 1].data;
+  const pts = ult.map(d => [((d.data - t0) / (t1 - t0 || 1)) * 196 + 2, 40 - ((d.preco - lo) / r) * 34]);
+  const id = "g" + Math.random().toString(36).slice(2, 8), defs = s("defs"), g = s("linearGradient", {id, x1: 0, y1: 0, x2: 0, y2: 1});
+  g.append(s("stop", {offset: 0, style: "stop-color:var(--neon);stop-opacity:.3"}), s("stop", {offset: 1, style: "stop-color:var(--neon);stop-opacity:0"}));
+  defs.append(g);
+  svg.append(defs, s("path", {d: `M${pts[0][0]},44 L${pts.map(q => q.join(",")).join(" L")} L${pts[pts.length - 1][0]},44Z`, fill: `url(#${id})`}),
+    s("polyline", {class: "linha", points: pts.map(q => q.join(",")).join(" "), fill: "none", stroke: "var(--neon)", "stroke-width": 2, "vector-effect": "non-scaling-stroke", "stroke-linejoin": "round"}));
+  const [ex, ey] = pts[pts.length - 1];
+  svg.append(s("circle", {cx: ex, cy: ey, r: 3, fill: "var(--neon)"}));
+  return svg;
+}
+
+function card(p) {
+  const abrir = () => { location.hash = "p-" + p.id; };
+  return el("div", {class: "card realce " + VEREDITOS[p.v].cls, tabindex: 0, role: "link", "aria-label": p.nome, onclick: abrir,
+    onkeydown: e => { if (e.key === "Enter") abrir(); }},
+    el("div", {class: "topo-card"}, el("span", {class: "cat caps"}, p.cat),
+      el("button", {class: "cmp", type: "button", "data-id": p.id, "aria-pressed": String(selecao.includes(p.id)), title: "Adicionar ao comparador",
+        onclick: e => { e.stopPropagation(); alternarSelecao(p); }}, "+ comparar")),
+    el("span", {class: "nome"}, p.nome),
+    el("span", {class: "preco"}, reais(p.u.preco)),
+    el("span", {class: "sub"}, "último · " + ddmm(p.u.data) + " · ", el("b", {class: "cor-v"}, variacaoTxt(p))),
+    sparkline(p),
+    el("span", {class: "rodape"}, el("span", {}, "menor ", el("b", {}, reais(p.menor))), selo(p.v)));
+}
+
+/* ---------- aba Ofertas ---------- */
+let categoria = "Todos", filtroV = "todos", limite = 48;
 function termosDaBusca() {
   return semAcento($("busca").value).split(/[\s,]+/).map(t => t.replace(/[^a-z0-9]/g, "")).filter(Boolean)
     .map(t => t.length > 4 && t.endsWith("s") ? t.slice(0, -1) : t);
 }
-function filtrados() {
-  const termos = termosDaBusca();
-  const lista = produtos.filter(p => (categoria === "Todos" || (categoria === "Destaques" ? p.destaque : p.cat === categoria))
-    && termos.every(t => p.buscaJunta.includes(t)));
-  if (!termos.length) return lista;
-  const nota = p => (/^(rtx|gtx|rx|arc|ryzen|core)/i.test(p.nome) ? 0 : 1);
-  return lista.sort((a, b) => nota(a) - nota(b) || b.posts - a.posts);
-}
-
-function desenharChips() {
+function desenharChips(alvo, cat, aoEscolher, lista) {
   const conta = {};
-  for (const p of produtos) conta[p.cat] = (conta[p.cat] || 0) + 1;
-  const nDest = produtos.filter(p => p.destaque).length;
-  const itens = [...(nDest ? [["Destaques", nDest]] : []), ["Todos", produtos.length], ...ORDEM.filter(c => conta[c]).map(c => [c, conta[c]])];
-  $("chips").replaceChildren(...itens.map(([nome, n]) => el("button", {class: "chip", type: "button", "aria-pressed": String(nome === categoria),
-    onclick: () => { categoria = nome; limite = 48; desenharChips(); desenharGrade(); }}, el("b", {}, nome), String(n))));
+  for (const p of lista) conta[p.cat] = (conta[p.cat] || 0) + 1;
+  const itens = [["Todos", lista.length], ...ORDEM.filter(c => conta[c]).map(c => [c, conta[c]])];
+  $(alvo).replaceChildren(...itens.map(([nome, n]) => el("button", {class: "chip realce", type: "button", "aria-pressed": String(nome === cat),
+    onclick: () => aoEscolher(nome)}, el("b", {}, nome), String(n))));
 }
-
-function sparkline(p) {
-  const ult = p.serie.slice(-45), svg = s("svg", {viewBox: "0 0 200 44", preserveAspectRatio: ult.length < 2 ? "xMinYMid meet" : "none", "aria-hidden": "true"});
-  if (ult.length < 2) {
-    svg.append(s("line", {x1: 0, x2: 200, y1: 30, y2: 30, stroke: "var(--linha)", "stroke-dasharray": "3 4"}),
-      s("text", {x: 0, y: 20, "font-size": 11, fill: "var(--suave)"}, "1 dia de histórico, o gráfico vem com os próximos"));
-    return svg;
-  }
-  const t0 = +ult[0].data, t1 = +ult[ult.length - 1].data, v = ult.map(d => d.preco), meio = (Math.min(...v) + Math.max(...v)) / 2;
-  const r = Math.max(Math.max(...v) - Math.min(...v), meio * .12), lo = meio - r / 2;
-  const pts = ult.map(d => [((d.data - t0) / (t1 - t0 || 1)) * 196 + 2, 40 - ((d.preco - lo) / r) * 34]);
-  svg.append(s("path", {d: `M${pts[0][0]},44 L${pts.map(q => q.join(",")).join(" L")} L${pts[pts.length - 1][0]},44Z`, fill: "var(--area)"}),
-    s("polyline", {class: "linha", points: pts.map(q => q.join(",")).join(" "), fill: "none", stroke: "var(--linha-graf)", "stroke-width": 2, "vector-effect": "non-scaling-stroke", "stroke-linejoin": "round"}));
-  const [ex, ey] = pts[pts.length - 1];
-  svg.append(s("circle", {cx: ex, cy: ey, r: 3, fill: "var(--linha-graf)"}));
-  return svg;
+function desenharFiltroV() {
+  const conta = {todos: produtos.length};
+  for (const p of produtos) conta[p.v] = (conta[p.v] || 0) + 1;
+  const ops = [["todos", "Todos", ""], ["top", "Promoção top", "var(--top)"], ["compensa", "Compensa", "var(--compensa)"], ["razoavel", "Razoável", "var(--razoavel)"], ["caro", "Não compensa", "var(--caro)"]];
+  $("filtro-v").replaceChildren(...ops.map(([id, txt, cor]) => el("button", {type: "button", "aria-pressed": String(id === filtroV), onclick: () => { filtroV = id; limite = 48; desenharFiltroV(); desenharOfertas(); }},
+    cor ? el("i", {class: "ponto", style: `background:${cor};box-shadow:0 0 6px ${cor}`}) : null, `${txt} ${conta[id] || 0}`)));
 }
-
-function desenharGrade() {
-  const lista = filtrados(), grade = $("grade");
+function desenharOfertas() {
+  const termos = termosDaBusca();
   $("limpar").hidden = !$("busca").value;
-  if (!lista.length) {
-    grade.replaceChildren(el("p", {class: "vazio", style: "grid-column:1/-1"}, "Nenhum produto com esse nome ainda. Tente menos palavras, ou espere ele aparecer em um dos canais."));
-    $("mais").hidden = true; return;
-  }
-  grade.replaceChildren(...lista.slice(0, limite).map(p => el("button", {class: "card", type: "button", onclick: () => abrir(p)},
-    el("span", {class: "cat"}, p.cat),
-    el("span", {class: "nome"}, p.nome),
-    el("span", {class: "preco"}, el("strong", {}, reais(p.u.preco)), el("span", {}, "último · " + ddmm(p.u.data))),
-    sparkline(p),
-    el("span", {class: "rodape"}, el("span", {}, "menor ", el("b", {}, reais(p.menor))), el("span", {class: "selo " + p.status.cls}, p.status.txt)))));
+  desenharChips("chips", categoria, nome => { categoria = nome; limite = 48; desenharOfertas(); }, produtos);
+  let lista = produtos.filter(p => (categoria === "Todos" || p.cat === categoria) && (filtroV === "todos" || p.v === filtroV) && termos.every(t => p.busca.includes(t)));
+  const ordem = $("ordem").value;
+  const nota = p => termos.length && /^(rtx|gtx|rx|arc|ryzen|core)/i.test(p.nome) ? 0 : 1;
+  const cmp = {recentes: (a, b) => b.u.data - a.u.data, desconto: (a, b) => (b.v === "sem" ? -9 : b.queda) - (a.v === "sem" ? -9 : a.queda),
+    barato: (a, b) => a.u.preco - b.u.preco, caro: (a, b) => b.u.preco - a.u.preco, postados: (a, b) => b.posts - a.posts}[ordem];
+  lista.sort((a, b) => nota(a) - nota(b) || cmp(a, b));
+  $("conta").textContent = `${lista.length} ${lista.length === 1 ? "produto" : "produtos"}`;
+  $("grade").replaceChildren(...(lista.length ? lista.slice(0, limite).map(card)
+    : [el("p", {class: "vazio"}, "Nada encontrado com esses filtros. Tente menos palavras, outra categoria ou o filtro Todos.")]));
   $("mais").hidden = lista.length <= limite;
 }
 
-function desenharAchados() {
-  const lista = achados();
-  $("achados").replaceChildren(...(lista.length ? lista.map(a => el("button", {class: "achado", type: "button", onclick: () => abrir(a.p)},
-    el("span", {class: "tipo " + a.tipo}, el("span", {}, (a.tipo === "erro" ? "⚡ " : "● ") + a.rotulo), el("b", {}, "−" + Math.round(a.queda * 100) + "%")),
-    el("span", {class: "nome"}, a.p.nome), el("strong", {}, reais(a.d.preco)),
-    el("small", {}, [ddmm(a.d.data), a.d.loja, "mediana " + reaisRedondo(mediana(a.p.serie.filter(x => x.data < a.d.data).map(x => x.preco)))].filter(Boolean).join(" · "))))
-    : [el("p", {class: "vazio", style: "grid-column:1/-1"}, "Quando um preço cair bem abaixo do histórico, ele aparece aqui.")]));
+/* ---------- aba Promoções top ---------- */
+let categoriaTop = "Todos";
+function desenharTop() {
+  const tops = produtos.filter(p => p.v === "top").sort((a, b) => b.queda - a.queda);
+  desenharChips("chips-top", categoriaTop, nome => { categoriaTop = nome; desenharTop(); }, tops);
+  const lista = tops.filter(p => categoriaTop === "Todos" || p.cat === categoriaTop);
+  $("grade-top").replaceChildren(...(lista.length ? lista.slice(0, 96).map(card) : [el("p", {class: "vazio"}, "Nenhuma promoção top agora. Volte mais tarde: os canais são lidos a cada 15 minutos.")]));
 }
 
-/* ---------- detalhe ---------- */
-let atual = null, periodo = "tudo", comparado = null;
-
-function abrir(p) { location.hash = "p-" + p.id; }
-
-function rota() {
-  const id = location.hash.startsWith("#p-") ? decodeURIComponent(location.hash.slice(3)) : "";
-  const p = porId.get(id);
-  $("inicio").hidden = !!p; $("detalhe").hidden = !p; $("intro").hidden = !!p;
-  if (!p) { atual = null; document.title = "Radar de preços"; return; }
-  if (atual !== p) { atual = p; periodo = "tudo"; comparado = null; montarDetalhe(); }
-  window.scrollTo(0, 0);
+/* ---------- aba Maiores quedas ---------- */
+let diasQuedas = 7;
+function quedas(dias) {
+  const lista = [], desde = referencia - dias * DIA;
+  for (const p of produtos) p.serie.forEach((d, i) => {
+    if (d.data < desde || i < 3) return;
+    const antes = p.serie.slice(0, i).map(x => x.preco), med = mediana(antes), q = 1 - d.preco / med;
+    if (q >= .4) lista.push({p, d, med, q, tipo: "Possível erro de preço"});
+    else if (d.preco < Math.min(...antes) && q > .02) lista.push({p, d, med, q, tipo: "Menor preço do período"});
+  });
+  return lista.sort((a, b) => b.q - a.q);
+}
+function desenharQuedas() {
+  $("periodo-quedas").replaceChildren(...[[1, "Hoje"], [7, "7 dias"], [30, "30 dias"], [90, "90 dias"]].map(([d, txt]) =>
+    el("button", {type: "button", "aria-pressed": String(d === diasQuedas), onclick: () => { diasQuedas = d; desenharQuedas(); }}, txt)));
+  const lista = quedas(diasQuedas).slice(0, 80);
+  $("lista-quedas").replaceChildren(...(lista.length ? lista.map(a => el("div", {class: "linha-item realce", tabindex: 0, role: "link",
+      onclick: () => { location.hash = "p-" + a.p.id; }, onkeydown: e => { if (e.key === "Enter") location.hash = "p-" + a.p.id; }},
+    el("span", {class: "n"}, a.p.nome, el("small", {}, [a.tipo, ddmm(a.d.data), a.d.loja].filter(Boolean).join(" · "))),
+    el("span", {class: "m"}, "mediana " + reaisRedondo(a.med)),
+    el("span", {class: "p"}, reais(a.d.preco)),
+    el("span", {class: "q", style: `color:${a.q >= .4 ? "var(--razoavel)" : "var(--top)"}`}, "−" + Math.round(a.q * 100) + "%")))
+    : [el("p", {class: "vazio", style: "margin:0;border:0"}, "Nenhuma queda forte neste período ainda.")]));
 }
 
-function mesesComDados(p) {
-  const m = new Map();
-  for (const d of p.serie) m.set(d.dia.slice(0, 7), true);
-  return [...m.keys()].sort().slice(-2);
-}
-
-function intervalo(p) {
-  if (periodo === "7d") return [new Date(referencia - 6 * DIA - DIA / 2), new Date(+referencia + DIA / 2)];
-  if (periodo.startsWith("m:")) { const [a, m] = periodo.slice(2).split("-").map(Number); return [new Date(a, m - 1, 1), new Date(a, m, 0, 23)]; }
-  return [new Date(p.serie[0].data - DIA / 2), new Date(Math.max(+p.serie[p.serie.length - 1].data, +referencia) + DIA / 2)];
-}
-
-function montarDetalhe() {
-  const p = atual;
-  $("d-cat").textContent = p.cat; $("d-nome").textContent = p.nome;
-  document.title = p.nome + " · Radar de preços";
-  const meses = mesesComDados(p);
-  const abas = [["7d", "7 dias"], ...meses.map(m => ["m:" + m, MESES[+m.slice(5) - 1].replace(/^./, c => c.toUpperCase())]), ["tudo", "Tudo"]];
-  $("abas").replaceChildren(...abas.map(([id, txt]) => el("button", {type: "button", "aria-pressed": String(id === periodo),
-    onclick: () => { periodo = id; montarDetalhe(); }}, txt)));
-
-  const sel = $("comparar"), mesmos = produtos.filter(o => o !== p && o.cat === p.cat).sort((a, b) => a.nome.localeCompare(b.nome));
-  sel.replaceChildren(el("option", {value: ""}, mesmos.length ? "Nenhum" : "Nada na mesma categoria"),
-    ...mesmos.map(o => el("option", {value: o.id}, o.nome)));
-  sel.value = comparado ? comparado.id : "";
-  sel.onchange = () => { comparado = porId.get(sel.value) || null; montarDetalhe(); };
-
-  const [ini, fim] = intervalo(p), noPeriodo = p.serie.filter(d => d.data >= ini && d.data <= fim);
-  $("n-ult").textContent = reais(p.u.preco);
-  $("n-ult-s").textContent = [ddmm(p.u.data), p.u.loja].filter(Boolean).join(" · ");
-  if (noPeriodo.length) {
-    const m = noPeriodo.reduce((a, b) => b.preco < a.preco ? b : a);
-    $("n-menor").textContent = reais(m.preco); $("n-menor-s").textContent = [ddmm(m.data), m.loja].filter(Boolean).join(" · ");
-  } else { $("n-menor").textContent = "—"; $("n-menor-s").textContent = "sem ofertas no período"; }
-
-  const mesAt = isoDia(referencia).slice(0, 7), dAnt = new Date(referencia.getFullYear(), referencia.getMonth() - 1, 1), mesAnt = isoDia(dAnt).slice(0, 7);
-  const medDe = mes => mediana(p.serie.filter(d => d.dia.startsWith(mes)).map(d => d.preco));
-  const ma = medDe(mesAnt), mb = medDe(mesAt);
-  $("n-med-t").textContent = `Mediana ${MESES[dAnt.getMonth()].slice(0, 3)} → ${MESES[referencia.getMonth()].slice(0, 3)}`;
-  if (!isNaN(ma) && !isNaN(mb)) {
-    const v = mb / ma - 1;
-    $("n-med").textContent = (Math.abs(v) < .005 ? "= " : v < 0 ? "↓ " : "↑ ") + pctTxt(Math.abs(v));
-    $("n-med").className = v < -.005 ? "verde" : "";
-    $("n-med-s").textContent = reaisRedondo(ma) + " → " + reaisRedondo(mb);
-  } else { $("n-med").textContent = "—"; $("n-med").className = ""; $("n-med-s").textContent = "precisa de ofertas nos dois meses"; }
-
-  $("n-alvo").textContent = p.alvo ? reais(p.alvo) : "—";
-  $("n-alvo-s").textContent = `${p.serie.length} ${p.serie.length === 1 ? "dia" : "dias"} com oferta · ${p.posts} posts`;
-
-  const st = p.status, selo = $("c-selo");
-  selo.className = "selo " + st.cls; selo.textContent = st.txt;
-  const bf = blackFriday(referencia.getFullYear()), faltam = Math.ceil((bf - referencia) / DIA);
-  $("c-texto").textContent = {
-    "Acompanhando": "Ainda há poucos dias de histórico. O preço-alvo aparece depois de 5 dias com oferta.",
-    "No menor preço": `Esse é o menor preço que o radar já registrou para este produto: ${reais(p.u.preco)}. Se você estava esperando, é a hora.`,
-    "Abaixo do alvo": `Está abaixo do preço-alvo de ${reais(p.alvo)}, que é um bom preço para o histórico registrado. O menor já visto foi ${reais(p.menor)}.`,
-    "Espera a Black": `Está acima do alvo de ${reais(p.alvo || p.menor)} e a Black Friday é em ${faltam} ${faltam === 1 ? "dia" : "dias"}. Já passou por ${reais(p.menor)} no período.`,
-    "Só abaixo do alvo": `Preço justo aqui é abaixo de ${reais(p.alvo || p.menor)}. Acima disso, espere: já passou por ${reais(p.menor)}.`,
-  }[st.txt];
-  const botoes = [];
-  if (linkSeguro(p.u.link)) botoes.push(el("a", {class: "oferta", href: p.u.link, target: "_blank", rel: "noopener noreferrer"}, "Ver última oferta"));
-  const icone = d => { const i = s("svg", {viewBox: "0 0 24 24", fill: "currentColor", "aria-hidden": "true"}); i.append(s("path", {d})); return i; };
-  if (p.u.canal && !dados.exemplo) botoes.push(el("a", {class: "tg", href: "https://t.me/" + encodeURIComponent(p.u.canal), target: "_blank", rel: "noopener noreferrer"},
-    icone("M21.9 4.3 18.8 19c-.2 1-.8 1.3-1.7.8l-4.7-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.8 8.8-7.9c.4-.3-.1-.5-.6-.2L6.7 12.9 2 11.4c-1-.3-1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5Z"), "Ver ofertas no Telegram"));
-  botoes.push(el("a", {class: "wa", href: "https://wa.me/?text=" + encodeURIComponent(`${p.nome}: ${reais(p.u.preco)} no Radar de preços ${location.href}`), target: "_blank", rel: "noopener noreferrer"},
-    icone("M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.5 14.2c-.2.6-1.3 1.2-1.8 1.3-.5 0-1 .3-3.3-.7-2.8-1.1-4.5-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.2.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"), "WhatsApp"));
-  $("c-botoes").replaceChildren(...botoes); $("c-botoes").hidden = !botoes.length;
-
-  $("legenda").replaceChildren(...[
-    el("span", {}, el("i", {style: "border-color:var(--linha-graf)"}), "Menor preço do dia"),
-    el("span", {}, el("i", {style: "border-color:var(--suave);border-top-style:dashed"}), "Mediana do mês"),
-    p.alvo ? el("span", {}, el("i", {style: "border-color:var(--verde);border-top-style:dotted"}), "Meu preço-alvo") : null,
-    comparado ? el("span", {}, el("i", {style: "border-color:var(--azul)"}), comparado.nome) : null].filter(Boolean));
-  grafico(p, ini, fim);
-
-  $("tabela").replaceChildren(el("thead", {}, el("tr", {}, ...["Dia", "Menor preço", "Loja", "Cupom", "Pagamento"].map(t => el("th", {}, t)))),
-    el("tbody", {}, ...[...p.serie].reverse().map(d => el("tr", {}, el("td", {}, ddmmaa(d.data)), el("td", {}, reais(d.preco)),
-      el("td", {}, d.loja || "—"), el("td", {}, d.cupom ? el("code", {}, d.cupom) : "—"), el("td", {}, d.pag || "—")))));
-}
-
-function grafico(p, ini, fim) {
-  const caixaW = $("grafico").clientWidth || 720;
-  const W = Math.max(300, Math.min(caixaW, 1000)), H = W < 520 ? 260 : 320, m = {e: W < 520 ? 58 : 70, d: 14, t: 30, b: 32};
-  const fs = W < 520 ? 11 : 12;
-  const serie = p.serie.filter(d => d.data >= ini && d.data <= fim);
-  const outra = comparado ? comparado.serie.filter(d => d.data >= ini && d.data <= fim) : [];
-  const caixa = $("grafico");
-  if (!serie.length && !outra.length) { caixa.replaceChildren(el("p", {class: "vazio"}, "Nenhuma oferta registrada neste período.")); return; }
-  const valores = [...serie, ...outra].map(d => d.preco).concat(p.alvo ? [p.alvo] : []);
+/* ---------- gráfico ---------- */
+function grafico(caixa, series, ini, fim, opc = {}) {
+  const W = Math.max(300, Math.min(caixa.clientWidth || 720, 1100)), H = W < 520 ? 260 : 330, m = {e: W < 520 ? 58 : 70, d: 14, t: 30, b: 32}, fs = W < 520 ? 11 : 12;
+  const dentro = series.map(sr => ({...sr, pts: sr.p.serie.filter(d => d.data >= ini && d.data <= fim)}));
+  if (!dentro.some(sr => sr.pts.length)) { caixa.replaceChildren(el("p", {class: "vazio"}, "Nenhuma oferta registrada neste período.")); return; }
+  const valores = dentro.flatMap(sr => sr.pts.map(d => d.preco)).concat(opc.alvo ? [opc.alvo] : []);
   let lo = Math.min(...valores), hi = Math.max(...valores); const folga = Math.max((hi - lo) * .12, hi * .03); lo = Math.max(0, lo - folga); hi += folga;
   const bruto = (hi - lo) / 4, mag = 10 ** Math.floor(Math.log10(bruto)), passo = [1, 2, 2.5, 5, 10].map(k => k * mag).find(k => k >= bruto);
   lo = Math.floor(lo / passo) * passo; hi = Math.ceil(hi / passo) * passo;
   const x = t => m.e + (t - ini) / (fim - ini) * (W - m.e - m.d), y = v => H - m.b - (v - lo) / (hi - lo) * (H - m.t - m.b);
-  const svg = s("svg", {viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `Menor preço por dia de ${p.nome}`});
-  const defs = s("defs"), grad = s("linearGradient", {id: "degrade", x1: 0, y1: 0, x2: 0, y2: 1});
-  grad.append(s("stop", {offset: 0, style: "stop-color:var(--linha-graf);stop-opacity:.32"}), s("stop", {offset: 1, style: "stop-color:var(--linha-graf);stop-opacity:0"}));
-  defs.append(grad); svg.append(defs);
+  const svg = s("svg", {viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": "Gráfico do menor preço por dia"});
+  const defs = s("defs");
+  const g1 = s("linearGradient", {id: "area1", x1: 0, y1: 0, x2: 0, y2: 1});
+  g1.append(s("stop", {offset: 0, style: "stop-color:var(--neon);stop-opacity:.3"}), s("stop", {offset: 1, style: "stop-color:var(--neon);stop-opacity:0"}));
+  const g2 = s("linearGradient", {id: "foco", x1: 0, y1: 1, x2: 0, y2: 0});
+  g2.append(s("stop", {offset: 0, style: "stop-color:var(--neon);stop-opacity:.42"}), s("stop", {offset: 1, style: "stop-color:var(--neon);stop-opacity:0"}));
+  defs.append(g1, g2); svg.append(defs);
 
-  for (let v = lo; v <= hi + passo / 2; v += passo) {
+  for (let v = lo; v <= hi + passo / 2; v += passo)
     svg.append(s("line", {x1: m.e, x2: W - m.d, y1: y(v), y2: y(v), stroke: "var(--linha)"}),
       s("text", {x: m.e - 8, y: y(v) + 4, "text-anchor": "end", "font-size": fs, fill: "var(--suave)"}, reaisRedondo(v)));
-  }
   const nTicks = Math.min(Math.floor(W / 110), Math.max(2, Math.round((fim - ini) / DIA / 7) + 1));
   for (let i = 0; i < nTicks; i++) {
     const t = +ini + (fim - ini) * (i + .5) / nTicks;
     svg.append(s("text", {x: x(t), y: H - 10, "text-anchor": "middle", "font-size": fs, fill: "var(--suave)"}, ddmm(new Date(t))));
   }
-  // virada de mês, mediana de cada mês e datas de promoção
-  const mesesNoIntervalo = [];
-  for (let d = new Date(ini.getFullYear(), ini.getMonth(), 1); d <= fim; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) mesesNoIntervalo.push(d);
-  mesesNoIntervalo.forEach((d, i) => {
+  const foco = s("rect", {y: m.t, height: H - m.t - m.b, fill: "url(#foco)", opacity: 0});
+  svg.append(foco);
+  const principal = series[0].p;
+  for (let d = new Date(ini.getFullYear(), ini.getMonth(), 1), i = 0; d <= fim; d = new Date(d.getFullYear(), d.getMonth() + 1, 1), i++) {
     const a = Math.max(+d, +ini), b = Math.min(+new Date(d.getFullYear(), d.getMonth() + 1, 1), +fim);
     if (i > 0) {
       const ant = new Date(d.getFullYear(), d.getMonth() - 1, 1);
-      svg.append(s("line", {x1: x(a), x2: x(a), y1: m.t - 14, y2: H - m.b, stroke: "var(--suave)", "stroke-dasharray": "2 4", opacity: .7}),
-        x(a) - m.e > 80 ? s("text", {x: x(a) - 6, y: m.t - 12, "text-anchor": "end", "font-size": 10, "letter-spacing": 1.5, fill: "var(--suave)"}, MESES[ant.getMonth()].toUpperCase()) : s("g"),
-        W - m.d - x(a) > 90 ? s("text", {x: x(a) + 6, y: m.t - 12, "font-size": 10, "letter-spacing": 1.5, fill: "var(--suave)"}, MESES[d.getMonth()].toUpperCase()) : s("g"));
+      svg.append(s("line", {x1: x(a), x2: x(a), y1: m.t - 14, y2: H - m.b, stroke: "var(--suave)", "stroke-dasharray": "2 4", opacity: .6}));
+      if (x(a) - m.e > 80) svg.append(s("text", {x: x(a) - 6, y: m.t - 12, "text-anchor": "end", "font-size": 10, "letter-spacing": 1.5, fill: "var(--suave)"}, MESES[ant.getMonth()].toUpperCase()));
+      if (W - m.d - x(a) > 90) svg.append(s("text", {x: x(a) + 6, y: m.t - 12, "font-size": 10, "letter-spacing": 1.5, fill: "var(--suave)"}, MESES[d.getMonth()].toUpperCase()));
     }
-    const med = mediana(p.serie.filter(q => q.dia.startsWith(isoDia(d).slice(0, 7))).map(q => q.preco));
-    if (!isNaN(med) && med >= lo && med <= hi) svg.append(s("line", {x1: x(a), x2: x(b), y1: y(med), y2: y(med), stroke: "var(--suave)", "stroke-dasharray": "7 5", "stroke-width": 1.3}));
-  });
+    if (opc.mediana) {
+      const med = mediana(principal.serie.filter(q => q.dia.startsWith(isoDia(d).slice(0, 7))).map(q => q.preco));
+      if (!isNaN(med) && med >= lo && med <= hi) svg.append(s("line", {x1: x(a), x2: x(b), y1: y(med), y2: y(med), stroke: "var(--suave)", "stroke-dasharray": "7 5", "stroke-width": 1.3}));
+    }
+  }
   for (let ano = ini.getFullYear(); ano <= fim.getFullYear(); ano++)
     for (const [rot, d] of [["11/11", new Date(ano, 10, 11, 12)], ["Black Friday", blackFriday(ano)]])
-      if (d >= ini && d <= fim) svg.append(s("line", {x1: x(d), x2: x(d), y1: H - m.b - 18, y2: H - m.b, stroke: "var(--ambar)", "stroke-width": 2}),
-        s("text", {x: x(d) > W - m.d - 90 ? x(d) - 4 : x(d) + 4, y: H - m.b - 7, "text-anchor": x(d) > W - m.d - 90 ? "end" : "start", "font-size": 11, "font-weight": 700, fill: "var(--ambar)"}, rot));
-  if (p.alvo && p.alvo >= lo && p.alvo <= hi) svg.append(
-    s("line", {x1: m.e, x2: W - m.d, y1: y(p.alvo), y2: y(p.alvo), stroke: "var(--verde)", "stroke-dasharray": "2 4", "stroke-width": 1.6}),
-    s("text", {x: m.e + 6, y: y(p.alvo) - 6, "font-size": 11, fill: "var(--verde)", "font-weight": 700}, "alvo " + reaisRedondo(p.alvo)));
+      if (d >= ini && d <= fim) {
+        const perto = x(d) > W - m.d - 90;
+        svg.append(s("line", {x1: x(d), x2: x(d), y1: H - m.b - 18, y2: H - m.b, stroke: "var(--razoavel)", "stroke-width": 2}),
+          s("text", {x: perto ? x(d) - 4 : x(d) + 4, y: H - m.b - 7, "text-anchor": perto ? "end" : "start", "font-size": 11, "font-weight": 700, fill: "var(--razoavel)"}, rot));
+      }
+  if (opc.alvo && opc.alvo >= lo && opc.alvo <= hi) svg.append(
+    s("line", {x1: m.e, x2: W - m.d, y1: y(opc.alvo), y2: y(opc.alvo), stroke: "var(--neon)", "stroke-dasharray": "2 4", "stroke-width": 1.5, opacity: .8}),
+    s("text", {x: m.e + 6, y: y(opc.alvo) - 6, "font-size": 11, fill: "var(--neon)", "font-weight": 700}, "alvo " + reaisRedondo(opc.alvo)));
 
   const caminho = lista => lista.map(d => `${x(d.data).toFixed(1)},${y(d.preco).toFixed(1)}`).join(" L");
-  if (serie.length) {
-    if (serie.length > 1) svg.append(s("path", {d: `M${x(serie[0].data)},${H - m.b} L${caminho(serie)} L${x(serie[serie.length - 1].data)},${H - m.b}Z`, fill: "url(#degrade)"}));
-    svg.append(s("path", {class: "linha", d: "M" + caminho(serie), fill: "none", stroke: "var(--linha-graf)", "stroke-width": 2.5, "stroke-linejoin": "round"}));
-    for (const d of serie) svg.append(s("circle", {cx: x(d.data), cy: y(d.preco), r: 2.6, fill: "var(--fundo)", stroke: "var(--linha-graf)", "stroke-width": 1.4}));
-    const menor = serie.reduce((a, b) => b.preco < a.preco ? b : a);
-    const abaixo = y(menor.preco) < H - m.b - 34;
-    svg.append(s("circle", {cx: x(menor.data), cy: y(menor.preco), r: 6, fill: "var(--verde)", stroke: "var(--papel)", "stroke-width": 2}),
-      s("text", {x: Math.min(Math.max(x(menor.data), m.e + 40), W - m.d - 40), y: y(menor.preco) + (abaixo ? 22 : -12), "text-anchor": "middle", "font-size": 13, "font-weight": 800, fill: "var(--verde)"}, reais(menor.preco)));
+  dentro.forEach((sr, i) => {
+    if (!sr.pts.length) return;
+    if (i === 0 && sr.pts.length > 1) svg.append(s("path", {d: `M${x(sr.pts[0].data)},${H - m.b} L${caminho(sr.pts)} L${x(sr.pts[sr.pts.length - 1].data)},${H - m.b}Z`, fill: "url(#area1)"}));
+    svg.append(s("path", {class: "linha", d: "M" + caminho(sr.pts), fill: "none", stroke: sr.cor, "stroke-width": i === 0 ? 2.5 : 2, "stroke-linejoin": "round"}));
+    for (const d of sr.pts) svg.append(s("circle", {cx: x(d.data), cy: y(d.preco), r: i === 0 ? 2.6 : 2.2, fill: i === 0 ? "var(--fundo)" : sr.cor, stroke: sr.cor, "stroke-width": 1.4}));
+  });
+  const s0 = dentro[0].pts;
+  if (s0.length && opc.menor) {
+    const mn = s0.reduce((a, b) => b.preco < a.preco ? b : a), abaixo = y(mn.preco) < H - m.b - 34;
+    svg.append(s("circle", {cx: x(mn.data), cy: y(mn.preco), r: 6, fill: "var(--neon)", stroke: "var(--papel)", "stroke-width": 2}),
+      s("text", {x: Math.min(Math.max(x(mn.data), m.e + 40), W - m.d - 40), y: y(mn.preco) + (abaixo ? 22 : -12), "text-anchor": "middle", "font-size": 13, "font-weight": 700, fill: "var(--neon)"}, reais(mn.preco)));
   }
-  if (outra.length) {
-    svg.append(s("path", {d: "M" + caminho(outra), fill: "none", stroke: "var(--azul)", "stroke-width": 2, "stroke-linejoin": "round"}));
-    for (const d of outra) svg.append(s("circle", {cx: x(d.data), cy: y(d.preco), r: 2.4, fill: "var(--azul)"}));
-  }
-
-  const guia = s("line", {y1: m.t - 4, y2: H - m.b, stroke: "var(--tinta)", opacity: 0}), marca = s("circle", {r: 5, fill: "var(--tinta)", opacity: 0});
+  const guia = s("line", {y1: m.t - 4, y2: H - m.b, stroke: "var(--neon)", opacity: 0}), marca = s("circle", {r: 5, fill: "var(--neon)", opacity: 0});
   const area = s("rect", {x: m.e, y: m.t, width: W - m.e - m.d, height: H - m.t - m.b, fill: "transparent"});
   svg.append(guia, marca, area);
   const dica = el("div", {class: "dica", hidden: ""});
-  const pertoDe = (lista, t) => lista.reduce((a, b) => Math.abs(b.data - t) < Math.abs(a.data - t) ? b : a, lista[0]);
+  const todos = dentro.flatMap(sr => sr.pts);
+  const larguraDia = Math.max(10, x(+ini + DIA) - x(+ini));
   const mostrar = ev => {
     const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) / r.width * W;
-    const t = +ini + (px - m.e) / (W - m.e - m.d) * (fim - ini), base = serie.length ? serie : outra;
-    const d = pertoDe(base, t), cx = x(d.data), cy = y(d.preco);
-    guia.setAttribute("x1", cx); guia.setAttribute("x2", cx); guia.setAttribute("opacity", .35);
-    marca.setAttribute("cx", cx); marca.setAttribute("cy", cy); marca.setAttribute("opacity", 1);
-    const o = outra.length && serie.length ? outra.find(q => q.dia === d.dia) : null;
-    dica.replaceChildren(el("div", {class: "d"}, ddmmaa(d.data)), el("b", {}, reais(d.preco)), " ", [d.loja, d.cupom && "cupom " + d.cupom].filter(Boolean).join(" · "),
-      ...(o ? [el("div", {class: "c2"}, comparado.nome.slice(0, 28) + ": " + reais(o.preco))] : []));
+    const t = +ini + (px - m.e) / (W - m.e - m.d) * (fim - ini);
+    const d = todos.reduce((a, b) => Math.abs(b.data - t) < Math.abs(a.data - t) ? b : a, todos[0]);
+    const cx = x(d.data);
+    foco.setAttribute("x", cx - larguraDia * 1.5); foco.setAttribute("width", larguraDia * 3); foco.setAttribute("opacity", 1);
+    guia.setAttribute("x1", cx); guia.setAttribute("x2", cx); guia.setAttribute("opacity", .5);
+    const doDia = dentro.map(sr => ({sr, d: sr.pts.find(q => q.dia === d.dia)})).filter(o => o.d);
+    const prim = doDia[0];
+    marca.setAttribute("cx", cx); marca.setAttribute("cy", y(prim.d.preco)); marca.setAttribute("fill", prim.sr.cor); marca.setAttribute("opacity", 1);
+    dica.replaceChildren(el("div", {class: "d"}, ddmmaa(d.data)),
+      ...doDia.map(o => el("div", {}, el("b", {style: `color:${o.sr.cor}`}, reais(o.d.preco)), " ",
+        dentro.length > 1 ? o.sr.p.nome.slice(0, 26) : [o.d.loja, o.d.cupom && "cupom " + o.d.cupom].filter(Boolean).join(" · "))));
     dica.hidden = false;
     const esc = r.width / W, larg = dica.offsetWidth, cr = caixa.getBoundingClientRect();
-    let left = r.left - cr.left + caixa.scrollLeft + cx * esc + 12;
-    if (left + larg > caixa.scrollLeft + cr.width - 4) left = r.left - cr.left + caixa.scrollLeft + cx * esc - larg - 12;
-    dica.style.left = left + "px"; dica.style.top = Math.max(0, cy * esc - 50) + "px";
+    let left = r.left - cr.left + cx * esc + 14;
+    if (left + larg > cr.width - 4) left = r.left - cr.left + cx * esc - larg - 14;
+    dica.style.left = Math.max(0, left) + "px"; dica.style.top = Math.max(0, y(prim.d.preco) * esc - 56) + "px";
   };
+  const esconder = () => { dica.hidden = true; foco.setAttribute("opacity", 0); guia.setAttribute("opacity", 0); marca.setAttribute("opacity", 0); };
   area.addEventListener("pointermove", mostrar); area.addEventListener("pointerdown", mostrar);
-  area.addEventListener("pointerleave", ev => { if (ev.pointerType === "mouse") { dica.hidden = true; guia.setAttribute("opacity", 0); marca.setAttribute("opacity", 0); } });
+  area.addEventListener("pointerleave", ev => { if (ev.pointerType === "mouse") esconder(); });
   caixa.replaceChildren(svg, dica);
 }
 
-/* ---------- início ---------- */
-$("busca").addEventListener("input", () => { limite = 48; if ($("busca").value && categoria !== "Todos") { categoria = "Todos"; desenharChips(); } desenharGrade(); });
-$("limpar").addEventListener("click", () => { $("busca").value = ""; desenharGrade(); $("busca").focus(); });
-$("mais").addEventListener("click", () => { limite += 48; desenharGrade(); });
-$("voltar").addEventListener("click", () => { location.hash = ""; });
+/* ---------- produto ---------- */
+let atual = null, periodo = "tudo", comparado = null;
+function intervalo(p, per) {
+  const fimTudo = new Date(Math.max(+p.serie[p.serie.length - 1].data, +referencia) + DIA / 2);
+  if (per.startsWith("d")) return [new Date(referencia - (+per.slice(1) - 1) * DIA - DIA / 2), new Date(+referencia + DIA / 2)];
+  if (per.startsWith("m:")) { const [a, mm] = per.slice(2).split("-").map(Number); return [new Date(a, mm - 1, 1), new Date(a, mm, 0, 23)]; }
+  return [new Date(p.serie[0].data - DIA / 2), fimTudo];
+}
+function montarProduto() {
+  const p = atual;
+  $("d-cat").textContent = p.cat; $("d-nome").textContent = p.nome; document.title = p.nome + " · Radar de preços";
+  const meses = [...new Set(p.serie.map(d => d.dia.slice(0, 7)))].sort().slice(-3);
+  const abas = [["d7", "7 dias"], ["d30", "30 dias"], ["d90", "90 dias"], ...meses.map(mm => ["m:" + mm, MESES[+mm.slice(5) - 1].replace(/^./, c => c.toUpperCase())]), ["tudo", "Tudo"]];
+  $("abas-periodo").replaceChildren(...abas.map(([id, txt]) => el("button", {type: "button", "aria-pressed": String(id === periodo), onclick: () => { periodo = id; montarProduto(); }}, txt)));
+
+  const sel = $("comparar"), mesmos = produtos.filter(o => o !== p && o.cat === p.cat).sort((a, b) => a.nome.localeCompare(b.nome));
+  sel.replaceChildren(el("option", {value: ""}, mesmos.length ? "Nenhum" : "Nada na mesma categoria"), ...mesmos.map(o => el("option", {value: o.id}, o.nome)));
+  sel.value = comparado ? comparado.id : "";
+  sel.onchange = () => { comparado = porId.get(sel.value) || null; montarProduto(); };
+
+  const [ini, fim] = intervalo(p, periodo), noPer = p.serie.filter(d => d.data >= ini && d.data <= fim);
+  $("n-ult").textContent = reais(p.u.preco);
+  $("n-ult-s").textContent = [ddmm(p.u.data), p.u.loja, p.u.cupom && "cupom " + p.u.cupom].filter(Boolean).join(" · ");
+  if (noPer.length) {
+    const mn = noPer.reduce((a, b) => b.preco < a.preco ? b : a);
+    $("n-menor").textContent = reais(mn.preco); $("n-menor-s").textContent = [ddmm(mn.data), mn.loja].filter(Boolean).join(" · ");
+    $("n-med").textContent = reais(mediana(noPer.map(d => d.preco)));
+    const varia = noPer[noPer.length - 1].preco / noPer[0].preco - 1;
+    $("n-med-s").textContent = noPer.length > 1 ? `variação no período ${varia <= 0 ? "↓" : "↑"} ${pct(Math.abs(varia))}` : "1 dia no período";
+  } else { $("n-menor").textContent = "—"; $("n-menor-s").textContent = "sem ofertas no período"; $("n-med").textContent = "—"; $("n-med-s").textContent = ""; }
+  $("n-alvo").textContent = p.alvo ? reais(p.alvo) : "—";
+  $("n-alvo-s").textContent = `${p.serie.length} ${p.serie.length === 1 ? "dia" : "dias"} com oferta · ${p.posts} posts`;
+
+  const vd = $("d-veredito");
+  vd.className = "veredito " + VEREDITOS[p.v].cls;
+  vd.replaceChildren(el("strong", {}, VEREDITOS[p.v].txt), el("p", {}, frase(p)),
+    el("div", {class: "acoes"},
+      linkSeguro(p.u.link) ? el("a", {class: "botao cheio", href: p.u.link, target: "_blank", rel: "noopener noreferrer"}, "Ver última oferta") : null,
+      el("button", {class: "botao", type: "button", onclick: () => { if (!selecao.includes(p.id)) alternarSelecao(p); location.hash = "comparar"; }}, "Comparar com outros")));
+
+  const series = [{p, cor: CORES_SERIE[0]}, ...(comparado ? [{p: comparado, cor: CORES_SERIE[1]}] : [])];
+  $("legenda").replaceChildren(...[
+    el("span", {}, el("i", {style: "border-color:var(--neon)"}), "Menor preço do dia"),
+    el("span", {}, el("i", {style: "border-color:var(--suave);border-top-style:dashed"}), "Mediana do mês"),
+    p.alvo ? el("span", {}, el("i", {style: "border-color:var(--neon);border-top-style:dotted"}), "Meu preço-alvo") : null,
+    comparado ? el("span", {}, el("i", {style: "border-color:var(--serie2)"}), comparado.nome) : null].filter(Boolean));
+  grafico($("grafico"), series, ini, fim, {alvo: p.alvo, mediana: true, menor: true});
+
+  const lojas = new Map();
+  for (const d of p.serie) { const l = d.loja || "Não informada"; if (!lojas.has(l) || d.preco < lojas.get(l).preco) lojas.set(l, d); }
+  $("t-lojas").replaceChildren(el("thead", {}, el("tr", {}, el("th", {}, "Loja"), el("th", {class: "num"}, "Menor"), el("th", {class: "num"}, "Quando"))),
+    el("tbody", {}, ...[...lojas].sort((a, b) => a[1].preco - b[1].preco).map(([l, d]) => el("tr", {}, el("td", {}, l), el("td", {class: "num"}, reais(d.preco)), el("td", {class: "num"}, ddmm(d.data))))));
+  const linhasSpecs = ROTULOS_SPECS.filter(([k]) => p.spec[k] !== undefined);
+  $("t-specs").replaceChildren(el("tbody", {}, ...(linhasSpecs.length ? linhasSpecs.map(([k, rot, fmt]) => el("tr", {}, el("td", {}, rot(p)), el("td", {class: "num"}, fmt(p.spec[k]))))
+    : [el("tr", {}, el("td", {style: "color:var(--suave);white-space:normal"}, "O nome deste produto não traz especificações que o radar consiga ler."))])));
+  $("t-dias").replaceChildren(el("thead", {}, el("tr", {}, ...["Dia", "Menor preço", "Loja", "Cupom", "Pagamento"].map(t => el("th", {}, t)))),
+    el("tbody", {}, ...[...p.serie].reverse().map(d => el("tr", {}, el("td", {}, ddmmaa(d.data)), el("td", {}, reais(d.preco)),
+      el("td", {}, d.loja || "—"), el("td", {}, d.cupom ? el("code", {}, d.cupom) : "—"), el("td", {}, d.pag || "—")))));
+}
+
+/* ---------- comparador ---------- */
+let compCat = null;
+function desenharComparador() {
+  const sel = selecao.map(i => porId.get(i)).filter(Boolean);
+  const cats = ORDEM.filter(c => produtos.some(p => p.cat === c));
+  if (!compCat || !cats.includes(compCat)) compCat = sel.length ? sel[0].cat : (cats.includes("Placas de vídeo") ? "Placas de vídeo" : cats[0]);
+  $("comp-cat").replaceChildren(...cats.map(c => el("option", {value: c}, c)));
+  $("comp-cat").value = compCat;
+  $("comp-cat").onchange = () => { compCat = $("comp-cat").value; selecao = []; guardar("radar-selecao", selecao); desenharComparador(); };
+  const daCat = produtos.filter(p => p.cat === compCat).sort((a, b) => a.nome.localeCompare(b.nome));
+  const porNome = new Map(daCat.map(p => [p.nome, p]));
+  const lista = el("datalist", {id: "dl-comp"}, ...daCat.map(p => el("option", {value: p.nome})));
+  $("vagas").replaceChildren(lista, ...[0, 1, 2].map(i => {
+    const p = sel[i];
+    const inp = el("input", {type: "text", list: "dl-comp", placeholder: i === 0 ? "Digite para buscar o 1º produto" : "Digite para buscar outro produto", value: p ? p.nome : ""});
+    const escolher = () => {
+      const q = porNome.get(inp.value);
+      if (!q) return;
+      const nova = sel.map(x => x.id); nova[i] = q.id;
+      selecao = [...new Set(nova.filter(Boolean))].slice(0, 3); guardar("radar-selecao", selecao); desenharComparador();
+    };
+    inp.addEventListener("change", escolher); inp.addEventListener("input", () => { if (porNome.has(inp.value)) escolher(); });
+    return el("div", {class: "vaga realce" + (p ? " ativo" : "")}, el("label", {class: "caps", style: "color:var(--suave)"}, el("span", {class: "cor", style: `color:${CORES_SERIE[i]};background:${CORES_SERIE[i]}`}), `Produto ${i + 1}`), inp,
+      p ? el("button", {class: "cmp", type: "button", style: "margin-top:.4rem", onclick: () => { selecao = selecao.filter(x => x !== p.id); guardar("radar-selecao", selecao); desenharComparador(); }}, "remover") : null);
+  }));
+  const saida = $("comp-saida");
+  if (sel.length < 2) { saida.replaceChildren(el("p", {class: "vazio"}, sel.length ? "Escolha mais um produto para comparar." : "Escolha 2 ou 3 produtos. Você também pode marcar \"+ comparar\" nos cards das ofertas.")); return; }
+
+  const base = sel[0];
+  const dif = (v, ref, fmt, menorMelhor = true) => {
+    if (v === undefined || ref === undefined || v === ref) return null;
+    const d = v - ref, melhor = menorMelhor ? d < 0 : d > 0;
+    return el("small", {class: melhor ? "mais-barato" : "mais-caro"}, `${d > 0 ? "+" : "−"}${fmt(Math.abs(d))}${ref ? ` (${d > 0 ? "+" : "−"}${pct(Math.abs(d / ref))})` : ""}`);
+  };
+  const linha = (rot, f, fmt, menorMelhor = true) => el("tr", {}, el("td", {}, rot), ...sel.map((p, i) => {
+    const v = f(p);
+    return el("td", {class: "num"}, v === undefined || v === null || Number.isNaN(v) ? "—" : fmt(v), i ? dif(v, f(base), fmt, menorMelhor) : null);
+  }));
+  const comCap = sel.every(p => p.spec.capacidade) && ["Memória RAM", "SSD e HDs", "Placas de vídeo"].includes(compCat);
+  const linhasSpecs = ROTULOS_SPECS.filter(([k]) => sel.some(p => p.spec[k] !== undefined)).map(([k, rot, fmt]) =>
+    el("tr", {}, el("td", {}, rot(base)), ...sel.map((p, i) => {
+      const v = p.spec[k], ref = base.spec[k], num = typeof v === "number" && typeof ref === "number";
+      return el("td", {class: "num"}, v === undefined ? "—" : fmt(v), i && num && v !== ref ? el("small", {class: v > ref ? "mais-barato" : "mais-caro"}, `${v > ref ? "+" : "−"}${fmt(Math.abs(v - ref))}`) : null);
+    })));
+  const tabela = el("table", {class: "comp-tabela"},
+    el("thead", {}, el("tr", {}, el("th", {}, ""), ...sel.map((p, i) => el("th", {class: "num", style: `color:${CORES_SERIE[i]};white-space:normal;min-width:9rem`}, p.nome)))),
+    el("tbody", {},
+      el("tr", {}, el("td", {}, "Veredito"), ...sel.map(p => el("td", {class: "num"}, selo(p.v)))),
+      linha("Último preço", p => p.u.preco, reais), linha("Menor preço", p => p.menor, reais),
+      linha("Mediana 60 dias", p => p.med, reais), linha("Preço-alvo", p => p.alvo ?? undefined, reais),
+      comCap ? linha("Preço por GB", p => p.u.preco / p.spec.capacidade, v => reais(v)) : null,
+      linha("Dias com oferta", p => p.serie.length, v => String(v), false),
+      ...linhasSpecs));
+
+  const ordenados = [...sel].sort((a, b) => a.u.preco - b.u.preco), barato = ordenados[0], caro = ordenados[ordenados.length - 1];
+  const textos = [el("p", {}, el("b", {}, barato.nome), ` está ${reais(caro.u.preco - barato.u.preco)} mais barato (${pct(1 - barato.u.preco / caro.u.preco)}) que `, el("b", {}, caro.nome), " hoje.")];
+  if (comCap) {
+    const porGb = [...sel].sort((a, b) => a.u.preco / a.spec.capacidade - b.u.preco / b.spec.capacidade)[0];
+    textos.push(el("p", {}, "Melhor custo por GB: ", el("b", {}, porGb.nome), ` (${reais(porGb.u.preco / porGb.spec.capacidade)} por GB).`));
+  }
+  const melhorMomento = [...sel].filter(p => p.v !== "sem").sort((a, b) => b.queda - a.queda)[0];
+  if (melhorMomento) textos.push(el("p", {}, "Melhor momento de compra: ", el("b", {}, melhorMomento.nome), `, ${variacaoTxt(melhorMomento)}.`));
+
+  const caixaGraf = el("div", {class: "grafico"});
+  const ini = new Date(Math.min(...sel.map(p => +p.serie[0].data)) - DIA / 2), fim = new Date(Math.max(+referencia, ...sel.map(p => +p.serie[p.serie.length - 1].data)) + DIA / 2);
+  saida.replaceChildren(el("div", {class: "resumo"}, ...textos),
+    el("div", {class: "painel"}, el("div", {class: "tabela"}, tabela)),
+    el("div", {class: "painel"}, el("p", {class: "legenda", style: "margin-top:0"}, ...sel.map((p, i) => el("span", {}, el("i", {style: `border-color:${CORES_SERIE[i]}`}), p.nome))), caixaGraf));
+  grafico(caixaGraf, sel.map((p, i) => ({p, cor: CORES_SERIE[i]})), ini, fim, {});
+}
+
+/* ---------- rotas ---------- */
+let aba = "ofertas";
+function rota() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  const p = h.startsWith("p-") ? porId.get(h.slice(2)) : null;
+  aba = p ? "produto" : ["ofertas", "top", "quedas", "comparar", "como"].includes(h) ? h : "ofertas";
+  document.querySelectorAll(".vista").forEach(v => { v.hidden = v.id !== "v-" + aba; });
+  document.querySelectorAll("nav.abas-topo a").forEach(a => { if (a.dataset.aba === aba) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  if (aba !== "produto") document.title = "Radar de preços";
+  if (aba === "produto") { if (atual !== p) { atual = p; periodo = "tudo"; comparado = null; } montarProduto(); }
+  if (aba === "ofertas") desenharOfertas();
+  if (aba === "top") desenharTop();
+  if (aba === "quedas") desenharQuedas();
+  if (aba === "comparar") desenharComparador();
+  atualizarBandeja();
+  window.scrollTo(0, 0);
+}
+
+$("busca").addEventListener("input", () => { limite = 48; if ($("busca").value) categoria = "Todos"; desenharOfertas(); });
+$("limpar").addEventListener("click", () => { $("busca").value = ""; desenharOfertas(); $("busca").focus(); });
+$("mais").addEventListener("click", () => { limite += 48; desenharOfertas(); });
+$("ordem").addEventListener("change", desenharOfertas);
+$("voltar").addEventListener("click", () => { history.length > 1 ? history.back() : (location.hash = "ofertas"); });
+$("bandeja-limpar").addEventListener("click", () => { selecao = []; guardar("radar-selecao", selecao); atualizarBandeja(); document.querySelectorAll(".cmp").forEach(b => b.setAttribute("aria-pressed", "false")); });
 addEventListener("hashchange", rota);
-let espera; addEventListener("resize", () => { clearTimeout(espera); espera = setTimeout(() => { if (atual) montarDetalhe(); }, 150); });
+let espera; addEventListener("resize", () => { clearTimeout(espera); espera = setTimeout(() => { if (aba === "produto") montarProduto(); if (aba === "comparar") desenharComparador(); }, 150); });
 
 (async () => {
   try {
@@ -564,15 +869,14 @@ let espera; addEventListener("resize", () => { clearTimeout(espera); espera = se
   } catch (e) { /* sem dados publicados: usa o exemplo */ }
   if (!dados || !Array.isArray(dados.produtos) || !dados.produtos.length) { dados = exemplo(); $("aviso").hidden = false; }
   referencia = new Date(dados.atualizado || Date.now());
-  produtos = dados.produtos;
+  produtos = dados.produtos.filter(p => p.cat !== "Outros");
   produtos.forEach(preparar);
   porId = new Map(produtos.map(p => [p.id, p]));
-  const lista = achados(), comAchado = new Set(lista.map(a => a.p));
-  for (const p of produtos) p.destaque = comAchado.has(p) || (p.status.cls === "verde" && referencia - p.u.data < 3 * DIA);
-  if (!produtos.some(p => p.destaque)) categoria = "Todos"; else categoria = "Destaques";
-  if (dados.canais && dados.canais.length) $("intro").textContent = `Preços de oferta postados em ${dados.canais.length} canais de promoção do Telegram. Toque num produto para ver a curva completa, o preço-alvo e comparar com outro.`;
-  $("atualizado").textContent = `${produtos.length} produtos acompanhados, última atualização em ${referencia.toLocaleString("pt-BR", {day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"})}`;
-  desenharChips(); desenharGrade(); desenharAchados(); rota();
+  selecao = ler("radar-selecao", []).filter(i => porId.has(i));
+  $("atualizado").textContent = "ao vivo · " + referencia.toLocaleString("pt-BR", {day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"});
+  if (dados.canais && dados.canais.length) $("como-intro").textContent = `O radar lê ${dados.canais.length} canais de promoção do Telegram (${dados.canais.join(", ")}) a cada 15 minutos, guarda cada oferta e monta o histórico de preço de cada produto.`;
+  desenharFiltroV();
+  rota();
 })();
 </script>
 </body>
