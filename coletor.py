@@ -181,7 +181,8 @@ def categorizar(nome):
     for ordem, (categoria, padrao) in enumerate(CATEGORIAS):
         m = re.search(padrao, baixo)
         if m:
-            if categoria in ("Notebooks", "PCs montados"):
+            acessorio = re.search(r"\b(para|p/|pra|de|compat[ií]vel com)\s+(o\s+)?(notebook|laptop|pc|computador|desktop)", baixo)
+            if categoria in ("Notebooks", "PCs montados") and not acessorio:
                 return categoria
             achados.append((m.start() - (100 if categoria == "Eletrodomésticos" and "processador de alimentos" in baixo else 0), ordem, categoria))
     return min(achados)[2] if achados else "Outros"
@@ -222,8 +223,17 @@ PALAVRAS_VAZIAS = set(("de da do das dos com sem e para p por em a o the and wit
                        "lacrado frete gratis envio full pix cupom").split())
 
 
+RE_PADRAO = re.compile(r"^(gen\d|\d|ii|iii|iv)$")
+
+
 def tokens(nome):
-    return {SINONIMOS.get(t, t) for t in slug(nome).split("-") if t and t not in PALAVRAS_VAZIAS}
+    """Palavras do nome para comparar produtos. 'SATA 3', 'SATA III', 'Gen3' e 'PCIe 4' não mudam o produto."""
+    saida = set()
+    for t in slug(nome).split("-"):
+        t = re.sub(r"^(sata|pcie)(\d|iii|ii)$", r"\1", t)
+        if t and t not in PALAVRAS_VAZIAS and not RE_PADRAO.match(t):
+            saida.add(SINONIMOS.get(t, t))
+    return saida
 
 
 def mesmo_produto(a, b):
@@ -408,7 +418,7 @@ def montar_indice(todos, canais):
             "ult": [ult["quando"].astimezone(timezone.utc).isoformat(timespec="minutes")] + linha(ult),
         })
     produtos.sort(key=lambda p: p["ult"][0], reverse=True)
-    return {"versao": 2, "alertas": [{k: a[k] for k in ("arquivo", "produto", "nome", "top", "maximo")} for a in ler_alertas()], "atualizado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    return {"versao": 2, "alertas": [{k: a[k] for k in ("arquivo", "produto", "nome", "busca", "top", "maximo")} for a in ler_alertas()], "atualizado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "canais": canais, "produtos": produtos}
 
 
@@ -427,7 +437,8 @@ def ler_alertas():
             maximo = numero(maximo) if maximo else None
         except ValueError:
             maximo = None
-        alertas.append({"arquivo": arq.name, "produto": campos.get("produto", arq.stem), "nome": campos.get("nome", ""),
+        alertas.append({"arquivo": arq.name, "produto": campos.get("produto", "" if campos.get("busca") else arq.stem), "nome": campos.get("nome", ""),
+                        "busca": campos.get("busca", ""),
                         "top": "top" in campos.get("avisar_quando", "").lower(), "maximo": maximo})
     return alertas
 
@@ -456,6 +467,20 @@ def veredito(prod, agora):
     if u <= med * 1.04:
         return "razoavel", queda
     return "caro", queda
+
+
+def termos_busca(texto):
+    """Mesma regra da busca do site: sem acento, sem espaços e sem o 's' do plural."""
+    saida = []
+    for t in re.split(r"[\s,]+", unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode().lower()):
+        t = re.sub(r"[^a-z0-9]", "", t)
+        if t:
+            saida.append(t[:-1] if len(t) > 4 and t.endswith("s") else t)
+    return saida
+
+
+def texto_busca(prod):
+    return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", prod["nome"] + " " + prod["cat"]).encode("ascii", "ignore").decode().lower())
 
 
 def reais_txt(v):
@@ -499,41 +524,55 @@ def verificar_alertas(indice, estado):
     por_id = {p["id"]: p for p in indice["produtos"]}
     avisos = estado.setdefault("_avisos", {})
     for a in alertas:
-        prod = por_id.get(a["produto"])
-        if not prod and a["nome"]:  # o produto pode ter mudado de nome no radar
-            tk = tokens(a["nome"])
-            prod = next((p for p in indice["produtos"] if mesmo_produto(tk, tokens(p["nome"]))), None)
-        if not prod:
-            print(f"alertas: produto do alerta {a['arquivo']} não encontrado")
-            continue
-        quando = datetime.fromisoformat(prod["ult"][0])
-        if agora - quando > timedelta(hours=3):
-            continue  # só oferta nova
-        preco, loja, cupom, _, link = prod["ult"][1:6]
-        v, queda = veredito(prod, agora)
-        if not ((a["top"] and v == "top") or (a["maximo"] and preco <= a["maximo"])):
-            continue
-        ant = avisos.get(a["arquivo"], {})
-        if ant.get("quando") == prod["ult"][0]:
-            continue
-        if ant and preco >= ant.get("preco", 0) and agora - datetime.fromisoformat(ant["enviado"]) < timedelta(hours=24):
-            continue
-        partes = ["🔥 PROMOÇÃO TOP" if v == "top" else "🔔 PREÇO DO SEU ALERTA", prod["nome"], "",
-                  f"💰 {reais_txt(preco)}" + (f" ({queda:.0%} abaixo da mediana)".replace(".", ",") if queda > 0.01 else "")]
-        if cupom:
-            partes.append(f"🎟 Cupom: {cupom}")
-        if loja:
-            partes.append(f"🏬 {loja}")
-        if link:
-            partes.append(f"🔗 {link}")
-        if site:
-            partes.append(f"📈 Histórico: {site}#p-{prod['id']}")
-        try:
-            telegram(token, "sendMessage", chat_id=tg["chat"], text="\n".join(partes))
-            avisos[a["arquivo"]] = {"quando": prod["ult"][0], "preco": preco, "enviado": agora.isoformat()}
-            print(f"alertas: aviso enviado para {prod['nome']} ({reais_txt(preco)})")
-        except requests.RequestException as erro:
-            print(f"alertas: falha ao enviar aviso ({erro})", file=sys.stderr)
+        if a["busca"]:
+            ts = termos_busca(a["busca"])
+            candidatos = [p for p in indice["produtos"] if ts and all(t in texto_busca(p) for t in ts)]
+        else:
+            prod = por_id.get(a["produto"])
+            if not prod and a["nome"]:  # o produto pode ter mudado de nome no radar
+                tk = tokens(a["nome"])
+                prod = next((p for p in indice["produtos"] if mesmo_produto(tk, tokens(p["nome"]))), None)
+            if not prod:
+                print(f"alertas: produto do alerta {a['arquivo']} não encontrado")
+                continue
+            candidatos = [prod]
+        for prod in candidatos:
+            avisar(a, prod, agora, site, avisos, token, tg)
+
+
+def avisar(a, prod, agora, site, avisos, token, tg):
+    """Manda a mensagem de um produto se ele bater a regra do alerta e ainda não tiver sido avisado."""
+    quando = datetime.fromisoformat(prod["ult"][0])
+    if agora - quando > timedelta(hours=3):
+        return  # só oferta nova
+    preco, loja, cupom, _, link = prod["ult"][1:6]
+    v, queda = veredito(prod, agora)
+    if not ((a["top"] and v == "top") or (a["maximo"] and preco <= a["maximo"])):
+        return
+    chave = a["arquivo"] + ("|" + prod["id"] if a["busca"] else "")
+    ant = avisos.get(chave, {})
+    if ant.get("quando") == prod["ult"][0]:
+        return
+    if ant and preco >= ant.get("preco", 0) and agora - datetime.fromisoformat(ant["enviado"]) < timedelta(hours=24):
+        return
+    partes = ["🔥 PROMOÇÃO TOP" if v == "top" else "🔔 PREÇO DO SEU ALERTA", prod["nome"], "",
+              f"💰 {reais_txt(preco)}" + (f" ({queda:.0%} abaixo da mediana)".replace(".", ",") if queda > 0.01 else "")]
+    if cupom:
+        partes.append(f"🎟 Cupom: {cupom}")
+    if loja:
+        partes.append(f"🏬 {loja}")
+    if link:
+        partes.append(f"🔗 {link}")
+    if site:
+        partes.append(f"📈 Histórico: {site}#p-{prod['id']}")
+    if a["busca"]:
+        partes.append(f"(alerta da busca \"{a['busca']}\")")
+    try:
+        telegram(token, "sendMessage", chat_id=tg["chat"], text="\n".join(partes))
+        avisos[chave] = {"quando": prod["ult"][0], "preco": preco, "enviado": agora.isoformat()}
+        print(f"alertas: aviso enviado para {prod['nome']} ({reais_txt(preco)})")
+    except requests.RequestException as erro:
+        print(f"alertas: falha ao enviar aviso ({erro})", file=sys.stderr)
 
 
 def main():

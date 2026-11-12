@@ -207,6 +207,9 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
 .alerta-form input[type=text]{width:8rem;padding:.4rem .55rem;border:1px solid var(--linha);border-radius:.4rem;background:var(--papel2);font-family:var(--mono)}
 .alerta-form input[type=text]:focus{outline:none;border-color:var(--neon)}
 .alerta-form small{color:var(--suave)}
+.alerta-linha{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .8rem}
+.alerta-linha input[type=text]{width:7rem;padding:.4rem .55rem;border:1px solid var(--linha);border-radius:.4rem;background:var(--papel2);font-family:var(--mono)}
+.alerta-linha select{font-size:.88rem}
 .alerta-ativo{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;color:var(--neon)}
 .sino{color:var(--neon);font-size:.8rem;margin-right:.3rem}
 
@@ -265,6 +268,7 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
       </label>
     </div>
     <p class="caps" id="conta" style="color:var(--suave);margin:.9rem 0 0"></p>
+    <div class="painel" id="alerta-busca" hidden></div>
     <div class="grade" id="grade"></div>
     <button class="mais realce" id="mais" type="button" hidden>Mostrar mais produtos</button>
   </section>
@@ -460,6 +464,36 @@ function montarAlerta(p, aberto) {
   caixa.replaceChildren(...partes);
 }
 
+let alertasBusca = [];
+function montarAlertaBusca(termos) {
+  const caixa = $("alerta-busca"), r = repositorio(), texto = $("busca").value.trim();
+  caixa.hidden = !termos.length;
+  if (caixa.hidden) return;
+  const chave = termos.join(" "), ativo = alertasBusca.find(a => termosDe(a.busca).join(" ") === chave);
+  if (ativo) {
+    const regra = [ativo.top && "entrar em Promoção top", ativo.maximo && "custar até " + reais(ativo.maximo)].filter(Boolean).join(" ou ");
+    caixa.replaceChildren(el("div", {class: "alerta-ativo"}, el("strong", {}, "🔔 Alerta ligado para esta busca"),
+      el("span", {}, `Qualquer produto com "${ativo.busca}" que ${regra} gera aviso no Telegram.`),
+      r ? el("a", {class: "botao", href: `https://github.com/${r.dono}/${r.repo}/delete/main/alertas/${encodeURIComponent(ativo.arquivo)}`, target: "_blank", rel: "noopener noreferrer"}, "Desligar") : null));
+    return;
+  }
+  const quando = el("select", {"aria-label": "Quando avisar"}, el("option", {value: "valor"}, "custar até"), el("option", {value: "top"}, "entrar em Promoção top"));
+  const valor = el("input", {type: "text", inputmode: "decimal", placeholder: "R$ 200", "aria-label": "Preço máximo em reais"});
+  quando.addEventListener("change", () => { valor.hidden = quando.value === "top"; });
+  const msg = el("small", {style: "color:var(--suave);flex-basis:100%"}, "Um alerta só para todos os modelos que aparecem nesta busca, inclusive os que surgirem depois.");
+  const criar = el("button", {class: "botao cheio", type: "button"}, "Criar alerta");
+  criar.addEventListener("click", () => {
+    if (!r) { msg.textContent = "Os alertas funcionam no seu site publicado no GitHub, não nesta demonstração."; return; }
+    const v = parseFloat(valor.value.replace(/[^\d,.]/g, "").replace(/\./g, "").replace(",", "."));
+    if (quando.value === "valor" && !(v > 0)) { msg.textContent = "Digite o preço máximo, por exemplo 200."; valor.focus(); return; }
+    const nome = "busca-" + termos.join("-").slice(0, 50) + ".txt";
+    const conteudo = [`busca: ${texto}`, `avisar_quando: ${quando.value === "top" ? "promocao top" : "preco"}`, `preco_maximo: ${quando.value === "valor" ? v : ""}`].join("\n") + "\n";
+    window.open(`https://github.com/${r.dono}/${r.repo}/new/main?filename=${encodeURIComponent("alertas/" + nome)}&value=${encodeURIComponent(conteudo)}`, "_blank", "noopener");
+    msg.textContent = "Abriu o GitHub numa aba nova com o alerta pronto. Clique em Confirmar alterações lá.";
+  });
+  caixa.replaceChildren(el("div", {class: "alerta-linha"}, el("strong", {}, `🔔 Avisar no Telegram quando qualquer produto de "${texto}"`), quando, valor, criar, msg));
+}
+
 /* ---------- especificações lidas do nome ---------- */
 function specs(p) {
   const n = p.nome, r = {};
@@ -589,6 +623,10 @@ function card(p) {
 
 /* ---------- aba Ofertas ---------- */
 let categoria = "Todos", filtroV = "todos", limite = 48;
+function termosDe(texto) {
+  return semAcento(texto).split(/[\s,]+/).map(t => t.replace(/[^a-z0-9]/g, "")).filter(Boolean)
+    .map(t => t.length > 4 && t.endsWith("s") ? t.slice(0, -1) : t);
+}
 function termosDaBusca() {
   return semAcento($("busca").value).split(/[\s,]+/).map(t => t.replace(/[^a-z0-9]/g, "")).filter(Boolean)
     .map(t => t.length > 4 && t.endsWith("s") ? t.slice(0, -1) : t);
@@ -618,6 +656,7 @@ function desenharOfertas() {
     barato: (a, b) => a.u.preco - b.u.preco, caro: (a, b) => b.u.preco - a.u.preco, postados: (a, b) => b.posts - a.posts}[ordem];
   lista.sort((a, b) => nota(a) - nota(b) || cmp(a, b));
   $("conta").textContent = `${lista.length} ${lista.length === 1 ? "produto" : "produtos"}`;
+  montarAlertaBusca(termos);
   $("grade").replaceChildren(...(lista.length ? lista.slice(0, limite).map(card)
     : [el("p", {class: "vazio"}, "Nada encontrado com esses filtros. Tente menos palavras, outra categoria ou o filtro Todos.")]));
   $("mais").hidden = lista.length <= limite;
@@ -925,7 +964,7 @@ let espera; addEventListener("resize", () => { clearTimeout(espera); espera = se
   produtos.forEach(preparar);
   porId = new Map(produtos.map(p => [p.id, p]));
   selecao = ler("radar-selecao", []).filter(i => porId.has(i));
-  for (const a of dados.alertas || []) if (porId.has(a.produto)) alertaPorProduto.set(a.produto, a);
+  for (const a of dados.alertas || []) { if (a.busca) alertasBusca.push(a); else if (porId.has(a.produto)) alertaPorProduto.set(a.produto, a); }
   $("atualizado").textContent = "ao vivo · " + referencia.toLocaleString("pt-BR", {day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"});
   if (dados.canais && dados.canais.length) $("como-intro").textContent = `O radar lê ${dados.canais.length} canais de promoção do Telegram (${dados.canais.join(", ")}) a cada 15 minutos, guarda cada oferta e monta o histórico de preço de cada produto.`;
   desenharFiltroV();
