@@ -5,254 +5,533 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Radar de preços</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --fundo:#EEF1F4; --papel:#FFFFFF; --tinta:#16202B; --suave:#5A6877; --linha:#D3DAE2;
-  --azul:#1F5FD6; --cupom:#FFC933; --cupom-tinta:#3A2C00; --verde:#167A4C;
+  --fundo:#F2F3F5; --papel:#FFFFFF; --papel2:#F7F8FA; --tinta:#14181F; --suave:#5E6876; --linha:#DCE0E6;
+  --etiqueta:#F2B705; --etiqueta-tinta:#2B2100; --linha-graf:#C98F00; --area:rgba(242,183,5,.16);
+  --verde:#13804F; --verde-fundo:#E1F4EA; --ambar:#9A5B00; --ambar-fundo:#FFF0D6; --alerta:#C2410C;
+  --azul:#2563C9; --tg:#229ED9;
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){ color-scheme:dark;
-    --fundo:#10161D; --papel:#1A222C; --tinta:#E8EDF2; --suave:#9AA7B5; --linha:#2E3946;
-    --azul:#7FAEFF; --cupom:#FFC933; --cupom-tinta:#3A2C00; --verde:#5BD39A; }
+    --fundo:#0D1014; --papel:#161A20; --papel2:#1C2129; --tinta:#E8ECF1; --suave:#8D97A5; --linha:#272D36;
+    --etiqueta:#FFC933; --etiqueta-tinta:#2B2100; --linha-graf:#FFC933; --area:rgba(255,201,51,.13);
+    --verde:#4FD08C; --verde-fundo:rgba(79,208,140,.12); --ambar:#FFB547; --ambar-fundo:rgba(255,181,71,.12);
+    --alerta:#FF8A5C; --azul:#7FB0FF; --tg:#2AABEE; }
 }
 :root[data-theme="dark"]{ color-scheme:dark;
-  --fundo:#10161D; --papel:#1A222C; --tinta:#E8EDF2; --suave:#9AA7B5; --linha:#2E3946;
-  --azul:#7FAEFF; --cupom:#FFC933; --cupom-tinta:#3A2C00; --verde:#5BD39A; }
+  --fundo:#0D1014; --papel:#161A20; --papel2:#1C2129; --tinta:#E8ECF1; --suave:#8D97A5; --linha:#272D36;
+  --etiqueta:#FFC933; --etiqueta-tinta:#2B2100; --linha-graf:#FFC933; --area:rgba(255,201,51,.13);
+  --verde:#4FD08C; --verde-fundo:rgba(79,208,140,.12); --ambar:#FFB547; --ambar-fundo:rgba(255,181,71,.12);
+  --alerta:#FF8A5C; --azul:#7FB0FF; --tg:#2AABEE; }
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--fundo);color:var(--tinta);
   font:400 1rem/1.5 Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
-main{max-width:46rem;margin:0 auto;padding:1.5rem 1rem 3rem}
-h1{font-size:2rem;line-height:1.1;font-weight:800;font-stretch:118%;margin:0 0 .25rem;letter-spacing:-.01em}
-.sub{color:var(--suave);margin:0 0 1.25rem;font-size:.9rem}
-.aviso{background:var(--cupom);color:var(--cupom-tinta);padding:.6rem .8rem;border-radius:.4rem;font-size:.9rem;margin:0 0 1rem}
-input[type=search]{width:100%;font:inherit;font-size:1.05rem;padding:.85rem 1rem;border:2px solid var(--tinta);
-  border-radius:.5rem;background:var(--papel);color:var(--tinta)}
-input[type=search]:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--azul);outline-offset:2px}
-.conta{color:var(--suave);font-size:.85rem;margin:.75rem 0 .5rem}
-ul{list-style:none;margin:0;padding:0}
-.item{display:flex;gap:.75rem;align-items:center;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;
-  background:var(--papel);border:0;border-bottom:1px solid var(--linha);padding:.85rem .9rem}
-li:first-child .item{border-radius:.5rem .5rem 0 0} li:last-child .item{border-radius:0 0 .5rem .5rem;border-bottom:0}
-.item .nome{flex:1;min-width:0;font-weight:600;line-height:1.3}
-.item .nome small{display:block;font-weight:400;color:var(--suave);font-size:.8rem;margin-top:.15rem}
-/* etiqueta de preço: a peça de identidade da página */
-.etiqueta{flex:none;text-align:right;font-weight:800;font-stretch:90%;font-size:1.15rem;line-height:1.1;
-  padding:.35rem .55rem .35rem .9rem;background:var(--fundo);border-radius:.3rem;position:relative}
-.etiqueta::before{content:"";position:absolute;left:.3rem;top:50%;width:.35rem;height:.35rem;margin-top:-.175rem;
-  border-radius:50%;background:var(--papel);box-shadow:inset 0 0 0 1px var(--linha)}
-.etiqueta.com-cupom{background:var(--cupom);color:var(--cupom-tinta)}
-.etiqueta small{display:block;font-weight:600;font-size:.7rem}
-.voltar{font:inherit;background:none;border:0;color:var(--azul);padding:.5rem 0;cursor:pointer;font-weight:600}
-h2{font-size:1.35rem;line-height:1.2;font-weight:700;margin:.25rem 0 1rem}
-.numeros{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:0 0 1rem}
-.numeros div{background:var(--papel);border-radius:.5rem;padding:.6rem .7rem}
-.numeros dt{font-size:.78rem;color:var(--suave)} .numeros dd{margin:0;font-weight:800;font-stretch:90%;font-size:1.15rem}
-.numeros .menor dd{color:var(--verde)}
-.grafico{background:var(--papel);border-radius:.5rem;padding:.5rem;overflow-x:auto}
-svg{display:block;width:100%;height:auto;min-width:18rem}
-.legenda{display:flex;flex-wrap:wrap;gap:.4rem 1rem;font-size:.8rem;color:var(--suave);margin:.5rem .25rem 0}
-.legenda i{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;vertical-align:-.05rem;margin-right:.3rem}
-.ponto{cursor:pointer}
-.hist{margin-top:1.25rem} .hist h3{font-size:1rem;margin:0 0 .4rem}
-.hist li{background:var(--papel);border-bottom:1px solid var(--linha);padding:.7rem .9rem;display:flex;gap:.75rem;align-items:center}
-.hist li.sel{box-shadow:inset 4px 0 0 var(--azul)}
-.hist .q{flex:1;min-width:0;font-size:.88rem;color:var(--suave)} .hist .q b{color:var(--tinta);display:block;font-size:.95rem}
-.hist code{background:var(--cupom);color:var(--cupom-tinta);padding:.05rem .35rem;border-radius:.2rem;font:700 .82rem ui-monospace,Menlo,Consolas,monospace}
-a{color:var(--azul)}
-.vazio{background:var(--papel);border-radius:.5rem;padding:1.25rem;color:var(--suave)}
+main{max-width:68rem;margin:0 auto;padding:1.75rem 1rem 4rem}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--azul);outline-offset:2px}
 [hidden]{display:none!important}
+
+/* topo */
+.topo h1{font-size:clamp(2rem,5vw,2.75rem);line-height:1;font-weight:800;font-stretch:120%;margin:0;letter-spacing:-.015em}
+.topo p{color:var(--suave);margin:.6rem 0 0;max-width:36rem}
+.topo .atual{font-size:.85rem;margin-top:.35rem}
+.aviso{background:var(--etiqueta);color:var(--etiqueta-tinta);padding:.6rem .85rem;border-radius:.4rem;font-size:.9rem;margin:1rem 0 0}
+
+.busca{margin:1.5rem 0 .9rem;position:relative}
+.busca input{width:100%;padding:.9rem 2.6rem .9rem 1rem;border:1.5px solid var(--linha);border-radius:.6rem;background:var(--papel);font-size:1.05rem}
+.busca input:focus{border-color:var(--etiqueta);outline:none;box-shadow:0 0 0 3px var(--area)}
+.busca button{position:absolute;right:.4rem;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--suave);font-size:1.3rem;padding:.3rem .5rem;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{border:1px solid var(--linha);background:var(--papel);border-radius:999px;padding:.32rem .75rem;font-size:.85rem;cursor:pointer;color:var(--suave)}
+.chip b{font-weight:600;color:var(--tinta);margin-right:.2rem}
+.chip[aria-pressed="true"]{background:var(--etiqueta);border-color:var(--etiqueta);color:var(--etiqueta-tinta)}
+.chip[aria-pressed="true"] b{color:var(--etiqueta-tinta)}
+
+/* cards de produto */
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.75rem;margin-top:1.25rem}
+.card{display:flex;flex-direction:column;text-align:left;border:1px solid var(--linha);background:var(--papel);border-radius:.7rem;padding:.9rem .95rem .85rem;cursor:pointer;min-width:0}
+.card:hover{border-color:var(--suave)}
+.card .cat{font-size:.75rem;color:var(--suave)}
+.card .nome{font-weight:700;line-height:1.25;margin:.15rem 0 .55rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
+.card .preco{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem}
+.card .preco strong{font-size:1.4rem;font-weight:800;font-stretch:92%;line-height:1}
+.card .preco span{font-size:.75rem;color:var(--suave);white-space:nowrap}
+.card svg{width:100%;height:2.75rem;margin:.55rem 0 .45rem;display:block;overflow:visible}
+.card .rodape{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.78rem;color:var(--suave)}
+.card .rodape b{color:var(--tinta);font-weight:700}
+.selo{display:inline-block;font-size:.72rem;font-weight:700;padding:.18rem .5rem;border-radius:.3rem;white-space:nowrap;background:var(--papel2);color:var(--suave);border:1px solid var(--linha)}
+.selo.verde{background:var(--verde-fundo);color:var(--verde);border-color:transparent}
+.selo.ambar{background:var(--ambar-fundo);color:var(--ambar);border-color:transparent}
+@media (max-width:40rem){
+  .grade{grid-template-columns:1fr 1fr;gap:.5rem}
+  .card{padding:.75rem .75rem .7rem}
+  .card .nome{font-size:.92rem;-webkit-line-clamp:3;min-height:3.75em}
+  .card .preco{flex-direction:column;align-items:flex-start;gap:.15rem}
+  .card .preco strong{font-size:1.2rem}
+  .card .rodape{flex-direction:column;align-items:flex-start;gap:.35rem}
+  .pegou .grade{grid-template-columns:1fr}
+}
+.mais{display:block;margin:1rem auto 0;border:1px solid var(--linha);background:var(--papel);border-radius:.5rem;padding:.6rem 1.2rem;cursor:pointer;font-weight:600}
+.vazio{border:1px dashed var(--linha);border-radius:.7rem;padding:1.5rem;color:var(--suave);text-align:center;margin-top:1.25rem}
+
+/* quem estava no canal pegou */
+.pegou{margin-top:3rem}
+.pegou h2,.detalhe h2{font-size:clamp(1.4rem,3.5vw,1.9rem);line-height:1.1;font-weight:800;font-stretch:115%;margin:0}
+.pegou>p{color:var(--suave);margin:.4rem 0 0;max-width:36rem}
+.pegou .grade{grid-template-columns:repeat(auto-fill,minmax(13rem,1fr))}
+.achado{display:flex;flex-direction:column;min-width:0;border:1px solid var(--linha);background:var(--papel);border-radius:.7rem;padding:.8rem .9rem;text-align:left;cursor:pointer}
+.achado:hover{border-color:var(--suave)}
+.achado .tipo{display:flex;gap:.5rem;justify-content:space-between;font-size:.75rem;font-weight:700}
+.achado .tipo.erro{color:var(--alerta)} .achado .tipo.menor{color:var(--verde)}
+.achado .nome{display:block;font-weight:700;margin:.3rem 0 .1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.achado strong{display:block;font-size:1.35rem;font-weight:800;font-stretch:92%}
+.achado small{display:block;color:var(--suave);font-size:.75rem}
+
+/* detalhe */
+.voltar{border:0;background:none;color:var(--azul);font-weight:600;padding:.4rem 0;cursor:pointer}
+.detalhe .cat{color:var(--suave);font-size:.85rem;margin-top:.5rem}
+.detalhe h2{margin:.15rem 0 1.1rem}
+.numeros{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem}
+.numeros div{background:var(--papel);border:1px solid var(--linha);border-radius:.6rem;padding:.7rem .8rem;min-width:0}
+.numeros dt{font-size:.78rem;color:var(--suave)}
+.numeros dd{margin:.1rem 0 0;font-size:1.35rem;font-weight:800;font-stretch:92%;line-height:1.2}
+.numeros dd.verde{color:var(--verde)}
+.numeros small{display:block;font-size:.75rem;color:var(--suave);line-height:1.3;margin-top:.1rem}
+@media (max-width:40rem){.numeros{grid-template-columns:repeat(2,1fr)}}
+
+.painel{background:var(--papel);border:1px solid var(--linha);border-radius:.8rem;padding:.9rem;margin-top:.9rem}
+.controles{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem;align-items:center}
+.abas{display:flex;gap:.25rem;background:var(--papel2);border-radius:.5rem;padding:.2rem}
+.abas button{border:0;background:none;padding:.35rem .7rem;border-radius:.35rem;cursor:pointer;font-size:.88rem;color:var(--suave)}
+.abas button[aria-pressed="true"]{background:var(--papel);color:var(--tinta);font-weight:700;box-shadow:0 0 0 1px var(--linha)}
+.comparar{display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--suave)}
+.comparar select{max-width:14rem;padding:.4rem .5rem;border:1px solid var(--linha);border-radius:.4rem;background:var(--papel2)}
+.legenda{display:flex;flex-wrap:wrap;gap:.3rem 1rem;font-size:.8rem;color:var(--suave);margin:.75rem 0 .25rem}
+.legenda i{display:inline-block;width:1rem;height:0;border-top:2.5px solid;vertical-align:middle;margin-right:.35rem}
+.grafico{position:relative;overflow-x:auto}
+.grafico svg{display:block;width:100%;height:auto;touch-action:pan-y}
+.grafico text{paint-order:stroke;stroke:var(--papel);stroke-width:4px;stroke-linejoin:round}
+.dica{position:absolute;pointer-events:none;background:var(--papel2);border:1px solid var(--linha);border-radius:.45rem;padding:.4rem .55rem;font-size:.8rem;line-height:1.3;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.dica b{font-size:1rem;font-weight:800}
+.dica .c2{color:var(--azul)}
+
+.conselho{margin-top:.9rem;border-radius:.6rem;padding:.9rem;background:var(--papel2)}
+.conselho p{margin:.45rem 0 .8rem;max-width:40rem}
+.botoes{display:flex;flex-wrap:wrap;gap:.5rem}
+.botoes a{display:inline-flex;align-items:center;gap:.45rem;text-decoration:none;font-weight:700;padding:.6rem 1rem;border-radius:.5rem}
+.botoes .oferta{background:var(--etiqueta);color:var(--etiqueta-tinta)}
+.botoes .tg{background:var(--tg);color:#fff}
+details{margin-top:.9rem}
+summary{cursor:pointer;color:var(--azul);font-weight:600;font-size:.9rem}
+.tabela{overflow-x:auto;margin-top:.5rem}
+table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:30rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--linha);white-space:nowrap}
+th{color:var(--suave);font-weight:600}
+td code{background:var(--etiqueta);color:var(--etiqueta-tinta);padding:.05rem .35rem;border-radius:.2rem;font-weight:700;font-family:inherit;font-size:.8rem}
+@media (prefers-reduced-motion:no-preference){.card,.achado{transition:border-color .15s}}
 </style>
 </head>
 <body>
 <main>
-  <h1>Radar de preços</h1>
-  <p class="sub" id="atualizado">Carregando ofertas…</p>
-  <p class="aviso" id="aviso" hidden>Estes são dados de exemplo. Quando o coletor rodar, as ofertas reais dos seus canais aparecem aqui.</p>
+  <header class="topo">
+    <h1>Radar de preços</h1>
+    <p id="intro">Preços de oferta postados nos canais de promoção do Telegram. Toque num produto para ver a curva completa, o preço-alvo e comparar com outro.</p>
+    <p class="atual" id="atualizado">Carregando…</p>
+    <p class="aviso" id="aviso" hidden>Estes são dados de exemplo. No seu site, aparecem as ofertas reais coletadas dos canais.</p>
+  </header>
 
-  <section id="tela-busca">
-    <label for="busca" class="sub" style="display:block;margin-bottom:.4rem">Qual produto você quer acompanhar?</label>
-    <input id="busca" type="search" placeholder="mouse, SSD 1TB, RTX 5060, notebook…" autocomplete="off">
-    <p class="conta" id="conta"></p>
-    <ul id="lista"></ul>
+  <section id="inicio">
+    <div class="busca">
+      <input id="busca" type="search" placeholder="RX 9060, 7800X3D, SSD 1TB, gabinete…" autocomplete="off" aria-label="Buscar produto">
+      <button id="limpar" type="button" aria-label="Limpar busca" hidden>×</button>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Categorias"></div>
+    <div class="grade" id="grade"></div>
+    <button class="mais" id="mais" type="button" hidden>Mostrar mais produtos</button>
+
+    <section class="pegou" id="pegou">
+      <h2>Quem estava no canal pegou</h2>
+      <p>Preços dos últimos 7 dias que ficaram bem abaixo do histórico. Oferta boa dura minutos, por isso vale estar no canal.</p>
+      <div class="grade" id="achados"></div>
+    </section>
   </section>
 
-  <section id="tela-produto" hidden>
-    <button class="voltar" id="voltar">‹ Voltar para a busca</button>
-    <h2 id="p-nome"></h2>
+  <section class="detalhe" id="detalhe" hidden>
+    <button class="voltar" id="voltar" type="button">‹ Todos os produtos</button>
+    <p class="cat" id="d-cat"></p>
+    <h2 id="d-nome"></h2>
     <dl class="numeros">
-      <div><dt>Último preço</dt><dd id="n-ultimo"></dd></div>
-      <div class="menor"><dt>Menor preço</dt><dd id="n-menor"></dd></div>
-      <div><dt>Preço médio</dt><dd id="n-medio"></dd></div>
+      <div><dt>Último preço</dt><dd id="n-ult"></dd><small id="n-ult-s"></small></div>
+      <div><dt>Menor do período</dt><dd id="n-menor" class="verde"></dd><small id="n-menor-s"></small></div>
+      <div><dt id="n-med-t">Mediana do mês</dt><dd id="n-med"></dd><small id="n-med-s"></small></div>
+      <div><dt>Preço-alvo</dt><dd id="n-alvo"></dd><small id="n-alvo-s"></small></div>
     </dl>
-    <div class="grafico"><div id="svg"></div>
-      <p class="legenda"><span><i style="background:var(--cupom);box-shadow:0 0 0 1.5px var(--tinta)"></i>com cupom</span>
-        <span><i style="background:var(--azul)"></i>sem cupom</span><span>Toque em um ponto para ver a oferta</span></p>
+    <div class="painel">
+      <div class="controles">
+        <div class="abas" id="abas" role="group" aria-label="Período"></div>
+        <label class="comparar">Comparar com <select id="comparar"></select></label>
+      </div>
+      <p class="legenda" id="legenda"></p>
+      <div class="grafico" id="grafico"></div>
+      <div class="conselho">
+        <span class="selo" id="c-selo"></span>
+        <p id="c-texto"></p>
+        <div class="botoes" id="c-botoes"></div>
+      </div>
+      <details><summary>Ver tabela dia a dia</summary><div class="tabela"><table id="tabela"></table></div></details>
     </div>
-    <div class="hist"><h3>Todas as ofertas registradas</h3><ul id="hist"></ul></div>
   </section>
 </main>
 
 <script>
-const EXEMPLO = (() => {
-  const o = (produto, nome, loja, pontos) => pontos.map(([data, preco, cupom, pagamento, canal]) =>
-    ({produto, nome, loja, preco, cupom: cupom || "", pagamento: pagamento || "", data: data + ":00+00:00",
-      canais: [canal || "canal-exemplo"], link: ""}));
-  return {atualizado: "2026-11-12T01:25:00+00:00", ofertas: [
-    ...o("mouse-attack-shark-x8", "Mouse Gamer Sem Fio Attack Shark X8 Ultimate, Tri-Mode 42000 DPI, White", "KaBuM!", [
-      ["2026-08-14T15:10", 289.90], ["2026-09-03T22:40", 259.99, "SETEMBRO10"], ["2026-09-28T13:05", 269.90],
-      ["2026-10-15T23:30", 239.99, "", "pix"], ["2026-10-30T12:00", 249.90], ["2026-11-06T21:15", 219.99, "ESQUENTA"],
-      ["2026-11-12T01:24", 199.99, "TIROCERTO", "", "TJGOFERTASs"]]),
-    ...o("smart-tv-65-philips-ambilight", "Smart Tv 65\" 4k Philips Ambilight Titan os 20w Hdr10+", "Shopee", [
-      ["2026-08-20T18:00", 3299.00], ["2026-09-12T14:30", 3149.90, "", "pix"], ["2026-10-09T20:10", 2999.00, "TV150"],
-      ["2026-10-28T11:45", 3099.00], ["2026-11-12T01:23", 2737.92, "", "pix", "GrapeTec"]]),
-    ...o("ssd-kingston-nv3-1tb", "SSD Kingston NV3 1TB, M.2 NVMe, Leitura 6000MB/s", "KaBuM!", [
-      ["2026-08-05T16:20", 459.99], ["2026-09-01T10:00", 429.90, "", "pix"], ["2026-09-25T23:55", 399.99, "NINJA"],
-      ["2026-10-20T19:00", 419.90], ["2026-11-11T22:05", 379.99, "LIVE1111"]]),
-    ...o("placa-de-video-rtx-5060-8gb", "Placa de Vídeo RTX 5060 8GB Galax 1-Click OC", "Pichau", [
-      ["2026-08-29T13:15", 2399.90], ["2026-09-30T21:00", 2299.00, "", "pix"], ["2026-10-22T09:30", 2249.90],
-      ["2026-11-11T23:40", 2099.99, "11PICHAU"]]),
-    ...o("notebook-acer-aspire-go-15", "Notebook Acer Aspire Go 15, Intel Core i5, 8GB, SSD 512GB", "Amazon", [
-      ["2026-09-08T17:45", 3199.00], ["2026-10-11T12:20", 2999.00, "", "pix"], ["2026-11-12T01:17", 2849.05, "ACER5"]]),
-  ]};
-})();
+const ORDEM = ["Placas de vídeo","Processadores","Placas-mãe","Memória RAM","SSD e HDs","Fontes","Gabinetes","Coolers",
+  "Monitores","Mouses","Teclados","Headsets e fones","Controles","Setup e acessórios","Notebooks","PCs montados",
+  "Consoles","TVs","Celulares, tablets e relógios","Outros"];
+const MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const DIA = 864e5;
 
+/* ---------- dados de exemplo (só aparecem quando não há dados/indice.json) ---------- */
+function exemplo() {
+  let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const fim = new Date(2026, 10, 11, 12), dias = 75;
+  const lojas = ["KaBuM!", "Mercado Livre", "Shopee", "Amazon", "Pichau", "Terabyte"];
+  const base = [
+    ["RX 9060 XT 16GB", "Placas de vídeo", 3560, [[38, .71]]], ["RX 9060 XT 8GB", "Placas de vídeo", 2700, [[2, .9]]],
+    ["RTX 5060 Ti 16GB", "Placas de vídeo", 3350, [[20, .86]]], ["RTX 5070 12GB", "Placas de vídeo", 4400, []],
+    ["Ryzen 7 7800X3D", "Processadores", 2350, [[1, .58]]], ["Ryzen 5 7600", "Processadores", 1090, [[50, .85]]],
+    ["SSD Kingston NV3 1TB M.2 NVMe", "SSD e HDs", 430, [[4, .82]]], ["Gabinete Gamer Jonsbo C6 Preto Mini Torre M-ATX", "Gabinetes", 330, []],
+    ["Mouse Gamer Sem Fio Attack Shark X8 Ultimate", "Mouses", 250, [[0, .8]]], ["Monitor Gamer LG UltraGear 27\" 180Hz IPS", "Monitores", 1150, [[16, .87]]],
+    ["Smart TV 65\" 4K Philips Ambilight", "TVs", 3200, [[0, .86]]], ["Caixa de Som JBL Boombox 4", "Setup e acessórios", 2350, [[3, .89]]],
+  ];
+  const produtos = base.map(([nome, cat, preco, quedas], i) => {
+    const lista = [];
+    for (let d = dias; d >= 0; d--) {
+      if (rnd() < .38 && d !== 0) continue;
+      const q = quedas.find(([dd]) => dd === d);
+      const p = Math.round(preco * (q ? q[1] : 1 + (rnd() - .45) * .12) * 100) / 100;
+      const data = new Date(fim - d * DIA), iso = data.toISOString().slice(0, 10);
+      lista.push([iso, p, lojas[Math.floor(rnd() * lojas.length)], rnd() < .3 ? "CUPOM" + (10 + Math.floor(rnd() * 40)) : "", rnd() < .4 ? "pix" : "", "", "exemplo"]);
+    }
+    const u = lista[lista.length - 1];
+    return {id: "ex-" + i, nome, cat, posts: lista.length * 2 + 3, dias: lista, ult: [u[0] + "T21:30Z", ...u.slice(1)]};
+  });
+  return {atualizado: "2026-11-11T23:10:00Z", canais: [], produtos, exemplo: true};
+}
+
+/* ---------- utilidades ---------- */
 const $ = id => document.getElementById(id);
-const el = (tag, props = {}, ...filhos) => {
+function el(tag, props = {}, ...filhos) {
   const n = document.createElement(tag);
-  for (const [k, v] of Object.entries(props)) k === "class" ? n.className = v : n.setAttribute(k, v);
-  n.append(...filhos); return n;
-};
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") n.className = v; else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v);
+  }
+  n.append(...filhos.filter(f => f !== null && f !== undefined && f !== false)); return n;
+}
+const NS = "http://www.w3.org/2000/svg";
+function s(tag, a = {}, txt) { const n = document.createElementNS(NS, tag); for (const k in a) n.setAttribute(k, a[k]); if (txt !== undefined) n.textContent = txt; return n; }
 const reais = v => v.toLocaleString("pt-BR", {style: "currency", currency: "BRL"});
-const dia = d => new Date(d).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit"});
-const diaHora = d => new Date(d).toLocaleString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"});
-const semAcento = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const reaisRedondo = v => "R$ " + Math.round(v).toLocaleString("pt-BR");
+const pctTxt = v => (v * 100).toLocaleString("pt-BR", {maximumFractionDigits: 1}) + "%";
+const dataDia = iso => { const [a, m, d] = iso.split("-").map(Number); return new Date(a, m - 1, d, 12); };
+const isoDia = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const ddmm = d => d.toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit"});
+const ddmmaa = d => d.toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"});
+const semAcento = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const mediana = a => { const o = [...a].sort((x, y) => x - y), m = o.length >> 1; return o.length ? (o.length % 2 ? o[m] : (o[m - 1] + o[m]) / 2) : NaN; };
+const percentil = (a, q) => { const o = [...a].sort((x, y) => x - y), i = (o.length - 1) * q, b = Math.floor(i); return o[b] + (o[Math.min(b + 1, o.length - 1)] - o[b]) * (i - b); };
+const linkSeguro = u => /^https?:\/\//.test(u || "") ? u : "";
+function blackFriday(ano) { const d = new Date(ano, 10, 1, 12); d.setDate(1 + ((11 - d.getDay()) % 7) + 22); return d; }
 
-let produtos = [];
+/* ---------- preparação ---------- */
+let dados, produtos = [], porId = new Map(), referencia, categoria = "Todos", limite = 48;
 
-function agrupar(dados) {
-  const mapa = new Map();
-  for (const o of dados.ofertas) {
-    if (!mapa.has(o.produto)) mapa.set(o.produto, {chave: o.produto, nome: o.nome, ofertas: []});
-    mapa.get(o.produto).ofertas.push(o);
-  }
-  produtos = [...mapa.values()].map(p => {
-    p.ofertas.sort((a, b) => a.data.localeCompare(b.data));
-    p.ultima = p.ofertas[p.ofertas.length - 1];
-    p.nome = p.ultima.nome;
-    p.menor = Math.min(...p.ofertas.map(o => o.preco));
-    p.medio = p.ofertas.reduce((s, o) => s + o.preco, 0) / p.ofertas.length;
-    p.busca = semAcento(p.nome);
-    return p;
-  }).sort((a, b) => b.ultima.data.localeCompare(a.ultima.data));
+function preparar(p) {
+  p.serie = p.dias.map(([dia, preco, loja, cupom, pag, link, canal]) => ({dia, data: dataDia(dia), preco, loja, cupom, pag, link, canal}));
+  const [quando, preco, loja, cupom, pag, link, canal] = p.ult;
+  p.u = {data: new Date(quando), preco, loja, cupom, pag, link, canal};
+  const precos = p.serie.map(d => d.preco);
+  p.menor = Math.min(...precos);
+  p.menorDia = p.serie.find(d => d.preco === p.menor);
+  p.alvo = p.serie.length >= 5 ? Math.round(percentil(precos, .25) / 10) * 10 : null;
+  p.busca = semAcento(p.nome + " " + p.cat);
+  p.status = status(p);
 }
 
-function listar() {
+function status(p) {
+  if (p.serie.length < 3) return {cls: "", txt: "Acompanhando"};
+  if (p.u.preco <= p.menor * 1.01) return {cls: "verde", txt: "No menor preço"};
+  if (p.alvo && p.u.preco <= p.alvo) return {cls: "verde", txt: "Abaixo do alvo"};
+  const bf = blackFriday(referencia.getFullYear()), faltam = (bf - referencia) / DIA;
+  if (faltam > 0 && faltam <= 30) return {cls: "ambar", txt: "Espera a Black"};
+  return {cls: "", txt: "Só abaixo do alvo"};
+}
+
+function achados() {
+  const lista = [], desde = referencia - 7 * DIA;
+  for (const p of produtos) p.serie.forEach((d, i) => {
+    if (d.data < desde || i < 3) return;
+    const antes = p.serie.slice(0, i).map(x => x.preco), med = mediana(antes), queda = 1 - d.preco / med;
+    if (queda >= .4) lista.push({p, d, tipo: "erro", rotulo: "Possível erro de preço", queda});
+    else if (d.preco < Math.min(...antes)) lista.push({p, d, tipo: "menor", rotulo: "Menor preço do período", queda});
+  });
+  return lista.sort((a, b) => b.d.data - a.d.data || b.queda - a.queda).slice(0, 8);
+}
+
+/* ---------- tela inicial ---------- */
+function filtrados() {
   const termos = semAcento($("busca").value).split(/\s+/).filter(Boolean);
-  const achados = produtos.filter(p => termos.every(t => p.busca.includes(t)));
-  const lista = $("lista"); lista.replaceChildren();
-  $("conta").textContent = termos.length
-    ? `${achados.length} ${achados.length === 1 ? "produto encontrado" : "produtos encontrados"}`
-    : `${produtos.length} produtos acompanhados, os mais recentes primeiro`;
-  if (!achados.length) {
-    lista.append(el("li", {class: "vazio"}, "Nenhuma oferta com esse nome ainda. Tente menos palavras, ou espere o produto aparecer em um dos canais."));
-    return;
-  }
-  for (const p of achados.slice(0, 60)) {
-    const u = p.ultima;
-    const botao = el("button", {class: "item", type: "button"},
-      el("span", {class: "nome"}, p.nome,
-        el("small", {}, `${p.ofertas.length} ${p.ofertas.length === 1 ? "oferta" : "ofertas"}, menor ${reais(p.menor)}${u.loja ? ", " + u.loja : ""}`)),
-      el("span", {class: "etiqueta" + (u.cupom ? " com-cupom" : "")}, reais(u.preco),
-        el("small", {}, u.cupom ? "com cupom" : dia(u.data))));
-    botao.addEventListener("click", () => abrir(p));
-    lista.append(el("li", {}, botao));
-  }
+  return produtos.filter(p => (categoria === "Todos" || (categoria === "Destaques" ? p.destaque : p.cat === categoria))
+    && termos.every(t => p.busca.includes(t)));
 }
 
-function abrir(p, selecionada = p.ultima) {
-  $("tela-busca").hidden = true; $("tela-produto").hidden = false;
-  $("p-nome").textContent = p.nome;
-  $("n-ultimo").textContent = reais(p.ultima.preco);
-  $("n-menor").textContent = reais(p.menor);
-  $("n-medio").textContent = reais(p.medio);
-  desenhar(p, selecionada);
-  const hist = $("hist"); hist.replaceChildren();
-  for (const o of [...p.ofertas].reverse()) {
-    const detalhe = el("span", {class: "q"}, el("b", {}, diaHora(o.data)));
-    const partes = [o.loja, o.pagamento && "no " + o.pagamento, o.canais.join(", ")].filter(Boolean).join(", ");
-    if (o.cupom) detalhe.append("cupom ", el("code", {}, o.cupom), partes ? ", " : "");
-    detalhe.append(partes);
-    if (/^https?:\/\//.test(o.link)) detalhe.append(" ", el("a", {href: o.link, target: "_blank", rel: "noopener noreferrer"}, "ver oferta"));
-    hist.append(el("li", {class: o === selecionada ? "sel" : ""}, detalhe,
-      el("span", {class: "etiqueta" + (o.cupom ? " com-cupom" : "")}, reais(o.preco))));
+function desenharChips() {
+  const conta = {};
+  for (const p of produtos) conta[p.cat] = (conta[p.cat] || 0) + 1;
+  const nDest = produtos.filter(p => p.destaque).length;
+  const itens = [["Destaques", nDest], ["Todos", produtos.length], ...ORDEM.filter(c => conta[c]).map(c => [c, conta[c]])];
+  $("chips").replaceChildren(...itens.map(([nome, n]) => el("button", {class: "chip", type: "button", "aria-pressed": String(nome === categoria),
+    onclick: () => { categoria = nome; limite = 48; desenharChips(); desenharGrade(); }}, el("b", {}, nome), String(n))));
+}
+
+function sparkline(p) {
+  const ult = p.serie.slice(-45), svg = s("svg", {viewBox: "0 0 200 44", preserveAspectRatio: "none", "aria-hidden": "true"});
+  if (ult.length < 2) { svg.append(s("line", {x1: 0, x2: 200, y1: 22, y2: 22, stroke: "var(--linha)", "stroke-dasharray": "3 4"})); return svg; }
+  const t0 = +ult[0].data, t1 = +ult[ult.length - 1].data, v = ult.map(d => d.preco), lo = Math.min(...v), hi = Math.max(...v), r = hi - lo || 1;
+  const pts = ult.map(d => [((d.data - t0) / (t1 - t0 || 1)) * 196 + 2, 40 - ((d.preco - lo) / r) * 34]);
+  svg.append(s("path", {d: `M${pts[0][0]},44 L${pts.map(q => q.join(",")).join(" L")} L${pts[pts.length - 1][0]},44Z`, fill: "var(--area)"}),
+    s("polyline", {points: pts.map(q => q.join(",")).join(" "), fill: "none", stroke: "var(--linha-graf)", "stroke-width": 2, "vector-effect": "non-scaling-stroke", "stroke-linejoin": "round"}));
+  const [ex, ey] = pts[pts.length - 1];
+  svg.append(s("circle", {cx: ex, cy: ey, r: 3, fill: "var(--tinta)"}));
+  return svg;
+}
+
+function desenharGrade() {
+  const lista = filtrados(), grade = $("grade");
+  $("limpar").hidden = !$("busca").value;
+  if (!lista.length) {
+    grade.replaceChildren(el("p", {class: "vazio", style: "grid-column:1/-1"}, "Nenhum produto com esse nome ainda. Tente menos palavras, ou espere ele aparecer em um dos canais."));
+    $("mais").hidden = true; return;
   }
+  grade.replaceChildren(...lista.slice(0, limite).map(p => el("button", {class: "card", type: "button", onclick: () => abrir(p)},
+    el("span", {class: "cat"}, p.cat),
+    el("span", {class: "nome"}, p.nome),
+    el("span", {class: "preco"}, el("strong", {}, reais(p.u.preco)), el("span", {}, "último, " + ddmm(p.u.data))),
+    sparkline(p),
+    el("span", {class: "rodape"}, el("span", {}, "menor ", el("b", {}, reais(p.menor))), el("span", {class: "selo " + p.status.cls}, p.status.txt)))));
+  $("mais").hidden = lista.length <= limite;
+}
+
+function desenharAchados() {
+  const lista = achados();
+  $("achados").replaceChildren(...(lista.length ? lista.map(a => el("button", {class: "achado", type: "button", onclick: () => abrir(a.p)},
+    el("span", {class: "tipo " + a.tipo}, el("span", {}, a.rotulo), el("span", {}, "−" + Math.round(a.queda * 100) + "%")),
+    el("span", {class: "nome"}, a.p.nome), el("strong", {}, reais(a.d.preco)),
+    el("small", {}, [ddmm(a.d.data), a.d.loja, "mediana " + reaisRedondo(mediana(a.p.serie.filter(x => x.data < a.d.data).map(x => x.preco)))].filter(Boolean).join(", "))))
+    : [el("p", {class: "vazio", style: "grid-column:1/-1"}, "Quando um preço cair bem abaixo do histórico, ele aparece aqui.")]));
+}
+
+/* ---------- detalhe ---------- */
+let atual = null, periodo = "tudo", comparado = null;
+
+function abrir(p) { location.hash = "p-" + p.id; }
+
+function rota() {
+  const id = location.hash.startsWith("#p-") ? decodeURIComponent(location.hash.slice(3)) : "";
+  const p = porId.get(id);
+  $("inicio").hidden = !!p; $("detalhe").hidden = !p; $("intro").hidden = !!p;
+  if (!p) { atual = null; document.title = "Radar de preços"; return; }
+  if (atual !== p) { atual = p; periodo = "tudo"; comparado = null; montarDetalhe(); }
   window.scrollTo(0, 0);
 }
 
-function desenhar(p, selecionada) {
-  const L = 640, A = 300, m = {e: 58, d: 16, t: 26, b: 30};
-  const ts = p.ofertas.map(o => +new Date(o.data));
-  const folga = Math.max((Math.max(...ts) - Math.min(...ts)) * 0.06, 864e5);
-  const t0 = Math.min(...ts) - folga, t1 = Math.max(...ts) + folga;
-  const precos = p.ofertas.map(o => o.preco);
-  const pf = Math.max((Math.max(...precos) - Math.min(...precos)) * 0.18, Math.max(...precos) * 0.03);
-  const v0 = Math.max(0, Math.min(...precos) - pf), v1 = Math.max(...precos) + pf;
-  const x = t => m.e + (t - t0) / (t1 - t0) * (L - m.e - m.d);
-  const y = v => A - m.b - (v - v0) / (v1 - v0) * (A - m.t - m.b);
-  const NS = "http://www.w3.org/2000/svg";
-  const s = (tag, a, txt) => { const n = document.createElementNS(NS, tag); for (const k in a) n.setAttribute(k, a[k]); if (txt) n.textContent = txt; return n; };
-  const svg = s("svg", {viewBox: `0 0 ${L} ${A}`, role: "img", "aria-label": `Histórico de preços de ${p.nome}`});
-
-  for (let i = 0; i <= 3; i++) {
-    const v = v0 + (v1 - v0) * i / 3;
-    svg.append(s("line", {x1: m.e, x2: L - m.d, y1: y(v), y2: y(v), stroke: "var(--linha)"}),
-      s("text", {x: m.e - 8, y: y(v) + 4, "text-anchor": "end", "font-size": 12, fill: "var(--suave)"}, "R$ " + Math.round(v).toLocaleString("pt-BR")));
-  }
-  for (let i = 0; i <= 3; i++) {
-    const t = t0 + (t1 - t0) * i / 3;
-    svg.append(s("text", {x: x(t), y: A - 8, "text-anchor": i === 0 ? "start" : i === 3 ? "end" : "middle", "font-size": 12, fill: "var(--suave)"}, dia(t)));
-  }
-  // datas de promoção dentro do período do gráfico
-  for (let ano = new Date(t0).getFullYear(); ano <= new Date(t1).getFullYear(); ano++) {
-    const bf = new Date(ano, 10, 1); bf.setDate(1 + ((11 - bf.getDay()) % 7) + 22); // sexta depois da 4ª quinta de novembro
-    for (const [rotulo, d] of [["11/11", new Date(ano, 10, 11, 12)], ["Black Friday", new Date(bf.setHours(12))]]) {
-      if (+d < t0 || +d > t1) continue;
-      svg.append(s("line", {x1: x(+d), x2: x(+d), y1: m.t - 6, y2: A - m.b, stroke: "var(--tinta)", "stroke-dasharray": "3 4", opacity: .55}),
-        s("text", {x: x(+d), y: m.t - 11, "text-anchor": x(+d) > L - 90 ? "end" : "middle", "font-size": 12, "font-weight": 700, fill: "var(--tinta)"}, rotulo));
-    }
-  }
-  svg.append(s("polyline", {points: p.ofertas.map(o => `${x(+new Date(o.data))},${y(o.preco)}`).join(" "),
-    fill: "none", stroke: "var(--azul)", "stroke-width": 2.5, "stroke-linejoin": "round"}));
-  for (const o of p.ofertas) {
-    const cx = x(+new Date(o.data)), cy = y(o.preco), sel = o === selecionada;
-    const g = s("g", {class: "ponto", tabindex: 0, role: "button", "aria-label": `${diaHora(o.data)}, ${reais(o.preco)}${o.cupom ? ", cupom " + o.cupom : ""}`});
-    g.append(s("circle", {cx, cy, r: 16, fill: "transparent"}),
-      s("circle", {cx, cy, r: sel ? 8 : 5.5, fill: o.cupom ? "var(--cupom)" : "var(--azul)", stroke: o.cupom || sel ? "var(--tinta)" : "var(--papel)", "stroke-width": sel ? 2.5 : 1.5}));
-    if (sel) g.append(s("text", {x: Math.min(Math.max(cx, m.e + 40), L - 50), y: cy - 14, "text-anchor": "middle", "font-size": 14, "font-weight": 800, fill: "var(--tinta)"}, reais(o.preco)));
-    const escolher = () => abrir(p, o);
-    g.addEventListener("click", escolher);
-    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); escolher(); } });
-    svg.append(g);
-  }
-  $("svg").replaceChildren(svg);
+function mesesComDados(p) {
+  const m = new Map();
+  for (const d of p.serie) m.set(d.dia.slice(0, 7), true);
+  return [...m.keys()].sort().slice(-2);
 }
 
-$("busca").addEventListener("input", listar);
-$("voltar").addEventListener("click", () => { $("tela-produto").hidden = true; $("tela-busca").hidden = false; });
+function intervalo(p) {
+  if (periodo === "7d") return [new Date(referencia - 6 * DIA - DIA / 2), new Date(+referencia + DIA / 2)];
+  if (periodo.startsWith("m:")) { const [a, m] = periodo.slice(2).split("-").map(Number); return [new Date(a, m - 1, 1), new Date(a, m, 0, 23)]; }
+  return [new Date(p.serie[0].data - DIA / 2), new Date(Math.max(+p.serie[p.serie.length - 1].data, +referencia) + DIA / 2)];
+}
+
+function montarDetalhe() {
+  const p = atual;
+  $("d-cat").textContent = p.cat; $("d-nome").textContent = p.nome;
+  document.title = p.nome + " · Radar de preços";
+  const meses = mesesComDados(p);
+  const abas = [["7d", "7 dias"], ...meses.map(m => ["m:" + m, MESES[+m.slice(5) - 1].replace(/^./, c => c.toUpperCase())]), ["tudo", "Tudo"]];
+  $("abas").replaceChildren(...abas.map(([id, txt]) => el("button", {type: "button", "aria-pressed": String(id === periodo),
+    onclick: () => { periodo = id; montarDetalhe(); }}, txt)));
+
+  const sel = $("comparar"), mesmos = produtos.filter(o => o !== p && o.cat === p.cat).sort((a, b) => a.nome.localeCompare(b.nome));
+  sel.replaceChildren(el("option", {value: ""}, mesmos.length ? "Nenhum" : "Nada na mesma categoria"),
+    ...mesmos.map(o => el("option", {value: o.id}, o.nome)));
+  sel.value = comparado ? comparado.id : "";
+  sel.onchange = () => { comparado = porId.get(sel.value) || null; montarDetalhe(); };
+
+  const [ini, fim] = intervalo(p), noPeriodo = p.serie.filter(d => d.data >= ini && d.data <= fim);
+  $("n-ult").textContent = reais(p.u.preco);
+  $("n-ult-s").textContent = [ddmm(p.u.data), p.u.loja].filter(Boolean).join(", ");
+  if (noPeriodo.length) {
+    const m = noPeriodo.reduce((a, b) => b.preco < a.preco ? b : a);
+    $("n-menor").textContent = reais(m.preco); $("n-menor-s").textContent = [ddmm(m.data), m.loja].filter(Boolean).join(", ");
+  } else { $("n-menor").textContent = "—"; $("n-menor-s").textContent = "sem ofertas no período"; }
+
+  const mesAt = isoDia(referencia).slice(0, 7), dAnt = new Date(referencia.getFullYear(), referencia.getMonth() - 1, 1), mesAnt = isoDia(dAnt).slice(0, 7);
+  const medDe = mes => mediana(p.serie.filter(d => d.dia.startsWith(mes)).map(d => d.preco));
+  const ma = medDe(mesAnt), mb = medDe(mesAt);
+  $("n-med-t").textContent = `Mediana ${MESES[dAnt.getMonth()].slice(0, 3)} → ${MESES[referencia.getMonth()].slice(0, 3)}`;
+  if (!isNaN(ma) && !isNaN(mb)) {
+    const v = mb / ma - 1;
+    $("n-med").textContent = (Math.abs(v) < .005 ? "= " : v < 0 ? "↓ " : "↑ ") + pctTxt(Math.abs(v));
+    $("n-med").className = v < -.005 ? "verde" : "";
+    $("n-med-s").textContent = reaisRedondo(ma) + " → " + reaisRedondo(mb);
+  } else { $("n-med").textContent = "—"; $("n-med").className = ""; $("n-med-s").textContent = "precisa de ofertas nos dois meses"; }
+
+  $("n-alvo").textContent = p.alvo ? reais(p.alvo) : "—";
+  $("n-alvo-s").textContent = `${p.serie.length} ${p.serie.length === 1 ? "dia" : "dias"} com oferta, ${p.posts} posts`;
+
+  const st = p.status, selo = $("c-selo");
+  selo.className = "selo " + st.cls; selo.textContent = st.txt;
+  const bf = blackFriday(referencia.getFullYear()), faltam = Math.ceil((bf - referencia) / DIA);
+  $("c-texto").textContent = {
+    "Acompanhando": "Ainda há poucos dias de histórico. O preço-alvo aparece depois de 5 dias com oferta.",
+    "No menor preço": `Esse é o menor preço que o radar já registrou para este produto: ${reais(p.u.preco)}. Se você estava esperando, é a hora.`,
+    "Abaixo do alvo": `Está abaixo do preço-alvo de ${reais(p.alvo)}, que é um bom preço para o histórico registrado. O menor já visto foi ${reais(p.menor)}.`,
+    "Espera a Black": `Está acima do alvo de ${reais(p.alvo || p.menor)} e a Black Friday é em ${faltam} ${faltam === 1 ? "dia" : "dias"}. Já passou por ${reais(p.menor)} no período.`,
+    "Só abaixo do alvo": `Preço justo aqui é abaixo de ${reais(p.alvo || p.menor)}. Acima disso, espere: já passou por ${reais(p.menor)}.`,
+  }[st.txt];
+  const botoes = [];
+  if (linkSeguro(p.u.link)) botoes.push(el("a", {class: "oferta", href: p.u.link, target: "_blank", rel: "noopener noreferrer"}, "Ver última oferta"));
+  if (p.u.canal && !dados.exemplo) botoes.push(el("a", {class: "tg", href: "https://t.me/" + encodeURIComponent(p.u.canal), target: "_blank", rel: "noopener noreferrer"}, "Ver no canal do Telegram"));
+  $("c-botoes").replaceChildren(...botoes); $("c-botoes").hidden = !botoes.length;
+
+  $("legenda").replaceChildren(...[
+    el("span", {}, el("i", {style: "border-color:var(--linha-graf)"}), "Menor preço do dia"),
+    el("span", {}, el("i", {style: "border-color:var(--suave);border-top-style:dashed"}), "Mediana do mês"),
+    p.alvo ? el("span", {}, el("i", {style: "border-color:var(--verde);border-top-style:dotted"}), "Preço-alvo") : null,
+    comparado ? el("span", {}, el("i", {style: "border-color:var(--azul)"}), comparado.nome) : null].filter(Boolean));
+  grafico(p, ini, fim);
+
+  $("tabela").replaceChildren(el("thead", {}, el("tr", {}, ...["Dia", "Menor preço", "Loja", "Cupom", "Pagamento"].map(t => el("th", {}, t)))),
+    el("tbody", {}, ...[...p.serie].reverse().map(d => el("tr", {}, el("td", {}, ddmmaa(d.data)), el("td", {}, reais(d.preco)),
+      el("td", {}, d.loja || "—"), el("td", {}, d.cupom ? el("code", {}, d.cupom) : "—"), el("td", {}, d.pag || "—")))));
+}
+
+function grafico(p, ini, fim) {
+  const caixaW = $("grafico").clientWidth || 720;
+  const W = Math.max(300, Math.min(caixaW, 1000)), H = W < 520 ? 260 : 320, m = {e: W < 520 ? 58 : 70, d: 14, t: 30, b: 32};
+  const fs = W < 520 ? 11 : 12;
+  const serie = p.serie.filter(d => d.data >= ini && d.data <= fim);
+  const outra = comparado ? comparado.serie.filter(d => d.data >= ini && d.data <= fim) : [];
+  const caixa = $("grafico");
+  if (!serie.length && !outra.length) { caixa.replaceChildren(el("p", {class: "vazio"}, "Nenhuma oferta registrada neste período.")); return; }
+  const valores = [...serie, ...outra].map(d => d.preco).concat(p.alvo ? [p.alvo] : []);
+  let lo = Math.min(...valores), hi = Math.max(...valores); const folga = Math.max((hi - lo) * .12, hi * .03); lo = Math.max(0, lo - folga); hi += folga;
+  const bruto = (hi - lo) / 4, mag = 10 ** Math.floor(Math.log10(bruto)), passo = [1, 2, 2.5, 5, 10].map(k => k * mag).find(k => k >= bruto);
+  lo = Math.floor(lo / passo) * passo; hi = Math.ceil(hi / passo) * passo;
+  const x = t => m.e + (t - ini) / (fim - ini) * (W - m.e - m.d), y = v => H - m.b - (v - lo) / (hi - lo) * (H - m.t - m.b);
+  const svg = s("svg", {viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `Menor preço por dia de ${p.nome}`});
+
+  for (let v = lo; v <= hi + passo / 2; v += passo) {
+    svg.append(s("line", {x1: m.e, x2: W - m.d, y1: y(v), y2: y(v), stroke: "var(--linha)"}),
+      s("text", {x: m.e - 8, y: y(v) + 4, "text-anchor": "end", "font-size": fs, fill: "var(--suave)"}, reaisRedondo(v)));
+  }
+  const nTicks = Math.min(Math.floor(W / 110), Math.max(2, Math.round((fim - ini) / DIA / 7) + 1));
+  for (let i = 0; i < nTicks; i++) {
+    const t = +ini + (fim - ini) * (i + .5) / nTicks;
+    svg.append(s("text", {x: x(t), y: H - 10, "text-anchor": "middle", "font-size": fs, fill: "var(--suave)"}, ddmm(new Date(t))));
+  }
+  // virada de mês, mediana de cada mês e datas de promoção
+  const mesesNoIntervalo = [];
+  for (let d = new Date(ini.getFullYear(), ini.getMonth(), 1); d <= fim; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) mesesNoIntervalo.push(d);
+  mesesNoIntervalo.forEach((d, i) => {
+    const a = Math.max(+d, +ini), b = Math.min(+new Date(d.getFullYear(), d.getMonth() + 1, 1), +fim);
+    if (i > 0) svg.append(s("line", {x1: x(a), x2: x(a), y1: m.t - 14, y2: H - m.b, stroke: "var(--suave)", "stroke-dasharray": "2 4", opacity: .7}));
+    if (mesesNoIntervalo.length > 1 && x(b) - x(a) > 70)
+      svg.append(s("text", {x: (x(a) + x(b)) / 2, y: m.t - 14, "text-anchor": "middle", "font-size": 11, fill: "var(--suave)"}, MESES[d.getMonth()]));
+    const med = mediana(p.serie.filter(q => q.dia.startsWith(isoDia(d).slice(0, 7))).map(q => q.preco));
+    if (!isNaN(med) && med >= lo && med <= hi) svg.append(s("line", {x1: x(a), x2: x(b), y1: y(med), y2: y(med), stroke: "var(--suave)", "stroke-dasharray": "7 5", "stroke-width": 1.3}));
+  });
+  for (let ano = ini.getFullYear(); ano <= fim.getFullYear(); ano++)
+    for (const [rot, d] of [["11/11", new Date(ano, 10, 11, 12)], ["Black Friday", blackFriday(ano)]])
+      if (d >= ini && d <= fim) svg.append(s("line", {x1: x(d), x2: x(d), y1: H - m.b - 18, y2: H - m.b, stroke: "var(--ambar)", "stroke-width": 2}),
+        s("text", {x: x(d) > W - m.d - 90 ? x(d) - 4 : x(d) + 4, y: H - m.b - 7, "text-anchor": x(d) > W - m.d - 90 ? "end" : "start", "font-size": 11, "font-weight": 700, fill: "var(--ambar)"}, rot));
+  if (p.alvo && p.alvo >= lo && p.alvo <= hi) svg.append(
+    s("line", {x1: m.e, x2: W - m.d, y1: y(p.alvo), y2: y(p.alvo), stroke: "var(--verde)", "stroke-dasharray": "2 4", "stroke-width": 1.6}),
+    s("text", {x: m.e + 6, y: y(p.alvo) - 6, "font-size": 11, fill: "var(--verde)", "font-weight": 700}, "alvo " + reaisRedondo(p.alvo)));
+
+  const caminho = lista => lista.map(d => `${x(d.data).toFixed(1)},${y(d.preco).toFixed(1)}`).join(" L");
+  if (serie.length) {
+    if (serie.length > 1) svg.append(s("path", {d: `M${x(serie[0].data)},${H - m.b} L${caminho(serie)} L${x(serie[serie.length - 1].data)},${H - m.b}Z`, fill: "var(--area)"}));
+    svg.append(s("path", {d: "M" + caminho(serie), fill: "none", stroke: "var(--linha-graf)", "stroke-width": 2.5, "stroke-linejoin": "round"}));
+    for (const d of serie) svg.append(s("circle", {cx: x(d.data), cy: y(d.preco), r: 2.8, fill: "var(--papel)", stroke: "var(--linha-graf)", "stroke-width": 1.6}));
+    const menor = serie.reduce((a, b) => b.preco < a.preco ? b : a);
+    const abaixo = y(menor.preco) < H - m.b - 34;
+    svg.append(s("circle", {cx: x(menor.data), cy: y(menor.preco), r: 6, fill: "var(--verde)", stroke: "var(--papel)", "stroke-width": 2}),
+      s("text", {x: Math.min(Math.max(x(menor.data), m.e + 40), W - m.d - 40), y: y(menor.preco) + (abaixo ? 22 : -12), "text-anchor": "middle", "font-size": 13, "font-weight": 800, fill: "var(--verde)"}, reais(menor.preco)));
+  }
+  if (outra.length) {
+    svg.append(s("path", {d: "M" + caminho(outra), fill: "none", stroke: "var(--azul)", "stroke-width": 2, "stroke-linejoin": "round"}));
+    for (const d of outra) svg.append(s("circle", {cx: x(d.data), cy: y(d.preco), r: 2.4, fill: "var(--azul)"}));
+  }
+
+  const guia = s("line", {y1: m.t - 4, y2: H - m.b, stroke: "var(--tinta)", opacity: 0}), marca = s("circle", {r: 5, fill: "var(--tinta)", opacity: 0});
+  const area = s("rect", {x: m.e, y: m.t, width: W - m.e - m.d, height: H - m.t - m.b, fill: "transparent"});
+  svg.append(guia, marca, area);
+  const dica = el("div", {class: "dica", hidden: ""});
+  const pertoDe = (lista, t) => lista.reduce((a, b) => Math.abs(b.data - t) < Math.abs(a.data - t) ? b : a, lista[0]);
+  const mostrar = ev => {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) / r.width * W;
+    const t = +ini + (px - m.e) / (W - m.e - m.d) * (fim - ini), base = serie.length ? serie : outra;
+    const d = pertoDe(base, t), cx = x(d.data), cy = y(d.preco);
+    guia.setAttribute("x1", cx); guia.setAttribute("x2", cx); guia.setAttribute("opacity", .35);
+    marca.setAttribute("cx", cx); marca.setAttribute("cy", cy); marca.setAttribute("opacity", 1);
+    const o = outra.length && serie.length ? outra.find(q => q.dia === d.dia) : null;
+    dica.replaceChildren(el("div", {}, ddmmaa(d.data)), el("b", {}, reais(d.preco)), " ", [d.loja, d.cupom && "cupom " + d.cupom].filter(Boolean).join(", "),
+      ...(o ? [el("div", {class: "c2"}, comparado.nome.slice(0, 28) + ": " + reais(o.preco))] : []));
+    dica.hidden = false;
+    const esc = r.width / W, larg = dica.offsetWidth, cr = caixa.getBoundingClientRect();
+    let left = r.left - cr.left + caixa.scrollLeft + cx * esc + 12;
+    if (left + larg > caixa.scrollLeft + cr.width - 4) left = r.left - cr.left + caixa.scrollLeft + cx * esc - larg - 12;
+    dica.style.left = left + "px"; dica.style.top = Math.max(0, cy * esc - 50) + "px";
+  };
+  area.addEventListener("pointermove", mostrar); area.addEventListener("pointerdown", mostrar);
+  area.addEventListener("pointerleave", ev => { if (ev.pointerType === "mouse") { dica.hidden = true; guia.setAttribute("opacity", 0); marca.setAttribute("opacity", 0); } });
+  caixa.replaceChildren(svg, dica);
+}
+
+/* ---------- início ---------- */
+$("busca").addEventListener("input", () => { limite = 48; if ($("busca").value && categoria === "Destaques") { categoria = "Todos"; desenharChips(); } desenharGrade(); });
+$("limpar").addEventListener("click", () => { $("busca").value = ""; desenharGrade(); $("busca").focus(); });
+$("mais").addEventListener("click", () => { limite += 48; desenharGrade(); });
+$("voltar").addEventListener("click", () => { location.hash = ""; });
+addEventListener("hashchange", rota);
+let espera; addEventListener("resize", () => { clearTimeout(espera); espera = setTimeout(() => { if (atual) montarDetalhe(); }, 150); });
 
 (async () => {
-  let dados = null;
   try {
-    const r = await fetch("dados/ofertas.json", {cache: "no-store"});
+    const r = await fetch("dados/indice.json", {cache: "no-store"});
     if (r.ok) dados = await r.json();
-  } catch (e) { /* sem arquivo de dados: mostra o exemplo */ }
-  if (!dados || !dados.ofertas || !dados.ofertas.length) { dados = EXEMPLO; $("aviso").hidden = false; }
-  agrupar(dados);
-  $("atualizado").textContent = dados.atualizado ? "Última atualização: " + diaHora(dados.atualizado) : "Ainda sem atualização";
-  listar();
+  } catch (e) { /* sem dados publicados: usa o exemplo */ }
+  if (!dados || !Array.isArray(dados.produtos) || !dados.produtos.length) { dados = exemplo(); $("aviso").hidden = false; }
+  referencia = new Date(dados.atualizado || Date.now());
+  produtos = dados.produtos;
+  produtos.forEach(preparar);
+  porId = new Map(produtos.map(p => [p.id, p]));
+  const lista = achados(), comAchado = new Set(lista.map(a => a.p));
+  for (const p of produtos) p.destaque = comAchado.has(p) || (p.status.cls === "verde" && referencia - p.u.data < 3 * DIA);
+  if (!produtos.some(p => p.destaque)) categoria = "Todos"; else categoria = "Destaques";
+  if (dados.canais && dados.canais.length) $("intro").textContent = `Preços de oferta postados em ${dados.canais.length} canais de promoção do Telegram. Toque num produto para ver a curva completa, o preço-alvo e comparar com outro.`;
+  $("atualizado").textContent = `${produtos.length} produtos acompanhados, última atualização em ${referencia.toLocaleString("pt-BR", {day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"})}`;
+  desenharChips(); desenharGrade(); desenharAchados(); rota();
 })();
 </script>
 </body>

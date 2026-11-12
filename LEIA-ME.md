@@ -6,8 +6,9 @@ e mostra o histórico de preços em um site com busca e gráfico. Tudo gratuito,
 ## O que tem aqui
 
 - `canais.txt`: a lista de canais que o coletor lê. Edite este arquivo.
-- `coletor.py`: lê os canais e grava as ofertas em `dados/ofertas.json`.
-- `index.html`: o site (busca, gráfico, histórico). Sem dados, mostra um exemplo.
+- `coletor.py`: lê os canais, guarda cada post em `dados/posts/` (um arquivo por mês) e monta `dados/indice.json`,
+  que é o que o site mostra. Como os textos ficam guardados, uma melhoria no coletor reprocessa todo o histórico.
+- `index.html`: o site (categorias, busca, gráfico por dia, preço-alvo, comparação). Sem dados, mostra um exemplo.
 - `.github/workflows/coletar.yml`: faz o GitHub rodar o coletor a cada 15 minutos.
 
 ## Como colocar no ar
@@ -29,5 +30,7 @@ e mostra o histórico de preços em um site com busca e gráfico. Tudo gratuito,
   basta, mas em dias de muito movimento algum post pode escapar.
 - O GitHub às vezes atrasa a execução agendada em alguns minutos.
 - O gráfico mostra os preços **de oferta** publicados nos canais, a partir da primeira coleta.
-- Links encurtados de algumas lojas não abrem até a página do produto. Nesses casos o produto é
-  identificado pelo nome, e o mesmo item com nomes muito diferentes pode aparecer duas vezes.
+- Placas de vídeo e processadores são agrupados pelo modelo (ex.: RX 9060 XT 16GB, qualquer marca).
+  Os outros produtos são agrupados pela semelhança do nome, então o mesmo item escrito de jeitos
+  muito diferentes ainda pode aparecer duas vezes.
+- O preço-alvo é o preço que ficou entre os 25% mais baratos do histórico e só aparece depois de 5 dias com oferta.
