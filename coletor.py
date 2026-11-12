@@ -161,11 +161,12 @@ CATEGORIAS = [
     ("Headsets e fones", r"\b(headset|headphone|fone|earbuds?|airpods)\b"),
     ("Controles", r"\b(controle|gamepad|joystick|dualsense)\b"),
     ("Consoles", r"\b(playstation|ps5|ps4|xbox series|nintendo switch|switch 2|console)\b"),
-    ("TVs", r"\b(smart ?tv|tv|televis[aã]o)\b"),
-    ("Celulares, tablets e relógios", r"\b(celular|smartphone|iphone|galaxy|redmi|poco|motorola|tablet|ipad|smartwatch|rel[oó]gio|watch)\b"),
+    ("TVs", r"\b(smart ?tv|tv|televis[aã]o|tv box)\b"),
+    ("Celulares, tablets e relógios", r"\b(celular|smartphone|iphone|galaxy|redmi|poco|motorola|tablet|ipad|smartwatch|rel[oó]gio inteligente|apple watch|galaxy watch|amazfit|mi band|smart ?band|kindle|e-reader)\b"),
+    ("Câmeras e casa inteligente", r"\b(c[aâ]mera|webcam|gopro|drone|echo dot|echo pop|alexa|l[aâ]mpada inteligente|tomada inteligente|fechadura digital|campainha inteligente|projetor|starlink)\b"),
     ("Setup e acessórios", r"\b(caixa de som|soundbar|roteador|cabo|adaptador|lumin[aá]ria|fita led|power ?bank|carregador|nobreak|estabilizador|pendrive|cart[aã]o de mem[oó]ria|impressora)\b"),
-    ("Eletrodomésticos", r"\b(geladeira|refrigerador|freezer|lavadora|m[aá]quina de lavar|lava e seca|air ?fryer|fritadeira|micro-?ondas|aspirador|rob[oô] aspirador|ventilador|ar[- ]condicionado|cafeteira|liquidificador|fog[aã]o|cooktop|forno|panela|purificador|secador|chapinha|barbeador)\b"),
-    ("Jogos e software", r"\b(jogo|game pass|gift ?card|cart[aã]o presente|licen[cç]a|windows \d+|office|steam|psn|assinatura)\b"),
+    ("Eletrodomésticos", r"\b(geladeira|refrigerador|freezer|lavadora|m[aá]quina de lavar|lava e seca|air ?fryer|fritadeira|micro-?ondas|aspirador|rob[oô] aspirador|ventilador|ar[- ]condicionado|cafeteira|liquidificador|fog[aã]o|cooktop|forno|panela el[eé]trica|purificador|secador|chapinha|barbeador|lava-?lou[cç]as|batedeira|mixer|processador de alimentos|sanduicheira|torradeira|chaleira el[eé]trica|ferro de passar|bebedouro|adega|climatizador|aquecedor)\b"),
+    ("Jogos e software", r"\b(jogo (para|de) (ps5|ps4|xbox|nintendo|switch|pc)|game pass|gift ?card|cart[aã]o presente (playstation|xbox|nintendo|steam)|licen[cç]a|windows \d+|office 365|microsoft 365|steam|psn|xbox live)\b"),
 ]
 
 
@@ -179,7 +180,7 @@ def categorizar(nome):
         if m:
             if categoria in ("Notebooks", "PCs montados"):
                 return categoria
-            achados.append((m.start(), ordem, categoria))
+            achados.append((m.start() - (100 if categoria == "Eletrodomésticos" and "processador de alimentos" in baixo else 0), ordem, categoria))
     return min(achados)[2] if achados else "Outros"
 
 
@@ -376,6 +377,8 @@ def montar_indice(todos, canais):
 
     produtos, usados = [], set()
     for chave, g in grupos.items():
+        if g["cat"] == "Outros":
+            continue  # o site mostra só tecnologia, eletrônicos e eletrodomésticos
         ofertas = g["ofertas"]
         precos = [o["preco"] for o in ofertas]
         mediana = statistics.median(precos)
