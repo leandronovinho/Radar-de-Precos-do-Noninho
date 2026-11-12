@@ -1,0 +1,3 @@
+busca: 9060 16gb
+avisar_quando: preco
+preco_maximo: 3300
