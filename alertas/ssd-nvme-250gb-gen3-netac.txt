@@ -1,0 +1,4 @@
+produto: ssd-nvme-250gb-gen3-netac
+nome: Ssd Nvme 250Gb Gen3 Netac
+avisar_quando: preco
+preco_maximo: 200
