@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radar de preços</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fundo:#EEF1F4; --papel:#FFFFFF; --tinta:#16202B; --suave:#5A6877; --linha:#D3DAE2;
+  --azul:#1F5FD6; --cupom:#FFC933; --cupom-tinta:#3A2C00; --verde:#167A4C;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ color-scheme:dark;
+    --fundo:#10161D; --papel:#1A222C; --tinta:#E8EDF2; --suave:#9AA7B5; --linha:#2E3946;
+    --azul:#7FAEFF; --cupom:#FFC933; --cupom-tinta:#3A2C00; --verde:#5BD39A; }
+}
+:root[data-theme="dark"]{ color-scheme:dark;
+  --fundo:#10161D; --papel:#1A222C; --tinta:#E8EDF2; --suave:#9AA7B5; --linha:#2E3946;
+  --azul:#7FAEFF; --cupom:#FFC933; --cupom-tinta:#3A2C00; --verde:#5BD39A; }
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--fundo);color:var(--tinta);
+  font:400 1rem/1.5 Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1rem 3rem}
+h1{font-size:2rem;line-height:1.1;font-weight:800;font-stretch:118%;margin:0 0 .25rem;letter-spacing:-.01em}
+.sub{color:var(--suave);margin:0 0 1.25rem;font-size:.9rem}
+.aviso{background:var(--cupom);color:var(--cupom-tinta);padding:.6rem .8rem;border-radius:.4rem;font-size:.9rem;margin:0 0 1rem}
+input[type=search]{width:100%;font:inherit;font-size:1.05rem;padding:.85rem 1rem;border:2px solid var(--tinta);
+  border-radius:.5rem;background:var(--papel);color:var(--tinta)}
+input[type=search]:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--azul);outline-offset:2px}
+.conta{color:var(--suave);font-size:.85rem;margin:.75rem 0 .5rem}
+ul{list-style:none;margin:0;padding:0}
+.item{display:flex;gap:.75rem;align-items:center;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;
+  background:var(--papel);border:0;border-bottom:1px solid var(--linha);padding:.85rem .9rem}
+li:first-child .item{border-radius:.5rem .5rem 0 0} li:last-child .item{border-radius:0 0 .5rem .5rem;border-bottom:0}
+.item .nome{flex:1;min-width:0;font-weight:600;line-height:1.3}
+.item .nome small{display:block;font-weight:400;color:var(--suave);font-size:.8rem;margin-top:.15rem}
+/* etiqueta de preço: a peça de identidade da página */
+.etiqueta{flex:none;text-align:right;font-weight:800;font-stretch:90%;font-size:1.15rem;line-height:1.1;
+  padding:.35rem .55rem .35rem .9rem;background:var(--fundo);border-radius:.3rem;position:relative}
+.etiqueta::before{content:"";position:absolute;left:.3rem;top:50%;width:.35rem;height:.35rem;margin-top:-.175rem;
+  border-radius:50%;background:var(--papel);box-shadow:inset 0 0 0 1px var(--linha)}
+.etiqueta.com-cupom{background:var(--cupom);color:var(--cupom-tinta)}
+.etiqueta small{display:block;font-weight:600;font-size:.7rem}
+.voltar{font:inherit;background:none;border:0;color:var(--azul);padding:.5rem 0;cursor:pointer;font-weight:600}
+h2{font-size:1.35rem;line-height:1.2;font-weight:700;margin:.25rem 0 1rem}
+.numeros{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:0 0 1rem}
+.numeros div{background:var(--papel);border-radius:.5rem;padding:.6rem .7rem}
+.numeros dt{font-size:.78rem;color:var(--suave)} .numeros dd{margin:0;font-weight:800;font-stretch:90%;font-size:1.15rem}
+.numeros .menor dd{color:var(--verde)}
+.grafico{background:var(--papel);border-radius:.5rem;padding:.5rem;overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:18rem}
+.legenda{display:flex;flex-wrap:wrap;gap:.4rem 1rem;font-size:.8rem;color:var(--suave);margin:.5rem .25rem 0}
+.legenda i{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;vertical-align:-.05rem;margin-right:.3rem}
+.ponto{cursor:pointer}
+.hist{margin-top:1.25rem} .hist h3{font-size:1rem;margin:0 0 .4rem}
+.hist li{background:var(--papel);border-bottom:1px solid var(--linha);padding:.7rem .9rem;display:flex;gap:.75rem;align-items:center}
+.hist li.sel{box-shadow:inset 4px 0 0 var(--azul)}
+.hist .q{flex:1;min-width:0;font-size:.88rem;color:var(--suave)} .hist .q b{color:var(--tinta);display:block;font-size:.95rem}
+.hist code{background:var(--cupom);color:var(--cupom-tinta);padding:.05rem .35rem;border-radius:.2rem;font:700 .82rem ui-monospace,Menlo,Consolas,monospace}
+a{color:var(--azul)}
+.vazio{background:var(--papel);border-radius:.5rem;padding:1.25rem;color:var(--suave)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1>Radar de preços</h1>
+  <p class="sub" id="atualizado">Carregando ofertas…</p>
+  <p class="aviso" id="aviso" hidden>Estes são dados de exemplo. Quando o coletor rodar, as ofertas reais dos seus canais aparecem aqui.</p>
+
+  <section id="tela-busca">
+    <label for="busca" class="sub" style="display:block;margin-bottom:.4rem">Qual produto você quer acompanhar?</label>
+    <input id="busca" type="search" placeholder="mouse, SSD 1TB, RTX 5060, notebook…" autocomplete="off">
+    <p class="conta" id="conta"></p>
+    <ul id="lista"></ul>
+  </section>
+
+  <section id="tela-produto" hidden>
+    <button class="voltar" id="voltar">‹ Voltar para a busca</button>
+    <h2 id="p-nome"></h2>
+    <dl class="numeros">
+      <div><dt>Último preço</dt><dd id="n-ultimo"></dd></div>
+      <div class="menor"><dt>Menor preço</dt><dd id="n-menor"></dd></div>
+      <div><dt>Preço médio</dt><dd id="n-medio"></dd></div>
+    </dl>
+    <div class="grafico"><div id="svg"></div>
+      <p class="legenda"><span><i style="background:var(--cupom);box-shadow:0 0 0 1.5px var(--tinta)"></i>com cupom</span>
+        <span><i style="background:var(--azul)"></i>sem cupom</span><span>Toque em um ponto para ver a oferta</span></p>
+    </div>
+    <div class="hist"><h3>Todas as ofertas registradas</h3><ul id="hist"></ul></div>
+  </section>
+</main>
+
+<script>
+const EXEMPLO = (() => {
+  const o = (produto, nome, loja, pontos) => pontos.map(([data, preco, cupom, pagamento, canal]) =>
+    ({produto, nome, loja, preco, cupom: cupom || "", pagamento: pagamento || "", data: data + ":00+00:00",
+      canais: [canal || "canal-exemplo"], link: ""}));
+  return {atualizado: "2026-11-12T01:25:00+00:00", ofertas: [
+    ...o("mouse-attack-shark-x8", "Mouse Gamer Sem Fio Attack Shark X8 Ultimate, Tri-Mode 42000 DPI, White", "KaBuM!", [
+      ["2026-08-14T15:10", 289.90], ["2026-09-03T22:40", 259.99, "SETEMBRO10"], ["2026-09-28T13:05", 269.90],
+      ["2026-10-15T23:30", 239.99, "", "pix"], ["2026-10-30T12:00", 249.90], ["2026-11-06T21:15", 219.99, "ESQUENTA"],
+      ["2026-11-12T01:24", 199.99, "TIROCERTO", "", "TJGOFERTASs"]]),
+    ...o("smart-tv-65-philips-ambilight", "Smart Tv 65\" 4k Philips Ambilight Titan os 20w Hdr10+", "Shopee", [
+      ["2026-08-20T18:00", 3299.00], ["2026-09-12T14:30", 3149.90, "", "pix"], ["2026-10-09T20:10", 2999.00, "TV150"],
+      ["2026-10-28T11:45", 3099.00], ["2026-11-12T01:23", 2737.92, "", "pix", "GrapeTec"]]),
+    ...o("ssd-kingston-nv3-1tb", "SSD Kingston NV3 1TB, M.2 NVMe, Leitura 6000MB/s", "KaBuM!", [
+      ["2026-08-05T16:20", 459.99], ["2026-09-01T10:00", 429.90, "", "pix"], ["2026-09-25T23:55", 399.99, "NINJA"],
+      ["2026-10-20T19:00", 419.90], ["2026-11-11T22:05", 379.99, "LIVE1111"]]),
+    ...o("placa-de-video-rtx-5060-8gb", "Placa de Vídeo RTX 5060 8GB Galax 1-Click OC", "Pichau", [
+      ["2026-08-29T13:15", 2399.90], ["2026-09-30T21:00", 2299.00, "", "pix"], ["2026-10-22T09:30", 2249.90],
+      ["2026-11-11T23:40", 2099.99, "11PICHAU"]]),
+    ...o("notebook-acer-aspire-go-15", "Notebook Acer Aspire Go 15, Intel Core i5, 8GB, SSD 512GB", "Amazon", [
+      ["2026-09-08T17:45", 3199.00], ["2026-10-11T12:20", 2999.00, "", "pix"], ["2026-11-12T01:17", 2849.05, "ACER5"]]),
+  ]};
+})();
+
+const $ = id => document.getElementById(id);
+const el = (tag, props = {}, ...filhos) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) k === "class" ? n.className = v : n.setAttribute(k, v);
+  n.append(...filhos); return n;
+};
+const reais = v => v.toLocaleString("pt-BR", {style: "currency", currency: "BRL"});
+const dia = d => new Date(d).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit"});
+const diaHora = d => new Date(d).toLocaleString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"});
+const semAcento = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+let produtos = [];
+
+function agrupar(dados) {
+  const mapa = new Map();
+  for (const o of dados.ofertas) {
+    if (!mapa.has(o.produto)) mapa.set(o.produto, {chave: o.produto, nome: o.nome, ofertas: []});
+    mapa.get(o.produto).ofertas.push(o);
+  }
+  produtos = [...mapa.values()].map(p => {
+    p.ofertas.sort((a, b) => a.data.localeCompare(b.data));
+    p.ultima = p.ofertas[p.ofertas.length - 1];
+    p.nome = p.ultima.nome;
+    p.menor = Math.min(...p.ofertas.map(o => o.preco));
+    p.medio = p.ofertas.reduce((s, o) => s + o.preco, 0) / p.ofertas.length;
+    p.busca = semAcento(p.nome);
+    return p;
+  }).sort((a, b) => b.ultima.data.localeCompare(a.ultima.data));
+}
+
+function listar() {
+  const termos = semAcento($("busca").value).split(/\s+/).filter(Boolean);
+  const achados = produtos.filter(p => termos.every(t => p.busca.includes(t)));
+  const lista = $("lista"); lista.replaceChildren();
+  $("conta").textContent = termos.length
+    ? `${achados.length} ${achados.length === 1 ? "produto encontrado" : "produtos encontrados"}`
+    : `${produtos.length} produtos acompanhados, os mais recentes primeiro`;
+  if (!achados.length) {
+    lista.append(el("li", {class: "vazio"}, "Nenhuma oferta com esse nome ainda. Tente menos palavras, ou espere o produto aparecer em um dos canais."));
+    return;
+  }
+  for (const p of achados.slice(0, 60)) {
+    const u = p.ultima;
+    const botao = el("button", {class: "item", type: "button"},
+      el("span", {class: "nome"}, p.nome,
+        el("small", {}, `${p.ofertas.length} ${p.ofertas.length === 1 ? "oferta" : "ofertas"}, menor ${reais(p.menor)}${u.loja ? ", " + u.loja : ""}`)),
+      el("span", {class: "etiqueta" + (u.cupom ? " com-cupom" : "")}, reais(u.preco),
+        el("small", {}, u.cupom ? "com cupom" : dia(u.data))));
+    botao.addEventListener("click", () => abrir(p));
+    lista.append(el("li", {}, botao));
+  }
+}
+
+function abrir(p, selecionada = p.ultima) {
+  $("tela-busca").hidden = true; $("tela-produto").hidden = false;
+  $("p-nome").textContent = p.nome;
+  $("n-ultimo").textContent = reais(p.ultima.preco);
+  $("n-menor").textContent = reais(p.menor);
+  $("n-medio").textContent = reais(p.medio);
+  desenhar(p, selecionada);
+  const hist = $("hist"); hist.replaceChildren();
+  for (const o of [...p.ofertas].reverse()) {
+    const detalhe = el("span", {class: "q"}, el("b", {}, diaHora(o.data)));
+    const partes = [o.loja, o.pagamento && "no " + o.pagamento, o.canais.join(", ")].filter(Boolean).join(", ");
+    if (o.cupom) detalhe.append("cupom ", el("code", {}, o.cupom), partes ? ", " : "");
+    detalhe.append(partes);
+    if (/^https?:\/\//.test(o.link)) detalhe.append(" ", el("a", {href: o.link, target: "_blank", rel: "noopener noreferrer"}, "ver oferta"));
+    hist.append(el("li", {class: o === selecionada ? "sel" : ""}, detalhe,
+      el("span", {class: "etiqueta" + (o.cupom ? " com-cupom" : "")}, reais(o.preco))));
+  }
+  window.scrollTo(0, 0);
+}
+
+function desenhar(p, selecionada) {
+  const L = 640, A = 300, m = {e: 58, d: 16, t: 26, b: 30};
+  const ts = p.ofertas.map(o => +new Date(o.data));
+  const folga = Math.max((Math.max(...ts) - Math.min(...ts)) * 0.06, 864e5);
+  const t0 = Math.min(...ts) - folga, t1 = Math.max(...ts) + folga;
+  const precos = p.ofertas.map(o => o.preco);
+  const pf = Math.max((Math.max(...precos) - Math.min(...precos)) * 0.18, Math.max(...precos) * 0.03);
+  const v0 = Math.max(0, Math.min(...precos) - pf), v1 = Math.max(...precos) + pf;
+  const x = t => m.e + (t - t0) / (t1 - t0) * (L - m.e - m.d);
+  const y = v => A - m.b - (v - v0) / (v1 - v0) * (A - m.t - m.b);
+  const NS = "http://www.w3.org/2000/svg";
+  const s = (tag, a, txt) => { const n = document.createElementNS(NS, tag); for (const k in a) n.setAttribute(k, a[k]); if (txt) n.textContent = txt; return n; };
+  const svg = s("svg", {viewBox: `0 0 ${L} ${A}`, role: "img", "aria-label": `Histórico de preços de ${p.nome}`});
+
+  for (let i = 0; i <= 3; i++) {
+    const v = v0 + (v1 - v0) * i / 3;
+    svg.append(s("line", {x1: m.e, x2: L - m.d, y1: y(v), y2: y(v), stroke: "var(--linha)"}),
+      s("text", {x: m.e - 8, y: y(v) + 4, "text-anchor": "end", "font-size": 12, fill: "var(--suave)"}, "R$ " + Math.round(v).toLocaleString("pt-BR")));
+  }
+  for (let i = 0; i <= 3; i++) {
+    const t = t0 + (t1 - t0) * i / 3;
+    svg.append(s("text", {x: x(t), y: A - 8, "text-anchor": i === 0 ? "start" : i === 3 ? "end" : "middle", "font-size": 12, fill: "var(--suave)"}, dia(t)));
+  }
+  // datas de promoção dentro do período do gráfico
+  for (let ano = new Date(t0).getFullYear(); ano <= new Date(t1).getFullYear(); ano++) {
+    const bf = new Date(ano, 10, 1); bf.setDate(1 + ((11 - bf.getDay()) % 7) + 22); // sexta depois da 4ª quinta de novembro
+    for (const [rotulo, d] of [["11/11", new Date(ano, 10, 11, 12)], ["Black Friday", new Date(bf.setHours(12))]]) {
+      if (+d < t0 || +d > t1) continue;
+      svg.append(s("line", {x1: x(+d), x2: x(+d), y1: m.t - 6, y2: A - m.b, stroke: "var(--tinta)", "stroke-dasharray": "3 4", opacity: .55}),
+        s("text", {x: x(+d), y: m.t - 11, "text-anchor": x(+d) > L - 90 ? "end" : "middle", "font-size": 12, "font-weight": 700, fill: "var(--tinta)"}, rotulo));
+    }
+  }
+  svg.append(s("polyline", {points: p.ofertas.map(o => `${x(+new Date(o.data))},${y(o.preco)}`).join(" "),
+    fill: "none", stroke: "var(--azul)", "stroke-width": 2.5, "stroke-linejoin": "round"}));
+  for (const o of p.ofertas) {
+    const cx = x(+new Date(o.data)), cy = y(o.preco), sel = o === selecionada;
+    const g = s("g", {class: "ponto", tabindex: 0, role: "button", "aria-label": `${diaHora(o.data)}, ${reais(o.preco)}${o.cupom ? ", cupom " + o.cupom : ""}`});
+    g.append(s("circle", {cx, cy, r: 16, fill: "transparent"}),
+      s("circle", {cx, cy, r: sel ? 8 : 5.5, fill: o.cupom ? "var(--cupom)" : "var(--azul)", stroke: o.cupom || sel ? "var(--tinta)" : "var(--papel)", "stroke-width": sel ? 2.5 : 1.5}));
+    if (sel) g.append(s("text", {x: Math.min(Math.max(cx, m.e + 40), L - 50), y: cy - 14, "text-anchor": "middle", "font-size": 14, "font-weight": 800, fill: "var(--tinta)"}, reais(o.preco)));
+    const escolher = () => abrir(p, o);
+    g.addEventListener("click", escolher);
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); escolher(); } });
+    svg.append(g);
+  }
+  $("svg").replaceChildren(svg);
+}
+
+$("busca").addEventListener("input", listar);
+$("voltar").addEventListener("click", () => { $("tela-produto").hidden = true; $("tela-busca").hidden = false; });
+
+(async () => {
+  let dados = null;
+  try {
+    const r = await fetch("dados/ofertas.json", {cache: "no-store"});
+    if (r.ok) dados = await r.json();
+  } catch (e) { /* sem arquivo de dados: mostra o exemplo */ }
+  if (!dados || !dados.ofertas || !dados.ofertas.length) { dados = EXEMPLO; $("aviso").hidden = false; }
+  agrupar(dados);
+  $("atualizado").textContent = dados.atualizado ? "Última atualização: " + diaHora(dados.atualizado) : "Ainda sem atualização";
+  listar();
+})();
+</script>
+</body>
+</html>

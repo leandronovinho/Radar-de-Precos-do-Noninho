@@ -1,0 +1,10 @@
+# Um canal público do Telegram por linha: só o nome que vem depois de t.me/
+# Linhas que começam com # são ignoradas.
+upandosetup
+HardTecPromocoes
+grape_tec
+IskandarSouza
+gtOFERTAS
+cuponsjersu
+TJGOFERTASs
+PROMOSGERAISTJ
