@@ -1,0 +1,4 @@
+produto: ssd-sata3-netac-512gb
+nome: SSD SATA3 NETAC 512GB
+avisar_quando: preco
+preco_maximo: 200
