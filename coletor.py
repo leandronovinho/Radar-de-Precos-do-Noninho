@@ -15,6 +15,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
+import os
+
 import requests
 from bs4 import BeautifulSoup
 
@@ -27,6 +29,7 @@ ARQ_ANTIGO = PASTA_DADOS / "ofertas.json"
 FUSO = ZoneInfo("America/Sao_Paulo")
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
 ARQ_ESTADO = PASTA_DADOS / "estado.json"
+PASTA_ALERTAS = RAIZ / "alertas"
 JANELA_DUPLICATA = timedelta(hours=6)
 MAX_LINKS_POR_RODADA = 80
 # Histórico: na primeira vez, o coletor volta no passado de cada canal até esta data, aos poucos.
@@ -405,8 +408,132 @@ def montar_indice(todos, canais):
             "ult": [ult["quando"].astimezone(timezone.utc).isoformat(timespec="minutes")] + linha(ult),
         })
     produtos.sort(key=lambda p: p["ult"][0], reverse=True)
-    return {"versao": 2, "atualizado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    return {"versao": 2, "alertas": [{k: a[k] for k in ("arquivo", "produto", "nome", "top", "maximo")} for a in ler_alertas()], "atualizado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "canais": canais, "produtos": produtos}
+
+
+# ---------------------------------------------------------------- alertas no Telegram
+def ler_alertas():
+    """Cada arquivo em alertas/ é um alerta: linhas 'chave: valor' com produto, nome, avisar_quando e preco_maximo."""
+    alertas = []
+    for arq in sorted(PASTA_ALERTAS.glob("*.txt")) if PASTA_ALERTAS.exists() else []:
+        campos = {}
+        for linha in arq.read_text(encoding="utf-8").splitlines():
+            if ":" in linha and not linha.strip().startswith("#"):
+                k, v = linha.split(":", 1)
+                campos[k.strip().lower()] = v.strip()
+        maximo = re.sub(r"[^\d,.]", "", campos.get("preco_maximo", ""))
+        try:
+            maximo = numero(maximo) if maximo else None
+        except ValueError:
+            maximo = None
+        alertas.append({"arquivo": arq.name, "produto": campos.get("produto", arq.stem), "nome": campos.get("nome", ""),
+                        "top": "top" in campos.get("avisar_quando", "").lower(), "maximo": maximo})
+    return alertas
+
+
+def veredito(prod, agora):
+    """Mesma regra do site: top, compensa, razoavel, caro ou sem (pouco histórico)."""
+    precos = [d[1] for d in prod["dias"]]
+    if len(precos) < 3:
+        return "sem", 0.0
+    u = prod["ult"][1]
+    limite = (agora - timedelta(days=60)).astimezone(FUSO).date().isoformat()
+    recentes = [d[1] for d in prod["dias"] if d[0] >= limite]
+    med = statistics.median(recentes if len(recentes) >= 3 else precos)
+    menor = min(precos)
+    alvo = None
+    if len(precos) >= 5:
+        o = sorted(precos)
+        i = (len(o) - 1) * 0.25
+        b = int(i)
+        alvo = round((o[b] + (o[min(b + 1, len(o) - 1)] - o[b]) * (i - b)) / 10) * 10
+    queda = 1 - u / med
+    if u <= menor * 1.02 or queda >= 0.15:
+        return "top", queda
+    if (alvo and u <= alvo) or queda >= 0.05:
+        return "compensa", queda
+    if u <= med * 1.04:
+        return "razoavel", queda
+    return "caro", queda
+
+
+def reais_txt(v):
+    return "R$ " + f"{v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def telegram(token, metodo, **dados):
+    r = requests.post(f"https://api.telegram.org/bot{token}/{metodo}", json=dados, timeout=20)
+    r.raise_for_status()
+    return r.json()
+
+
+def verificar_alertas(indice, estado):
+    token = os.environ.get("TELEGRAM_TOKEN", "").strip()
+    alertas = ler_alertas()
+    if not token:
+        if alertas:
+            print("alertas: falta o segredo TELEGRAM_TOKEN no GitHub, nenhum aviso enviado")
+        return
+    tg = estado.setdefault("_telegram", {})
+    try:
+        if not tg.get("chat"):
+            for upd in telegram(token, "getUpdates").get("result", []):
+                msg = upd.get("message") or {}
+                if msg.get("chat", {}).get("type") == "private" and msg.get("text", "").startswith("/start"):
+                    tg["chat"] = msg["chat"]["id"]
+                    telegram(token, "sendMessage", chat_id=tg["chat"],
+                             text="Pronto! O Radar de preços vai te avisar aqui quando um produto que você marcou ficar barato.")
+                    print("alertas: Telegram conectado")
+                    break
+            if not tg.get("chat"):
+                print("alertas: abra o seu robô no Telegram e toque em Iniciar (/start) para conectar")
+                return
+    except requests.RequestException as erro:
+        print(f"alertas: falha ao falar com o Telegram ({erro})", file=sys.stderr)
+        return
+
+    agora = datetime.now(timezone.utc)
+    repo = os.environ.get("GITHUB_REPOSITORY", "")
+    site = f"https://{repo.split('/')[0].lower()}.github.io/{repo.split('/')[1]}/" if "/" in repo else ""
+    por_id = {p["id"]: p for p in indice["produtos"]}
+    avisos = estado.setdefault("_avisos", {})
+    for a in alertas:
+        prod = por_id.get(a["produto"])
+        if not prod and a["nome"]:  # o produto pode ter mudado de nome no radar
+            tk = tokens(a["nome"])
+            prod = next((p for p in indice["produtos"] if mesmo_produto(tk, tokens(p["nome"]))), None)
+        if not prod:
+            print(f"alertas: produto do alerta {a['arquivo']} não encontrado")
+            continue
+        quando = datetime.fromisoformat(prod["ult"][0])
+        if agora - quando > timedelta(hours=3):
+            continue  # só oferta nova
+        preco, loja, cupom, _, link = prod["ult"][1:6]
+        v, queda = veredito(prod, agora)
+        if not ((a["top"] and v == "top") or (a["maximo"] and preco <= a["maximo"])):
+            continue
+        ant = avisos.get(a["arquivo"], {})
+        if ant.get("quando") == prod["ult"][0]:
+            continue
+        if ant and preco >= ant.get("preco", 0) and agora - datetime.fromisoformat(ant["enviado"]) < timedelta(hours=24):
+            continue
+        partes = ["🔥 PROMOÇÃO TOP" if v == "top" else "🔔 PREÇO DO SEU ALERTA", prod["nome"], "",
+                  f"💰 {reais_txt(preco)}" + (f" ({queda:.0%} abaixo da mediana)".replace(".", ",") if queda > 0.01 else "")]
+        if cupom:
+            partes.append(f"🎟 Cupom: {cupom}")
+        if loja:
+            partes.append(f"🏬 {loja}")
+        if link:
+            partes.append(f"🔗 {link}")
+        if site:
+            partes.append(f"📈 Histórico: {site}#p-{prod['id']}")
+        try:
+            telegram(token, "sendMessage", chat_id=tg["chat"], text="\n".join(partes))
+            avisos[a["arquivo"]] = {"quando": prod["ult"][0], "preco": preco, "enviado": agora.isoformat()}
+            print(f"alertas: aviso enviado para {prod['nome']} ({reais_txt(preco)})")
+        except requests.RequestException as erro:
+            print(f"alertas: falha ao enviar aviso ({erro})", file=sys.stderr)
 
 
 def main():
@@ -443,8 +570,9 @@ def main():
             print(f"{canal}: falhou ({erro})", file=sys.stderr)
     entraram = guardar_novos(todos, novos)
     salvar_posts(todos)
-    ARQ_ESTADO.write_text(json.dumps(estado, indent=1), encoding="utf-8")
     indice = montar_indice(todos, canais)
+    verificar_alertas(indice, estado)
+    ARQ_ESTADO.write_text(json.dumps(estado, indent=1), encoding="utf-8")
     ARQ_INDICE.write_text(json.dumps(indice, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     if ARQ_ANTIGO.exists():
         ARQ_ANTIGO.unlink()  # formato da primeira versão, substituído por indice.json

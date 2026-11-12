@@ -200,6 +200,16 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
 .bandeja span{flex:1;font-size:.86rem;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bandeja .limpar{border:0;background:none;color:var(--suave);cursor:pointer}
 
+/* alertas */
+.alerta-form{display:flex;flex-direction:column;gap:.6rem}
+.alerta-form label{display:flex;align-items:center;gap:.5rem;cursor:pointer}
+.alerta-form input[type=radio]{accent-color:var(--neon);width:1rem;height:1rem}
+.alerta-form input[type=text]{width:8rem;padding:.4rem .55rem;border:1px solid var(--linha);border-radius:.4rem;background:var(--papel2);font-family:var(--mono)}
+.alerta-form input[type=text]:focus{outline:none;border-color:var(--neon)}
+.alerta-form small{color:var(--suave)}
+.alerta-ativo{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;color:var(--neon)}
+.sino{color:var(--neon);font-size:.8rem;margin-right:.3rem}
+
 /* como funciona */
 .guia{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin-top:1rem}
 @media (max-width:44rem){.guia{grid-template-columns:1fr}}
@@ -304,6 +314,7 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
       <div class="caixa"><h3>Preço-alvo</h3><p>O valor que fica entre os 25% mais baratos do histórico do produto. Aparece depois de 5 dias com oferta.</p></div>
       <div class="caixa"><h3>Mediana</h3><p>O preço do meio: metade das ofertas foi mais barata e metade mais cara. Não se deixa levar por um erro de preço isolado.</p></div>
       <div class="caixa"><h3>Placas de vídeo e processadores</h3><p>São agrupados pelo modelo, como RX 9060 XT 16GB, qualquer que seja a marca. Os outros produtos se agrupam pela semelhança do nome.</p></div>
+      <div class="caixa"><h3>Alertas no Telegram</h3><p>Na página de um produto, toque em "Me avisar no Telegram" e escolha quando quer o aviso: quando entrar em Promoção top ou quando custar até um valor seu. O alerta é salvo no GitHub com um clique e vale a partir da próxima coleta.</p></div>
       <div class="caixa"><h3>Especificações</h3><p>No comparador, memória, capacidade, velocidade, tamanho e frequência são lidos do nome do produto. Se o canal não escreveu, aparece um traço.</p></div>
     </div>
   </section>
@@ -319,6 +330,7 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
       <div class="caixa realce"><dt class="caps">Meu preço-alvo</dt><dd id="n-alvo" class="neon"></dd><small id="n-alvo-s"></small></div>
     </dl>
     <div class="veredito" id="d-veredito"></div>
+    <div class="painel" id="d-alerta" hidden></div>
     <div class="painel">
       <div class="controles">
         <div class="seg" id="abas-periodo" role="group" aria-label="Período"></div>
@@ -409,6 +421,44 @@ const linkSeguro = u => /^https?:\/\//.test(u || "") ? u : "";
 function blackFriday(ano) { const d = new Date(ano, 10, 1, 12); d.setDate(1 + ((11 - d.getDay()) % 7) + 22); return d; }
 const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sem armazenamento */ } };
 const ler = (k, padrao) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? padrao; } catch (e) { return padrao; } };
+
+/* ---------- alertas ---------- */
+function repositorio() {
+  if (!location.hostname.endsWith(".github.io")) return null;
+  const repo = location.pathname.split("/").filter(Boolean)[0];
+  return repo ? {dono: location.hostname.split(".")[0], repo} : null;
+}
+let alertaPorProduto = new Map();
+function montarAlerta(p, aberto) {
+  const caixa = $("d-alerta"), r = repositorio(), ativo = alertaPorProduto.get(p.id);
+  caixa.hidden = !aberto && !ativo;
+  if (caixa.hidden) return;
+  const partes = [];
+  if (ativo) {
+    const regra = [ativo.top && "quando entrar em Promoção top", ativo.maximo && "quando custar até " + reais(ativo.maximo)].filter(Boolean).join(" ou ");
+    partes.push(el("div", {class: "alerta-ativo"}, el("strong", {}, "🔔 Alerta ligado"), el("span", {}, `Você recebe uma mensagem no Telegram ${regra}.`),
+      r ? el("a", {class: "botao", href: `https://github.com/${r.dono}/${r.repo}/delete/main/alertas/${encodeURIComponent(ativo.arquivo)}`, target: "_blank", rel: "noopener noreferrer"}, "Desligar alerta") : null));
+    if (!aberto) { caixa.replaceChildren(...partes); return; }
+  }
+  const sugestao = Math.round((p.alvo || p.menor) / 10) * 10;
+  const campoValor = el("input", {type: "text", inputmode: "decimal", value: String(sugestao), "aria-label": "Preço máximo em reais"});
+  const opTop = el("input", {type: "radio", name: "quando", value: "top", checked: ""}), opValor = el("input", {type: "radio", name: "quando", value: "valor"});
+  campoValor.addEventListener("focus", () => { opValor.checked = true; });
+  const criar = el("button", {class: "botao cheio", type: "button"}, "Criar alerta no GitHub");
+  criar.addEventListener("click", () => {
+    if (!r) { aviso.textContent = "Os alertas funcionam no seu site publicado no GitHub, não nesta demonstração."; return; }
+    const valor = parseFloat(campoValor.value.replace(/\./g, "").replace(",", "."));
+    const conteudo = [`produto: ${p.id}`, `nome: ${p.nome}`, `avisar_quando: ${opTop.checked ? "promocao top" : "preco"}`, `preco_maximo: ${opValor.checked && valor > 0 ? valor : ""}`].join("\n") + "\n";
+    window.open(`https://github.com/${r.dono}/${r.repo}/new/main?filename=${encodeURIComponent("alertas/" + p.id + ".txt")}&value=${encodeURIComponent(conteudo)}`, "_blank", "noopener");
+    aviso.textContent = "Abriu o GitHub numa aba nova com o alerta pronto. Clique em Confirmar alterações lá. Ele vale a partir da próxima coleta.";
+  });
+  const aviso = el("small", {}, "Abre o GitHub com o alerta já preenchido. É só clicar em Confirmar alterações.");
+  partes.push(el("div", {class: "alerta-form"}, el("h3", {style: "font-family:var(--titulo);margin:0"}, ativo ? "Trocar o alerta" : "Me avisar no Telegram quando:"),
+    el("label", {}, opTop, "entrar em Promoção top (menor preço ou bem abaixo da mediana)"),
+    el("label", {}, opValor, "custar até R$", campoValor),
+    el("div", {}, criar), aviso));
+  caixa.replaceChildren(...partes);
+}
 
 /* ---------- especificações lidas do nome ---------- */
 function specs(p) {
@@ -527,7 +577,7 @@ function card(p) {
   const abrir = () => { location.hash = "p-" + p.id; };
   return el("div", {class: "card realce " + VEREDITOS[p.v].cls, tabindex: 0, role: "link", "aria-label": p.nome, onclick: abrir,
     onkeydown: e => { if (e.key === "Enter") abrir(); }},
-    el("div", {class: "topo-card"}, el("span", {class: "cat caps"}, p.cat),
+    el("div", {class: "topo-card"}, el("span", {class: "cat caps"}, alertaPorProduto.has(p.id) ? el("span", {class: "sino", title: "Alerta ligado"}, "🔔") : null, p.cat),
       el("button", {class: "cmp", type: "button", "data-id": p.id, "aria-pressed": String(selecao.includes(p.id)), title: "Adicionar ao comparador",
         onclick: e => { e.stopPropagation(); alternarSelecao(p); }}, "+ comparar")),
     el("span", {class: "nome"}, p.nome),
@@ -742,7 +792,9 @@ function montarProduto() {
   vd.replaceChildren(el("strong", {}, VEREDITOS[p.v].txt), el("p", {}, frase(p)),
     el("div", {class: "acoes"},
       linkSeguro(p.u.link) ? el("a", {class: "botao cheio", href: p.u.link, target: "_blank", rel: "noopener noreferrer"}, "Ver última oferta") : null,
+      el("button", {class: "botao", type: "button", onclick: () => montarAlerta(p, $("d-alerta").hidden || !$("d-alerta").querySelector(".alerta-form"))}, alertaPorProduto.has(p.id) ? "🔔 Alerta ligado" : "🔔 Me avisar no Telegram"),
       el("button", {class: "botao", type: "button", onclick: () => { if (!selecao.includes(p.id)) alternarSelecao(p); location.hash = "comparar"; }}, "Comparar com outros")));
+  montarAlerta(p, false);
 
   const series = [{p, cor: CORES_SERIE[0]}, ...(comparado ? [{p: comparado, cor: CORES_SERIE[1]}] : [])];
   $("legenda").replaceChildren(...[
@@ -864,7 +916,7 @@ let espera; addEventListener("resize", () => { clearTimeout(espera); espera = se
 
 (async () => {
   try {
-    const r = await fetch("dados/indice.json", {cache: "no-store"});
+    const r = await fetch("dados/indice.json?t=" + Date.now(), {cache: "no-store"});
     if (r.ok) dados = await r.json();
   } catch (e) { /* sem dados publicados: usa o exemplo */ }
   if (!dados || !Array.isArray(dados.produtos) || !dados.produtos.length) { dados = exemplo(); $("aviso").hidden = false; }
@@ -873,6 +925,7 @@ let espera; addEventListener("resize", () => { clearTimeout(espera); espera = se
   produtos.forEach(preparar);
   porId = new Map(produtos.map(p => [p.id, p]));
   selecao = ler("radar-selecao", []).filter(i => porId.has(i));
+  for (const a of dados.alertas || []) if (porId.has(a.produto)) alertaPorProduto.set(a.produto, a);
   $("atualizado").textContent = "ao vivo · " + referencia.toLocaleString("pt-BR", {day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"});
   if (dados.canais && dados.canais.length) $("como-intro").textContent = `O radar lê ${dados.canais.length} canais de promoção do Telegram (${dados.canais.join(", ")}) a cada 15 minutos, guarda cada oferta e monta o histórico de preço de cada produto.`;
   desenharFiltroV();
