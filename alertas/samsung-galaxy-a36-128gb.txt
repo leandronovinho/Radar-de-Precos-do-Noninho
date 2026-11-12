@@ -1,0 +1,4 @@
+produto: samsung-galaxy-a36-128gb
+nome: Samsung Galaxy A36 128Gb
+avisar_quando: preco
+preco_maximo: 1100
