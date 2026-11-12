@@ -1,0 +1,4 @@
+produto: ssd-sata-cusu-512gb
+nome: Ssd Sata Cusu 512GB
+avisar_quando: preco
+preco_maximo: 200
