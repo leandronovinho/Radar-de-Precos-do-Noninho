@@ -1,0 +1,4 @@
+produto: fonte-gamer-rise-mode-elektra-650w
+nome: Fonte Gamer Rise Mode Elektra, 650W
+avisar_quando: promocao top
+preco_maximo: 
