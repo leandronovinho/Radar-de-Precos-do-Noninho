@@ -7,6 +7,7 @@ import json
 import re
 import statistics
 import sys
+import time
 import unicodedata
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -25,8 +26,12 @@ ARQ_INDICE = PASTA_DADOS / "indice.json"
 ARQ_ANTIGO = PASTA_DADOS / "ofertas.json"
 FUSO = ZoneInfo("America/Sao_Paulo")
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
+ARQ_ESTADO = PASTA_DADOS / "estado.json"
 JANELA_DUPLICATA = timedelta(hours=6)
-MAX_LINKS_POR_RODADA = 120
+MAX_LINKS_POR_RODADA = 80
+# Histórico: na primeira vez, o coletor volta no passado de cada canal até esta data, aos poucos.
+HISTORICO_DESDE = "2026-08-01"
+PAGINAS_ANTIGAS_POR_RODADA = 25
 
 # ---------------------------------------------------------------- lojas e links
 ENCURTADORES = {"tidd.ly", "bit.ly", "s.shopee.com.br", "amzn.to", "tinyurl.com", "cutt.ly", "is.gd",
@@ -158,7 +163,9 @@ CATEGORIAS = [
     ("Consoles", r"\b(playstation|ps5|ps4|xbox series|nintendo switch|switch 2|console)\b"),
     ("TVs", r"\b(smart ?tv|tv|televis[aã]o)\b"),
     ("Celulares, tablets e relógios", r"\b(celular|smartphone|iphone|galaxy|redmi|poco|motorola|tablet|ipad|smartwatch|rel[oó]gio|watch)\b"),
-    ("Setup e acessórios", r"\b(caixa de som|soundbar|roteador|cabo|adaptador|lumin[aá]ria|fita led)\b"),
+    ("Setup e acessórios", r"\b(caixa de som|soundbar|roteador|cabo|adaptador|lumin[aá]ria|fita led|power ?bank|carregador|nobreak|estabilizador|pendrive|cart[aã]o de mem[oó]ria|impressora)\b"),
+    ("Eletrodomésticos", r"\b(geladeira|refrigerador|freezer|lavadora|m[aá]quina de lavar|lava e seca|air ?fryer|fritadeira|micro-?ondas|aspirador|rob[oô] aspirador|ventilador|ar[- ]condicionado|cafeteira|liquidificador|fog[aã]o|cooktop|forno|panela|purificador|secador|chapinha|barbeador)\b"),
+    ("Jogos e software", r"\b(jogo|game pass|gift ?card|cart[aã]o presente|licen[cç]a|windows \d+|office|steam|psn|assinatura)\b"),
 ]
 
 
@@ -228,10 +235,12 @@ def mesmo_produto(a, b):
 
 
 # ---------------------------------------------------------------- coleta
-def ler_canal(canal, html=None):
-    """Baixa a página pública do canal (t.me/s/canal) e devolve os posts com texto e data."""
+def ler_canal(canal, html=None, antes=None):
+    """Baixa a página pública do canal (t.me/s/canal) e devolve os posts com texto e data.
+    Com 'antes', traz os 20 posts anteriores a esse número de post."""
     if html is None:
-        r = requests.get(f"https://t.me/s/{canal}", headers=UA, timeout=20)
+        url = f"https://t.me/s/{canal}" + (f"?before={antes}" if antes else "")
+        r = requests.get(url, headers=UA, timeout=20)
         r.raise_for_status()
         html = r.text
     sopa = BeautifulSoup(html, "html.parser")
@@ -292,15 +301,17 @@ def salvar_posts(todos):
 
 
 def guardar_novos(todos, novos, resolver=resolver_link):
-    """Guarda os posts que ainda não existem e descobre a loja de cada um. Devolve quantos entraram."""
+    """Guarda os posts que ainda não existem e descobre a loja dos recentes. Devolve quantos entraram.
+    Posts com mais de 3 dias (do histórico) não têm o link aberto, para a coleta não demorar."""
     entraram = 0
+    recente = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
     for post in novos:
-        if post["post"] in todos:
+        if post["post"] in todos or post["data"] < HISTORICO_DESDE:
             continue
         info = interpretar_post(post["texto"])
         todos[post["post"]] = {"canal": post["post"].split("/")[0], "data": post["data"], "texto": post["texto"],
                                "link": info["link"] if info else "", "url": "", "loja": "",
-                               "resolvido": not (info and info["link"])}
+                               "resolvido": not (info and info["link"]) or post["data"] < recente}
         entraram += 1
     pendentes = [p for p in todos.values() if not p["resolvido"]][:MAX_LINKS_POR_RODADA]
     for p in pendentes:
@@ -311,8 +322,10 @@ def guardar_novos(todos, novos, resolver=resolver_link):
 
 # ---------------------------------------------------------------- índice para o site
 def montar_indice(todos, canais):
-    grupos = {}            # chave -> {"nome", "cat", "ofertas": [...], "tokens": [...]}
-    por_categoria = defaultdict(list)
+    grupos = {}            # chave -> {"nome", "cat", "ofertas": [...], "tokens": set de frozensets}
+    indice_palavras = defaultdict(lambda: defaultdict(set))   # categoria -> palavra -> chaves
+    frequencia = defaultdict(lambda: defaultdict(int))
+    ja_visto = {}
 
     for pid, p in sorted(todos.items(), key=lambda kv: kv[1]["data"]):
         info = interpretar_post(p["texto"])
@@ -322,16 +335,28 @@ def montar_indice(todos, canais):
         modelo = modelo_canonico(info["nome"], cat)
         if modelo:
             chave = "m:" + slug(modelo)
-            grupos.setdefault(chave, {"nome": modelo, "cat": cat, "ofertas": [], "tokens": [], "nomes": []})
+            grupos.setdefault(chave, {"nome": modelo, "cat": cat, "ofertas": [], "tokens": set(), "nomes": []})
         else:
-            tk = tokens(info["nome"])
-            chave = next((c for c in por_categoria[cat]
-                          if any(mesmo_produto(tk, outro) for outro in grupos[c]["tokens"])), None)
+            tk = frozenset(tokens(info["nome"]))
+            if not tk:
+                continue
+            idx, freq = indice_palavras[cat], frequencia[cat]
+            chave = ja_visto.get((cat, tk))
+            if not chave:
+                com_numero = [t for t in tk if any(c.isdigit() for c in t)]
+                chaves_de = sorted(com_numero or tk, key=lambda t: freq[t])[:2]
+                candidatos = set().union(*(idx[t] for t in chaves_de))
+                chave = next((c for c in sorted(candidatos)
+                              if any(mesmo_produto(tk, outro) for outro in grupos[c]["tokens"])), None)
             if not chave:
                 chave = f"f:{len(grupos)}"
-                grupos[chave] = {"nome": "", "cat": cat, "ofertas": [], "tokens": [], "nomes": []}
-                por_categoria[cat].append(chave)
-            grupos[chave]["tokens"].append(tk)
+                grupos[chave] = {"nome": "", "cat": cat, "ofertas": [], "tokens": set(), "nomes": []}
+            ja_visto[(cat, tk)] = chave
+            if tk not in grupos[chave]["tokens"]:
+                grupos[chave]["tokens"].add(tk)
+                for t in tk:
+                    idx[t].add(chave)
+                    freq[t] += 1
         g = grupos[chave]
         g["nomes"].append(info["nome"])
         quando = datetime.fromisoformat(p["data"])
@@ -385,18 +410,37 @@ def main():
     canais = [l.strip() for l in ARQ_CANAIS.read_text(encoding="utf-8").splitlines()
               if l.strip() and not l.strip().startswith("#")]
     todos = carregar_posts()
+    estado = json.loads(ARQ_ESTADO.read_text(encoding="utf-8")) if ARQ_ESTADO.exists() else {}
     novos = []
+    numero_post = lambda p: int(p["post"].split("/")[1])
     for canal in canais:
         try:
             posts = ler_canal(canal)
-            print(f"{canal}: {len(posts)} posts lidos")
             if not posts:
-                print("  aviso: nenhum post. O canal é público e o nome está certo?")
+                print(f"{canal}: nenhum post. O canal é público e o nome está certo?")
+                continue
             novos += posts
+            e = estado.setdefault(canal, {"antes": min(map(numero_post, posts)), "completo": False})
+            antigos = 0
+            for _ in range(0 if e["completo"] else PAGINAS_ANTIGAS_POR_RODADA):
+                pagina = ler_canal(canal, antes=e["antes"])
+                if not pagina:
+                    e["completo"] = True
+                    break
+                novos += pagina
+                antigos += len(pagina)
+                e["antes"] = min(map(numero_post, pagina))
+                if min(p["data"] for p in pagina) < HISTORICO_DESDE:
+                    e["completo"] = True
+                    break
+                time.sleep(0.4)
+            situacao = "histórico completo" if e["completo"] else "ainda buscando o histórico"
+            print(f"{canal}: {len(posts)} recentes, {antigos} antigos ({situacao})")
         except requests.RequestException as erro:
             print(f"{canal}: falhou ({erro})", file=sys.stderr)
     entraram = guardar_novos(todos, novos)
     salvar_posts(todos)
+    ARQ_ESTADO.write_text(json.dumps(estado, indent=1), encoding="utf-8")
     indice = montar_indice(todos, canais)
     ARQ_INDICE.write_text(json.dumps(indice, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     if ARQ_ANTIGO.exists():

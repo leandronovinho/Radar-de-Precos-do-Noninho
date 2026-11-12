@@ -62,6 +62,7 @@ button,select,input{font:inherit;color:inherit}
 .card .preco strong{font-size:1.4rem;font-weight:800;font-stretch:92%;line-height:1}
 .card .preco span{font-size:.75rem;color:var(--suave);white-space:nowrap}
 .card svg{width:100%;height:2.75rem;margin:.55rem 0 .45rem;display:block;overflow:visible}
+.card svg text{font-family:inherit}
 .card .rodape{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.78rem;color:var(--suave)}
 .card .rodape b{color:var(--tinta);font-weight:700}
 .selo{display:inline-block;font-size:.72rem;font-weight:700;padding:.18rem .5rem;border-radius:.3rem;white-space:nowrap;background:var(--papel2);color:var(--suave);border:1px solid var(--linha)}
@@ -293,14 +294,18 @@ function desenharChips() {
   const conta = {};
   for (const p of produtos) conta[p.cat] = (conta[p.cat] || 0) + 1;
   const nDest = produtos.filter(p => p.destaque).length;
-  const itens = [["Destaques", nDest], ["Todos", produtos.length], ...ORDEM.filter(c => conta[c]).map(c => [c, conta[c]])];
+  const itens = [...(nDest ? [["Destaques", nDest]] : []), ["Todos", produtos.length], ...ORDEM.filter(c => conta[c]).map(c => [c, conta[c]])];
   $("chips").replaceChildren(...itens.map(([nome, n]) => el("button", {class: "chip", type: "button", "aria-pressed": String(nome === categoria),
     onclick: () => { categoria = nome; limite = 48; desenharChips(); desenharGrade(); }}, el("b", {}, nome), String(n))));
 }
 
 function sparkline(p) {
-  const ult = p.serie.slice(-45), svg = s("svg", {viewBox: "0 0 200 44", preserveAspectRatio: "none", "aria-hidden": "true"});
-  if (ult.length < 2) { svg.append(s("line", {x1: 0, x2: 200, y1: 22, y2: 22, stroke: "var(--linha)", "stroke-dasharray": "3 4"})); return svg; }
+  const ult = p.serie.slice(-45), svg = s("svg", {viewBox: "0 0 200 44", preserveAspectRatio: ult.length < 2 ? "xMinYMid meet" : "none", "aria-hidden": "true"});
+  if (ult.length < 2) {
+    svg.append(s("line", {x1: 0, x2: 200, y1: 30, y2: 30, stroke: "var(--linha)", "stroke-dasharray": "3 4"}),
+      s("text", {x: 0, y: 20, "font-size": 11, fill: "var(--suave)"}, "1 dia de histórico, o gráfico vem com os próximos"));
+    return svg;
+  }
   const t0 = +ult[0].data, t1 = +ult[ult.length - 1].data, v = ult.map(d => d.preco), lo = Math.min(...v), hi = Math.max(...v), r = hi - lo || 1;
   const pts = ult.map(d => [((d.data - t0) / (t1 - t0 || 1)) * 196 + 2, 40 - ((d.preco - lo) / r) * 34]);
   svg.append(s("path", {d: `M${pts[0][0]},44 L${pts.map(q => q.join(",")).join(" L")} L${pts[pts.length - 1][0]},44Z`, fill: "var(--area)"}),
