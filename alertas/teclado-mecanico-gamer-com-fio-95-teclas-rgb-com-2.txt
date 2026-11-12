@@ -1,0 +1,4 @@
+produto: teclado-mecanico-gamer-com-fio-95-teclas-rgb-com-2
+nome: Teclado Mecânico Gamer com Fio 95 Teclas, RGB com 20 Modos de Iluminação, Switch Vermelho Hot Swap, Anti Ghosting, Teclado Compacto USB para PC, Notebook, Windo
+avisar_quando: preco
+preco_maximo: 130
