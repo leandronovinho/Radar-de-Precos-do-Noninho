@@ -1,0 +1,4 @@
+produto: ryzen-7-5700x
+nome: Ryzen 7 5700X
+avisar_quando: preco
+preco_maximo: 950
