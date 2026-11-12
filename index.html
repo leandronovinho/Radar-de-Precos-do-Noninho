@@ -936,6 +936,7 @@ let aba = "ofertas";
 function rota() {
   const h = decodeURIComponent(location.hash.slice(1));
   const p = h.startsWith("p-") ? porId.get(h.slice(2)) : null;
+  if (h.startsWith("b-")) { $("busca").value = h.slice(2).replace(/-/g, " "); categoria = "Todos"; filtroV = "todos"; desenharFiltroV(); }
   aba = p ? "produto" : ["ofertas", "top", "quedas", "comparar", "como"].includes(h) ? h : "ofertas";
   document.querySelectorAll(".vista").forEach(v => { v.hidden = v.id !== "v-" + aba; });
   document.querySelectorAll("nav.abas-topo a").forEach(a => { if (a.dataset.aba === aba) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });

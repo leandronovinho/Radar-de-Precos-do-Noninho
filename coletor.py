@@ -6,6 +6,7 @@ Dependências:  pip install requests beautifulsoup4
 import base64
 import hashlib
 import hmac
+import html
 import json
 import re
 import statistics
@@ -500,10 +501,11 @@ ARQ_PESSOAS = PASTA_DADOS / "pessoas.bin"
 MAX_ALERTAS_PESSOA = 10
 PREFIXOS_MODELO = {"rtx", "gtx", "rx", "ryzen", "i3", "i5", "i7", "i9", "ultra", "core", "galaxy", "iphone", "redmi", "moto",
                    "ps", "xbox", "arc", "a", "s", "tv", "monitor", "gen"}
-AJUDA = ("Me mande o nome do produto e o preço máximo, assim:\n\n"
+AJUDA = ("Para pesquisar, escreva o nome do produto (ex.: ak400).\n\nPara ser avisado, mande o produto e o preço máximo, assim:\n\n"
          "ak400 até 150\nrx 9060 xt até 2500\nfonte 650w até 300\n\n"
-         "Se não mandar preço, eu aviso quando entrar em Promoção top (o menor preço já visto ou bem abaixo do normal).\n\n"
-         "Outros comandos:\n/meusalertas mostra os seus alertas\n/parar 1 apaga o alerta número 1\n\n"
+         
+         "Os botões aqui embaixo mostram as ofertas do dia, as maiores quedas, o que vale a pena agora e os seus alertas. "
+         "O botão 📬 Resumo diário liga uma mensagem por dia com as melhores ofertas.\n\n"
          "Eu leio as mensagens a cada 10 minutos, então a resposta pode demorar um pouquinho.")
 
 
@@ -589,63 +591,221 @@ def candidatos_do_alerta(a, indice, por_id):
     return [prod] if prod else []
 
 
+BOTOES = {"ofertas": "🔥 Ofertas do dia", "quedas": "📉 Maiores quedas", "vale": "🏆 Vale a pena agora",
+          "alertas": "🔔 Meus alertas", "resumo": "📬 Resumo diário", "ajuda": "❓ Ajuda", "site": "🌐 Abrir o site"}
+ICONE_V = {"top": "🟢", "compensa": "🟩", "razoavel": "🟡", "caro": "🔴", "sem": "⚪"}
+NOME_V = {"top": "Promoção top", "compensa": "Compensa", "razoavel": "Preço razoável", "caro": "Não compensa", "sem": "Acompanhando"}
+ORDEM_CATS = ["Placas de vídeo", "Processadores", "Placas-mãe", "Memória RAM", "SSD e HDs", "Fontes", "Gabinetes", "Coolers",
+              "Monitores", "Mouses", "Teclados", "Headsets e fones", "Controles", "Setup e acessórios", "Notebooks", "PCs montados",
+              "Consoles", "TVs", "Celulares, tablets e relógios", "Câmeras e casa inteligente", "Eletrodomésticos", "Jogos e software"]
+
+
+def teclado(site):
+    linhas = [[BOTOES["ofertas"], BOTOES["quedas"]], [BOTOES["vale"], BOTOES["alertas"]], [BOTOES["resumo"], BOTOES["ajuda"]]]
+    teclas = [[{"text": t} for t in linha] for linha in linhas]
+    if site:
+        teclas.append([{"text": BOTOES["site"], "web_app": {"url": site}}])
+    return {"keyboard": teclas, "resize_keyboard": True, "is_persistent": True,
+            "input_field_placeholder": "Produto, ou produto até preço"}
+
+
+def h(t):
+    return html.escape(str(t), quote=False)
+
+
+def linha_produto(p, agora, site, extra=""):
+    v, queda = veredito(p, agora)
+    nome = f'<a href="{site}#p-{p["id"]}">{h(p["nome"])}</a>' if site else h(p["nome"])
+    quando = datetime.fromisoformat(p["ult"][0]).astimezone(FUSO).strftime("%d/%m")
+    partes = [reais_txt(p["ult"][1])]
+    if v != "sem":
+        partes.append(f"{'−' if queda >= 0 else '+'}{abs(queda):.0%} vs mediana".replace(".", ","))
+    partes += [x for x in (p["ult"][2], quando, extra) if x]
+    return f"{ICONE_V[v]} {nome}\n     {' · '.join(partes)}"
+
+
+def ofertas_do_dia(indice, agora, site, limite=10):
+    recentes = []
+    for p in indice["produtos"]:
+        if agora - datetime.fromisoformat(p["ult"][0]) <= timedelta(hours=24):
+            v, queda = veredito(p, agora)
+            if v == "top":
+                recentes.append((queda, p))
+    recentes.sort(key=lambda x: -x[0])
+    if not recentes:
+        return "Nenhuma Promoção top nas últimas 24 horas. Volte mais tarde: os canais são lidos a cada 10 minutos."
+    return ("🔥 <b>Ofertas do dia</b> (Promoção top nas últimas 24 horas)\n\n"
+            + "\n\n".join(linha_produto(p, agora, site) for _, p in recentes[:limite]))
+
+
+def maiores_quedas(indice, agora, site, limite=10):
+    hoje = (agora - timedelta(hours=36)).astimezone(FUSO).date().isoformat()
+    lista = []
+    for p in indice["produtos"]:
+        dias = p["dias"]
+        for i in range(max(3, len(dias) - 3), len(dias)):
+            if dias[i][0] < hoje:
+                continue
+            antes = [d[1] for d in dias[:i]]
+            q = 1 - dias[i][1] / statistics.median(antes)
+            if q >= 0.1:
+                lista.append((q, p, dias[i]))
+    lista.sort(key=lambda x: -x[0])
+    if not lista:
+        return "Nenhuma queda forte nas últimas 36 horas."
+    linhas = []
+    for q, p, d in lista[:limite]:
+        nome = f'<a href="{site}#p-{p["id"]}">{h(p["nome"])}</a>' if site else h(p["nome"])
+        tipo = "⚡ possível erro de preço" if q >= 0.4 else "📉"
+        linhas.append(f"{tipo} {nome}\n     {reais_txt(d[1])} · −{q:.0%} da mediana{' · ' + h(d[2]) if d[2] else ''}")
+    return "📉 <b>Maiores quedas</b> (últimas 36 horas)\n\n" + "\n\n".join(linhas)
+
+
+def vale_a_pena(indice, agora, site):
+    melhores = {}
+    for p in indice["produtos"]:
+        if agora - datetime.fromisoformat(p["ult"][0]) > timedelta(days=3):
+            continue
+        v, queda = veredito(p, agora)
+        if v in ("top", "compensa") and (p["cat"] not in melhores or queda > melhores[p["cat"]][0]):
+            melhores[p["cat"]] = (queda, p)
+    if not melhores:
+        return "Nada em bom preço nos últimos 3 dias."
+    linhas = [f"<b>{h(c)}</b>\n{linha_produto(melhores[c][1], agora, site)}" for c in ORDEM_CATS if c in melhores]
+    return "🏆 <b>Vale a pena agora</b>: o melhor preço de cada categoria nos últimos 3 dias\n\n" + "\n\n".join(linhas)
+
+
+def pesquisar(texto, indice, agora, site):
+    ts = termos_busca(texto)
+    achados = [p for p in indice["produtos"] if ts and all(t in texto_busca(p) for t in ts)]
+    if not achados:
+        return (f"Não achei \"{h(texto)}\" no radar. Tente menos palavras, como só o modelo (ex.: ak400, 9060, 7800x3d).", None)
+    modelo = lambda p: 0 if re.match(r"(?i)^(rtx|gtx|rx|arc|ryzen|core)", p["nome"]) else 1
+    achados.sort(key=lambda p: (modelo(p), p["ult"][0]), reverse=False)
+    achados = sorted(achados, key=lambda p: (modelo(p), -datetime.fromisoformat(p["ult"][0]).timestamp()))
+    corpo = "\n\n".join(linha_produto(p, agora, site) for p in achados[:6])
+    texto_fim = f"\n\n…e mais {len(achados) - 6} no site." if len(achados) > 6 else ""
+    msg = f"🔎 <b>{h(texto)}</b>: {len(achados)} {'produto' if len(achados) == 1 else 'produtos'}\n\n{corpo}{texto_fim}\n\n" \
+          f"Para ser avisado de um preço, mande por exemplo: <code>{h(texto)} até 300</code>"
+    chave = "_".join(ts)[:55]
+    botoes = [[{"text": "🔔 Avisar quando entrar em Promoção top", "callback_data": "a|" + chave}]]
+    if site:
+        botoes.append([{"text": "🌐 Ver todos no site", "url": f"{site}#b-{'-'.join(ts)[:60]}"}])
+    return msg, {"inline_keyboard": botoes}
+
+
+def lista_alertas(pessoa):
+    if not pessoa["alertas"]:
+        return "Você ainda não tem alertas.\n\n" + AJUDA, None
+    linhas = [f"{i}. {h(descrever(a))}" for i, a in enumerate(pessoa["alertas"], 1)]
+    botoes = [[{"text": f"🗑 Apagar {i}", "callback_data": "d|" + a.setdefault("id", os.urandom(3).hex())}]
+              for i, a in enumerate(pessoa["alertas"], 1)]
+    return "🔔 <b>Seus alertas</b>\n\n" + "\n".join(linhas) + "\n\nToque para apagar, ou mande: parar 1.", {"inline_keyboard": botoes}
+
+
+def criar_alerta(pessoa, novo, indice, por_id):
+    if len(pessoa["alertas"]) >= MAX_ALERTAS_PESSOA:
+        return f"Você já tem {MAX_ALERTAS_PESSOA} alertas, o máximo. Apague um em 🔔 Meus alertas."
+    novo["id"] = os.urandom(3).hex()
+    pessoa["alertas"].append(novo)
+    achados = candidatos_do_alerta(novo, indice, por_id)
+    resposta = f"✅ Alerta criado: {h(descrever(novo))}.\n\n"
+    if achados:
+        mais_barato = min(achados, key=lambda p: p["ult"][1])
+        resposta += (f"Hoje o radar acompanha {len(achados)} {'produto' if len(achados) == 1 else 'produtos'} assim. "
+                     f"O último preço mais baixo foi {reais_txt(mais_barato['ult'][1])} ({h(mais_barato['nome'])}).\n\n")
+    else:
+        resposta += "Ainda não vi nenhum produto com esse nome nos canais, mas deixei o alerta ligado.\n\n"
+    return resposta + "Te aviso aqui quando aparecer uma oferta assim."
+
+
 def responder_mensagens(token, tg, pessoas, indice, por_id):
-    """Lê o que as pessoas mandaram ao robô desde a última coleta e responde."""
-    site = tg.get("site", "")
-    resp = telegram(token, "getUpdates", offset=tg.get("offset", 0), timeout=0)
+    """Lê o que as pessoas mandaram ao robô desde a última coleta e responde, com o menu de botões."""
+    site, agora = tg.get("site", ""), datetime.now(timezone.utc)
+    resp = telegram(token, "getUpdates", offset=tg.get("offset", 0), timeout=0, allowed_updates=["message", "callback_query"])
+    enviar = lambda chat, texto, botoes=None: telegram(token, "sendMessage", chat_id=chat, text=texto, parse_mode="HTML",
+                                                      disable_web_page_preview=True, reply_markup=botoes or teclado(site))
     for upd in resp.get("result", []):
         tg["offset"] = upd["update_id"] + 1
-        msg = upd.get("message") or {}
-        chat, texto = msg.get("chat", {}), (msg.get("text") or "").strip()
-        if chat.get("type") != "private" or not texto:
-            continue
-        cid = str(chat["id"])
-        if not tg.get("chat"):
-            tg["chat"] = chat["id"]  # o primeiro a falar com o robô é o dono, que recebe os alertas criados pelo site no GitHub
-        pessoa = pessoas.setdefault(cid, {"nome": msg.get("from", {}).get("first_name", ""), "alertas": [], "avisos": {}})
-        baixo = texto.lower()
-        novo, resposta = None, None
-        if baixo.startswith("/start"):
-            carga = texto[6:].strip()
-            novo = ler_inicio(carga, por_id) if carga else None
-            if not novo:
-                resposta = f"Oi, {pessoa['nome'] or 'tudo bem'}! 👋 Eu sou o Radar de Preços e te aviso quando um produto ficar barato.\n\n" + AJUDA
-                if site:
-                    resposta += f"\n\nVocê também pode escolher pelo site: {site}"
-        elif baixo in ("/meusalertas", "meus alertas", "alertas", "/alertas"):
-            if pessoa["alertas"]:
-                linhas = [f"{i}. {descrever(a)}" for i, a in enumerate(pessoa["alertas"], 1)]
-                resposta = "🔔 Seus alertas:\n\n" + "\n".join(linhas) + "\n\nPara apagar um, mande: parar e o número (ex.: parar 1)."
-            else:
-                resposta = "Você ainda não tem alertas.\n\n" + AJUDA
-        elif re.match(r"^/?(parar|apagar|remover|excluir)\b", baixo):
-            n = re.search(r"\d+", baixo)
-            if n and 1 <= int(n.group()) <= len(pessoa["alertas"]):
-                tirado = pessoa["alertas"].pop(int(n.group()) - 1)
-                resposta = f"🗑 Apaguei o alerta: {descrever(tirado)}."
-            else:
-                resposta = "Me diga o número do alerta, assim: parar 1. Para ver os números, mande /meusalertas."
-        elif baixo in ("/ajuda", "ajuda", "/help", "oi", "olá", "ola"):
-            resposta = AJUDA
-        else:
-            busca, maximo = entender_pedido(texto)
-            novo = {"busca": busca, "produto": "", "nome": "", "top": maximo is None, "maximo": maximo}
-        if novo:
-            if len(pessoa["alertas"]) >= MAX_ALERTAS_PESSOA:
-                resposta = f"Você já tem {MAX_ALERTAS_PESSOA} alertas, o máximo. Apague um com /meusalertas e parar."
-            else:
-                pessoa["alertas"].append(novo)
-                achados = candidatos_do_alerta(novo, indice, por_id)
-                resposta = f"✅ Alerta criado: {descrever(novo)}.\n\n"
-                if achados:
-                    mais_barato = min(achados, key=lambda p: p["ult"][1])
-                    resposta += (f"Hoje o radar acompanha {len(achados)} {'produto' if len(achados) == 1 else 'produtos'} assim. "
-                                 f"O último preço mais baixo foi {reais_txt(mais_barato['ult'][1])} ({mais_barato['nome']}).\n\n")
+        try:
+            if "callback_query" in upd:
+                cq = upd["callback_query"]
+                cid, dado = str(cq["from"]["id"]), cq.get("data", "")
+                pessoa = pessoas.setdefault(cid, {"nome": cq["from"].get("first_name", ""), "alertas": [], "avisos": {}})
+                try:
+                    telegram(token, "answerCallbackQuery", callback_query_id=cq["id"])
+                except requests.RequestException:
+                    pass  # resposta tardia ao toque no botão: o Telegram pode recusar, não faz mal
+                if dado.startswith("a|"):
+                    enviar(int(cid), criar_alerta(pessoa, {"busca": dado[2:].replace("_", " "), "produto": "", "nome": "",
+                                                           "top": True, "maximo": None}, indice, por_id))
+                elif dado.startswith("d|"):
+                    antes = len(pessoa["alertas"])
+                    pessoa["alertas"] = [a for a in pessoa["alertas"] if a.get("id") != dado[2:]]
+                    enviar(int(cid), "🗑 Alerta apagado." if len(pessoa["alertas"]) < antes else "Esse alerta já tinha sido apagado.")
+                continue
+
+            msg = upd.get("message") or {}
+            chat, texto = msg.get("chat", {}), (msg.get("text") or "").strip()
+            if chat.get("type") != "private" or not texto:
+                continue
+            cid = str(chat["id"])
+            if not tg.get("chat"):
+                tg["chat"] = chat["id"]  # o primeiro a falar com o robô é o dono, que recebe os alertas criados pelo GitHub
+            pessoa = pessoas.setdefault(cid, {"nome": msg.get("from", {}).get("first_name", ""), "alertas": [], "avisos": {}})
+            baixo = texto.lower()
+            if baixo.startswith("/start"):
+                carga = texto[6:].strip()
+                novo = ler_inicio(carga, por_id) if carga else None
+                if novo:
+                    enviar(chat["id"], criar_alerta(pessoa, novo, indice, por_id))
                 else:
-                    resposta += "Ainda não vi nenhum produto com esse nome nos canais, mas deixei o alerta ligado.\n\n"
-                resposta += "Te aviso aqui quando aparecer uma oferta assim. Se não era isso, mande /meusalertas para ver e apagar."
-        if resposta:
-            telegram(token, "sendMessage", chat_id=chat["id"], text=resposta)
+                    enviar(chat["id"], f"Oi, {h(pessoa['nome'] or 'tudo bem')}! 👋 Eu sou o Radar de Preços.\n\n"
+                           "Use os botões aqui embaixo para ver as ofertas do dia, as maiores quedas e o que vale a pena agora. "
+                           "Ou escreva o nome de um produto para pesquisar.\n\n" + AJUDA)
+            elif texto == BOTOES["ofertas"] or baixo in ("/ofertas", "ofertas"):
+                enviar(chat["id"], ofertas_do_dia(indice, agora, site))
+            elif texto == BOTOES["quedas"] or baixo in ("/quedas", "quedas"):
+                enviar(chat["id"], maiores_quedas(indice, agora, site))
+            elif texto == BOTOES["vale"] or baixo in ("/vale", "vale a pena"):
+                enviar(chat["id"], vale_a_pena(indice, agora, site))
+            elif texto == BOTOES["alertas"] or baixo in ("/meusalertas", "meus alertas", "alertas", "/alertas"):
+                enviar(chat["id"], *lista_alertas(pessoa))
+            elif texto == BOTOES["resumo"] or baixo in ("/resumo", "resumo"):
+                pessoa["resumo"] = not pessoa.get("resumo")
+                enviar(chat["id"], "📬 Resumo diário ligado: todo dia de manhã te mando as melhores ofertas do dia anterior."
+                       if pessoa["resumo"] else "📭 Resumo diário desligado.")
+            elif texto == BOTOES["ajuda"] or baixo in ("/ajuda", "ajuda", "/help", "oi", "olá", "ola"):
+                enviar(chat["id"], AJUDA)
+            elif re.match(r"^/?(parar|apagar|remover|excluir)\b", baixo):
+                n = re.search(r"\d+", baixo)
+                if n and 1 <= int(n.group()) <= len(pessoa["alertas"]):
+                    tirado = pessoa["alertas"].pop(int(n.group()) - 1)
+                    enviar(chat["id"], f"🗑 Apaguei o alerta: {h(descrever(tirado))}.")
+                else:
+                    enviar(chat["id"], *lista_alertas(pessoa))
+            else:
+                busca, maximo = entender_pedido(texto)
+                if maximo:
+                    enviar(chat["id"], criar_alerta(pessoa, {"busca": busca, "produto": "", "nome": "", "top": False, "maximo": maximo},
+                                                    indice, por_id))
+                else:
+                    enviar(chat["id"], *pesquisar(texto, indice, agora, site))
+        except requests.RequestException as erro:
+            print(f"robô: falha ao responder ({erro})", file=sys.stderr)
+
+    # resumo diário: a partir das 9h, uma vez por dia
+    hoje = agora.astimezone(FUSO)
+    if hoje.hour >= 9:
+        corpo = None
+        for cid, pessoa in pessoas.items():
+            if pessoa.get("resumo") and pessoa.get("resumo_dia") != hoje.date().isoformat():
+                corpo = corpo or ofertas_do_dia(indice, agora, site, limite=8)
+                try:
+                    enviar(int(cid), "☀️ Bom dia! " + corpo)
+                    pessoa["resumo_dia"] = hoje.date().isoformat()
+                except requests.RequestException as erro:
+                    print(f"robô: falha no resumo ({erro})", file=sys.stderr)
 
 
 def verificar_alertas(indice, estado):
@@ -661,13 +821,19 @@ def verificar_alertas(indice, estado):
     por_id = {p["id"]: p for p in indice["produtos"]}
     pessoas = ler_pessoas(token)
     try:
-        if not tg.get("robo"):
+        if tg.get("config") != 2:
             tg["robo"] = telegram(token, "getMe")["result"]["username"]
-            telegram(token, "setMyCommands", commands=[{"command": "meusalertas", "description": "Ver os seus alertas"},
-                                                       {"command": "ajuda", "description": "Como criar um alerta"}])
+            telegram(token, "setMyCommands", commands=[{"command": "ofertas", "description": "Ofertas do dia"},
+                                                       {"command": "quedas", "description": "Maiores quedas"},
+                                                       {"command": "vale", "description": "O que vale a pena agora"},
+                                                       {"command": "meusalertas", "description": "Ver os seus alertas"},
+                                                       {"command": "ajuda", "description": "Como usar"}])
+            if site:
+                telegram(token, "setChatMenuButton", menu_button={"type": "web_app", "text": "Abrir Radar", "web_app": {"url": site}})
             telegram(token, "setMyDescription", description="Te aviso no Telegram quando um produto de tecnologia ficar barato. "
                      "Toque em Iniciar e me mande o produto e o preço, por exemplo: ak400 até 150.")
             telegram(token, "setMyShortDescription", short_description="Alertas de preço de tecnologia, eletrônicos e eletrodomésticos.")
+            tg["config"] = 2
         responder_mensagens(token, tg, pessoas, indice, por_id)
     except (requests.RequestException, KeyError) as erro:
         print(f"alertas: falha ao falar com o Telegram ({erro})", file=sys.stderr)
