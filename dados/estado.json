@@ -8,7 +8,7 @@
   "completo": true
  },
  "grape_tec": {
-  "antes": 196661,
+  "antes": 196158,
   "completo": false
  },
  "IskandarSouza": {
@@ -30,5 +30,6 @@
  "PROMOSGERAISTJ": {
   "antes": 27764,
   "completo": true
- }
+ },
+ "_telegram": {}
 }
