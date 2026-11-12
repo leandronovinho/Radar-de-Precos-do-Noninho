@@ -162,7 +162,7 @@ CATEGORIAS = [
     ("Gabinetes", r"\b(gabinete)\b"),
     ("Coolers", r"\b(water ?cooler|air ?cooler|cooler|ventoinha|fan)\b"),
     ("Monitores", r"\b(monitor)\b"),
-    ("Setup e acessórios", r"\b(mousepad|mouse pad|cadeira|mesa gamer|webcam|microfone|hub usb|suporte)\b"),
+    ("Setup e acessórios", r"\b(mousepad|mouse pad|cadeira gamer|mesa gamer|webcam|microfone|hub usb|suporte)\b"),
     ("Mouses", r"\b(mouse)\b"),
     ("Teclados", r"\b(teclado)\b"),
     ("Headsets e fones", r"\b(headset|headphone|fone|earbuds?|airpods)\b"),
@@ -172,7 +172,11 @@ CATEGORIAS = [
     ("Celulares, tablets e relógios", r"\b(celular|smartphone|iphone|galaxy|redmi|poco|motorola|tablet|ipad|smartwatch|rel[oó]gio inteligente|apple watch|galaxy watch|amazfit|mi band|smart ?band|kindle|e-reader)\b"),
     ("Câmeras e casa inteligente", r"\b(c[aâ]mera|webcam|gopro|drone|echo dot|echo pop|alexa|l[aâ]mpada inteligente|tomada inteligente|fechadura digital|campainha inteligente|projetor|starlink)\b"),
     ("Setup e acessórios", r"\b(caixa de som|soundbar|roteador|cabo|adaptador|lumin[aá]ria|fita led|power ?bank|carregador|nobreak|estabilizador|pendrive|cart[aã]o de mem[oó]ria|impressora)\b"),
+    ("Ferramentas", r"\b(furadeira|parafusadeira|serra (circular|tico-tico|m[aá]rmore)|serra el[eé]trica|esmerilhadeira|lixadeira|plaina|tupia|jogo de chaves|chave de (fenda|boca|catraca|impacto)|alicate|martelo|trena|n[ií]vel a laser|kit de ferramentas|maleta de ferramentas|caixa de ferramentas|jogo de brocas|broca|compressor de ar|lavadora de alta press[aã]o|soprador|mult[ií]metro|ferro de solda|soquete|torqu[ií]metro|morsa|pistola de cola)\b"),
     ("Eletrodomésticos", r"\b(geladeira|refrigerador|freezer|lavadora|m[aá]quina de lavar|lava e seca|air ?fryer|fritadeira|micro-?ondas|aspirador|rob[oô] aspirador|ventilador|ar[- ]condicionado|cafeteira|liquidificador|fog[aã]o|cooktop|forno|panela el[eé]trica|purificador|secador|chapinha|barbeador|lava-?lou[cç]as|batedeira|mixer|processador de alimentos|sanduicheira|torradeira|chaleira el[eé]trica|ferro de passar|bebedouro|adega|climatizador|aquecedor)\b"),
+    ("Móveis", r"\b(sof[aá]|poltrona|puff|cadeiras?|mesa de (jantar|centro|escrit[oó]rio|cabeceira)|rack|painel para tv|estante|guarda-?roupas?|c[oô]moda|criado-?mudo|cama box|box ba[uú]|colch[aã]o|beliche|cabeceira|escrivaninha|banqueta|sapateira|arm[aá]rio|gaveteiro|penteadeira|nicho|prateleira|aparador|bicama)\b"),
+    ("Cama, mesa e banho", r"\b(jogo de cama|len[cç]ol|edredom|cobertor|manta|travesseiro|toalhas?|roup[aã]o|fronha|colcha|cobre-?leito|jogo americano|toalha de mesa)\b"),
+    ("Casa e cozinha", r"\b(jogo de panelas|panelas?|frigideira|ca[cç]arola|talheres|faqueiro|facas?|jogo de pratos|pratos|copos?|ta[cç]as?|x[ií]caras?|canecas?|garrafa t[eé]rmica|garrafa|squeeze|potes?|organizador|lixeira|varal|tapete|cortina|vaso|espelho|escorredor|t[aá]bua de corte|assadeira|forma de bolo|utens[ií]lios|marmita|cooler t[eé]rmico|caixa t[eé]rmica|jarra|chaleira|cuscuzeira|espremedor|abridor|descanso de panela|tramontina|stanley|tupperware|electrolux ergo)\b"),
     ("Jogos e software", r"\b(jogo (para|de) (ps5|ps4|xbox|nintendo|switch|pc)|game pass|gift ?card|cart[aã]o presente (playstation|xbox|nintendo|steam)|licen[cç]a|windows \d+|office 365|microsoft 365|steam|psn|xbox live)\b"),
 ]
 
@@ -395,7 +399,7 @@ def montar_indice(todos, canais):
     produtos, usados = [], set()
     for chave, g in grupos.items():
         if g["cat"] == "Outros":
-            continue  # o site mostra só tecnologia, eletrônicos e eletrodomésticos
+            continue  # o site mostra tecnologia, eletrônicos, eletrodomésticos e casa
         ofertas = g["ofertas"]
         precos = [o["preco"] for o in ofertas]
         mediana = statistics.median(precos)
@@ -504,9 +508,8 @@ PREFIXOS_MODELO = {"rtx", "gtx", "rx", "ryzen", "i3", "i5", "i7", "i9", "ultra",
 AJUDA = ("Para pesquisar, escreva o nome do produto (ex.: ak400).\n\nPara ser avisado, mande o produto e o preço máximo, assim:\n\n"
          "ak400 até 150\nrx 9060 xt até 2500\nfonte 650w até 300\n\n"
          
-         "Os botões aqui embaixo mostram as ofertas do dia, as maiores quedas, o que vale a pena agora e os seus alertas. "
-         "O botão 📬 Resumo diário liga uma mensagem por dia com as melhores ofertas.\n\n"
-         "Eu leio as mensagens a cada 10 minutos, então a resposta pode demorar um pouquinho.")
+         "Os botões 🔥 Ofertas do dia, 📉 Maiores quedas, 🔎 Pesquisar e ⚖️ Comparar abrem o radar na hora, aqui dentro do Telegram.\n\n"
+         "Já as mensagens escritas, 🔔 Meus alertas e 📬 Resumo diário eu leio a cada 10 minutos, então a resposta pode demorar um pouquinho.")
 
 
 def _chaves(token):
@@ -592,21 +595,23 @@ def candidatos_do_alerta(a, indice, por_id):
 
 
 BOTOES = {"ofertas": "🔥 Ofertas do dia", "quedas": "📉 Maiores quedas", "vale": "🏆 Vale a pena agora",
-          "alertas": "🔔 Meus alertas", "resumo": "📬 Resumo diário", "ajuda": "❓ Ajuda", "site": "🌐 Abrir o site"}
+          "pesquisar": "🔎 Pesquisar", "comparar": "⚖️ Comparar",
+          "alertas": "🔔 Meus alertas", "resumo": "📬 Resumo diário", "ajuda": "❓ Ajuda"}
 ICONE_V = {"top": "🟢", "compensa": "🟩", "razoavel": "🟡", "caro": "🔴", "sem": "⚪"}
 NOME_V = {"top": "Promoção top", "compensa": "Compensa", "razoavel": "Preço razoável", "caro": "Não compensa", "sem": "Acompanhando"}
 ORDEM_CATS = ["Placas de vídeo", "Processadores", "Placas-mãe", "Memória RAM", "SSD e HDs", "Fontes", "Gabinetes", "Coolers",
               "Monitores", "Mouses", "Teclados", "Headsets e fones", "Controles", "Setup e acessórios", "Notebooks", "PCs montados",
-              "Consoles", "TVs", "Celulares, tablets e relógios", "Câmeras e casa inteligente", "Eletrodomésticos", "Jogos e software"]
+              "Consoles", "TVs", "Celulares, tablets e relógios", "Câmeras e casa inteligente", "Eletrodomésticos", "Móveis",
+              "Casa e cozinha", "Cama, mesa e banho", "Ferramentas", "Jogos e software"]
 
 
 def teclado(site):
-    linhas = [[BOTOES["ofertas"], BOTOES["quedas"]], [BOTOES["vale"], BOTOES["alertas"]], [BOTOES["resumo"], BOTOES["ajuda"]]]
-    teclas = [[{"text": t} for t in linha] for linha in linhas]
-    if site:
-        teclas.append([{"text": BOTOES["site"], "web_app": {"url": site}}])
-    return {"keyboard": teclas, "resize_keyboard": True, "is_persistent": True,
-            "input_field_placeholder": "Produto, ou produto até preço"}
+    """Botões fixos do robô. Os que abrem o site respondem na hora; os outros, na próxima coleta."""
+    app = lambda texto, aba: {"text": texto, "web_app": {"url": f"{site}#{aba}"}} if site else {"text": texto}
+    return {"keyboard": [[app(BOTOES["ofertas"], "top"), app(BOTOES["quedas"], "quedas")],
+                         [app(BOTOES["pesquisar"], "ofertas"), app(BOTOES["comparar"], "comparar")],
+                         [{"text": BOTOES["alertas"]}, {"text": BOTOES["resumo"]}, {"text": BOTOES["ajuda"]}]],
+            "resize_keyboard": True, "is_persistent": True, "input_field_placeholder": "Produto, ou produto até preço"}
 
 
 def h(t):
@@ -737,8 +742,20 @@ def responder_mensagens(token, tg, pessoas, indice, por_id):
     """Lê o que as pessoas mandaram ao robô desde a última coleta e responde, com o menu de botões."""
     site, agora = tg.get("site", ""), datetime.now(timezone.utc)
     resp = telegram(token, "getUpdates", offset=tg.get("offset", 0), timeout=0, allowed_updates=["message", "callback_query"])
-    enviar = lambda chat, texto, botoes=None: telegram(token, "sendMessage", chat_id=chat, text=texto, parse_mode="HTML",
-                                                      disable_web_page_preview=True, reply_markup=botoes or teclado(site))
+    def enviar(chat, texto, botoes=None):
+        """Manda a resposta; textos longos (o Telegram aceita até 4096 letras) vão em partes."""
+        pedacos, atual = [], ""
+        for bloco in texto.split("\n\n"):
+            if atual and len(atual) + len(bloco) + 2 > 3900:
+                pedacos.append(atual)
+                atual = bloco
+            else:
+                atual = f"{atual}\n\n{bloco}" if atual else bloco
+        pedacos.append(atual)
+        for i, pedaco in enumerate(pedacos):
+            ultimo = i == len(pedacos) - 1
+            telegram(token, "sendMessage", chat_id=chat, text=pedaco, parse_mode="HTML", disable_web_page_preview=True,
+                     reply_markup=(botoes or teclado(site)) if ultimo else teclado(site))
     for upd in resp.get("result", []):
         tg["offset"] = upd["update_id"] + 1
         try:
@@ -774,9 +791,7 @@ def responder_mensagens(token, tg, pessoas, indice, por_id):
                 if novo:
                     enviar(chat["id"], criar_alerta(pessoa, novo, indice, por_id))
                 else:
-                    enviar(chat["id"], f"Oi, {h(pessoa['nome'] or 'tudo bem')}! 👋 Eu sou o Radar de Preços.\n\n"
-                           "Use os botões aqui embaixo para ver as ofertas do dia, as maiores quedas e o que vale a pena agora. "
-                           "Ou escreva o nome de um produto para pesquisar.\n\n" + AJUDA)
+                    enviar(chat["id"], f"Oi, {h(pessoa['nome'] or 'tudo bem')}! 👋 Eu sou o Radar de Preços.\n\n" + AJUDA)
             elif texto == BOTOES["ofertas"] or baixo in ("/ofertas", "ofertas"):
                 enviar(chat["id"], ofertas_do_dia(indice, agora, site))
             elif texto == BOTOES["quedas"] or baixo in ("/quedas", "quedas"):
@@ -786,9 +801,13 @@ def responder_mensagens(token, tg, pessoas, indice, por_id):
             elif texto == BOTOES["alertas"] or baixo in ("/meusalertas", "meus alertas", "alertas", "/alertas"):
                 enviar(chat["id"], *lista_alertas(pessoa))
             elif texto == BOTOES["resumo"] or baixo in ("/resumo", "resumo"):
-                pessoa["resumo"] = not pessoa.get("resumo")
-                enviar(chat["id"], "📬 Resumo diário ligado: todo dia de manhã te mando as melhores ofertas do dia anterior."
-                       if pessoa["resumo"] else "📭 Resumo diário desligado.")
+                pessoa["resumo"] = not pessoa.get("resumo")  # liga ou desliga
+                if pessoa["resumo"]:
+                    pessoa["resumo_dia"] = agora.astimezone(FUSO).date().isoformat()  # o de hoje já vai agora
+                    enviar(chat["id"], "📬 Resumo diário ligado! A partir de amanhã, toda manhã eu te mando as melhores ofertas. "
+                           "As de agora estão aqui:\n\n" + ofertas_do_dia(indice, agora, site))
+                else:
+                    enviar(chat["id"], "📭 Resumo diário desligado. Para ligar de novo, toque em 📬 Resumo diário.")
             elif texto == BOTOES["ajuda"] or baixo in ("/ajuda", "ajuda", "/help", "oi", "olá", "ola"):
                 enviar(chat["id"], AJUDA)
             elif re.match(r"^/?(parar|apagar|remover|excluir)\b", baixo):
@@ -846,7 +865,7 @@ def verificar_alertas(indice, estado):
                 telegram(token, "setChatMenuButton", menu_button={"type": "web_app", "text": "Abrir Radar", "web_app": {"url": site}})
             telegram(token, "setMyDescription", description="Te aviso no Telegram quando um produto de tecnologia ficar barato. "
                      "Toque em Iniciar e me mande o produto e o preço, por exemplo: ak400 até 150.")
-            telegram(token, "setMyShortDescription", short_description="Alertas de preço de tecnologia, eletrônicos e eletrodomésticos.")
+            telegram(token, "setMyShortDescription", short_description="Alertas de preço de tecnologia, eletrônicos, eletrodomésticos e casa.")
             tg["config"] = 2
         responder_mensagens(token, tg, pessoas, indice, por_id)
     except (requests.RequestException, KeyError) as erro:

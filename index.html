@@ -225,9 +225,53 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
   .card .rodape{flex-direction:column;align-items:flex-start;gap:.3rem}
 }
 @media (prefers-reduced-motion:reduce){.realce::before,.realce::after{transition:none}}
+
+/* fundo decorativo: gráfico em queda e o nome, bem fracos */
+.fundo-deco{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.fundo-deco svg{width:100%;height:100%;display:block}
+.deco-t1,.deco-t2{font-family:var(--titulo);font-weight:700;letter-spacing:.06em}
+.deco-t1{font-size:150px;fill:none;stroke:var(--neon);stroke-width:1.2;opacity:.09}
+.deco-t2{font-size:210px;fill:var(--neon);opacity:.035}
+.deco-linha{fill:none;stroke:var(--neon);stroke-width:2.5;stroke-linejoin:round;opacity:.22;filter:drop-shadow(0 0 6px var(--neon))}
+.deco-q{font-family:var(--mono);font-size:28px;font-weight:700;fill:var(--neon);opacity:.22}
+@media (max-width:52rem){.fundo-deco{opacity:.55}.deco-t1,.deco-t2,.deco-q{display:none}}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .deco-linha{opacity:.18;filter:none}}
+
+/* chuva de cifrões nas laterais (só em telas largas) */
+.chuva{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+
+/* "em alta": etiquetas de produtos que aparecem e somem nas laterais, abaixo do nome no fundo */
+.em-alta{position:fixed;inset:0;pointer-events:none;z-index:0}
+.alta{position:absolute;display:block;text-decoration:none;color:var(--tinta);pointer-events:none;
+  background:color-mix(in srgb,var(--papel) 72%,transparent);border:1px solid color-mix(in srgb,var(--neon) 30%,transparent);
+  border-left:3px solid var(--neon);border-radius:.45rem;padding:.55rem .7rem;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  box-shadow:0 0 24px var(--area);opacity:0;transform:translateY(10px) scale(.97);transition:opacity 1.4s ease,transform 1.4s ease}
+.alta.mostra{opacity:.62;transform:none;pointer-events:auto}
+.alta.mostra:hover{opacity:1;box-shadow:0 0 0 1px var(--neon),0 0 30px var(--brilho)}
+.alta small{display:block;font-family:var(--mono);font-size:.56rem;letter-spacing:.14em;color:var(--neon);text-transform:uppercase}
+.alta b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.8rem;line-height:1.25;margin:.2rem 0 .3rem}
+.alta span{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem}
+.alta strong{font-family:var(--titulo);font-size:1.12rem;font-weight:700}
+.alta i{font-style:normal;font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--top)}
 </style>
 </head>
 <body>
+<div class="fundo-deco" aria-hidden="true">
+  <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="deco-area" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" style="stop-color:var(--neon);stop-opacity:.10"/>
+        <stop offset="1" style="stop-color:var(--neon);stop-opacity:0"/>
+      </linearGradient>
+    </defs>
+    <text class="deco-t1" x="800" y="330" text-anchor="middle">RADAR DE PREÇOS</text>
+    <text class="deco-t2" x="800" y="520" text-anchor="middle">NOVINHO</text>
+    <path d="M0,900 L0,300 L40,279 L80,248 L120,239 L160,212 L200,180 L240,180 L280,208 L320,228 L360,245 L400,223 L440,223 L480,205 L520,250 L560,289 L600,267 L640,296 L680,317 L720,337 L760,357 L800,333 L840,317 L880,324 L920,339 L960,363 L1000,388 L1040,356 L1080,482 L1120,612 L1160,640 L1200,615 L1240,611 L1280,579 L1320,609 L1360,633 L1400,634 L1440,618 L1480,640 L1520,640 L1560,640 L1600,640 L1600,900Z" fill="url(#deco-area)"/>
+    <polyline class="deco-linha" points="0,300 40,279 80,248 120,239 160,212 200,180 240,180 280,208 320,228 360,245 400,223 440,223 480,205 520,250 560,289 600,267 640,296 680,317 720,337 760,357 800,333 840,317 880,324 920,339 960,363 1000,388 1040,356 1080,482 1120,612 1160,640 1200,615 1240,611 1280,579 1320,609 1360,633 1400,634 1440,618 1480,640 1520,640 1560,640 1600,640"/>
+    <text class="deco-q" x="1172" y="680">−38%</text>
+  </svg>
+</div>
+<canvas class="chuva" id="chuva" aria-hidden="true"></canvas>
 <header class="barra">
   <div class="barra-in">
     <a class="marca" href="#ofertas">RADAR<b>//</b>PREÇOS</a>
@@ -360,7 +404,7 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
 <script>
 const ORDEM = ["Placas de vídeo","Processadores","Placas-mãe","Memória RAM","SSD e HDs","Fontes","Gabinetes","Coolers",
   "Monitores","Mouses","Teclados","Headsets e fones","Controles","Setup e acessórios","Notebooks","PCs montados",
-  "Consoles","TVs","Celulares, tablets e relógios","Câmeras e casa inteligente","Eletrodomésticos","Jogos e software","Outros"];
+  "Consoles","TVs","Celulares, tablets e relógios","Câmeras e casa inteligente","Eletrodomésticos","Móveis","Casa e cozinha","Cama, mesa e banho","Ferramentas","Jogos e software","Outros"];
 const MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 const DIA = 864e5;
 const VEREDITOS = {
@@ -959,6 +1003,68 @@ $("bandeja-limpar").addEventListener("click", () => { selecao = []; guardar("rad
 addEventListener("hashchange", rota);
 let espera; addEventListener("resize", () => { clearTimeout(espera); espera = setTimeout(() => { if (aba === "produto") montarProduto(); if (aba === "comparar") desenharComparador(); }, 150); });
 
+/* ---------- "em alta" nas laterais ---------- */
+function escolherEmAlta() {
+  const desde = referencia - 14 * DIA, recente = referencia - DIA;
+  return produtos.filter(p => (p.v === "top" || p.v === "compensa") && p.u.data >= recente)
+    .map(p => ({p, n: p.serie.filter(d => d.data >= desde).length + (p.v === "top" ? 2 : 0)}))
+    .sort((a, b) => b.n - a.n).slice(0, 18).map(o => o.p);
+}
+function haQuanto(data) {
+  const min = Math.max(0, Math.round((Date.now() - data) / 6e4));
+  if (min < 60) return `há ${Math.max(1, min)} min`;
+  const h = Math.round(min / 60);
+  return h < 24 ? `há ${h} h` : `há ${Math.round(h / 24)} d`;
+}
+function iniciarEmAlta() {
+  const lista = escolherEmAlta();
+  if (!lista.length) return;
+  const camada = el("div", {class: "em-alta", "aria-hidden": "true"});
+  document.body.append(camada);
+  const parado = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let vagas = [], emTela = new Set(), proximo = 0, geracao = 0;
+  const ALT = 104;
+  function montar() {
+    geracao++; camada.replaceChildren(); emTela.clear(); vagas = [];
+    const caixa = document.querySelector("main").getBoundingClientRect(), W = innerWidth, H = innerHeight;
+    const lados = [[12, caixa.left - 14], [caixa.right + 14, W - 12]].filter(([a, b]) => b - a >= 190);
+    const topo = Math.max(H * .46, 140), fundo = H - ALT - 16;
+    const porLado = Math.max(0, Math.min(3, Math.floor((fundo - topo) / (ALT + 22)) + 1));
+    for (const [a, b] of lados) {
+      const w = Math.min(232, b - a - 8);
+      for (let i = 0; i < porLado; i++) {
+        const faixa = (fundo - topo) / porLado;
+        vagas.push({a, b, w, y0: topo + i * faixa, y1: topo + i * faixa + Math.max(0, faixa - ALT - 12), ocupada: false});
+      }
+    }
+    const minha = geracao;
+    vagas.forEach((v, i) => setTimeout(() => ciclo(v, minha), parado ? 0 : 400 + i * 900 + Math.random() * 1200));
+  }
+  function ciclo(v, minha) {
+    if (minha !== geracao) return;
+    if (document.hidden) { setTimeout(() => ciclo(v, minha), 2000); return; }
+    const livres = lista.filter(p => !emTela.has(p.id));
+    const p = livres[(proximo++) % Math.max(1, livres.length)] || lista[0];
+    emTela.add(p.id);
+    const x = v.a + Math.random() * Math.max(0, v.b - v.a - v.w), y = v.y0 + Math.random() * Math.max(0, v.y1 - v.y0);
+    const etiqueta = el("a", {class: "alta", href: "#p-" + p.id, tabindex: "-1", style: `left:${x}px;top:${y}px;width:${v.w}px`},
+      el("small", {}, (p.v === "top" ? "⚡ promoção top" : "compensa") + " · " + haQuanto(p.u.data)),
+      el("b", {}, p.nome),
+      el("span", {}, el("strong", {}, reais(p.u.preco)), el("i", {}, "−" + Math.max(0, Math.round(p.queda * 100)) + "%")));
+    camada.append(etiqueta);
+    requestAnimationFrame(() => requestAnimationFrame(() => etiqueta.classList.add("mostra")));
+    if (parado) return;
+    const fica = 4500 + Math.random() * 3000;
+    setTimeout(() => {
+      etiqueta.classList.remove("mostra");
+      setTimeout(() => { etiqueta.remove(); emTela.delete(p.id); setTimeout(() => ciclo(v, minha), 600 + Math.random() * 2600); }, 1500);
+    }, fica);
+  }
+  let espera;
+  addEventListener("resize", () => { clearTimeout(espera); espera = setTimeout(montar, 250); });
+  montar();
+}
+
 (async () => {
   try {
     const r = await fetch("dados/indice.json?t=" + Date.now(), {cache: "no-store"});
@@ -979,6 +1085,72 @@ let espera; addEventListener("resize", () => { clearTimeout(espera); espera = se
   if (dados.canais && dados.canais.length) $("como-intro").textContent = `O radar lê ${dados.canais.length} canais de promoção do Telegram (${dados.canais.join(", ")}) a cada 15 minutos, guarda cada oferta e monta o histórico de preço de cada produto.`;
   desenharFiltroV();
   rota();
+  iniciarEmAlta();
+})();
+/* ---------- chuva de cifrões estilo Matrix nas laterais ---------- */
+(() => {
+  const tela = document.getElementById("chuva"), ctx = tela.getContext("2d");
+  const parado = matchMedia("(prefers-reduced-motion: reduce)");
+  const SIMBOLOS = "$$$$R$%↓0123456789¢".split("").concat(["R$", "R$"]);
+  const T = 18;
+  let colunas = [], moedas = [], cor = "#39FF8F", larg = 0, alt = 0, ultimo = 0, rodando = false;
+  const sorteio = () => SIMBOLOS[Math.floor(Math.random() * SIMBOLOS.length)];
+  function montar() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    larg = innerWidth; alt = innerHeight;
+    tela.width = larg * dpr; tela.height = alt * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cor = getComputedStyle(document.documentElement).getPropertyValue("--neon").trim() || cor;
+    const caixa = document.querySelector("main").getBoundingClientRect();
+    const faixas = [[8, caixa.left - 12], [caixa.right + 12, larg - 8]].filter(([a, b]) => b - a >= T * 2);
+    colunas = []; moedas = [];
+    for (const [a, b] of faixas) {
+      for (let x = a; x + T <= b; x += T * 1.15)
+        colunas.push({x, y: Math.random() * alt, v: 40 + Math.random() * 90, n: 6 + Math.floor(Math.random() * 14),
+          g: Array.from({length: 22}, sorteio), f: .35 + Math.random() * .65});
+      const qtd = Math.max(1, Math.round((b - a) / 160));
+      for (let i = 0; i < qtd; i++) moedas.push({x: a + 20 + Math.random() * Math.max(1, b - a - 40), y: Math.random() * alt, v: 18 + Math.random() * 25, ang: Math.random() * 6.3, giro: 1.5 + Math.random() * 2});
+    }
+    ctx.clearRect(0, 0, larg, alt);
+    const deveRodar = colunas.length > 0 && !parado.matches;
+    if (deveRodar && !rodando) { rodando = true; ultimo = performance.now(); requestAnimationFrame(quadro); }
+    if (!deveRodar) rodando = false;
+  }
+  function quadro(agora) {
+    if (!rodando) return;
+    requestAnimationFrame(quadro);
+    const dt = Math.min(.1, (agora - ultimo) / 1000);
+    if (dt < 1 / 30) return;
+    ultimo = agora;
+    ctx.clearRect(0, 0, larg, alt);
+    ctx.font = `700 ${T - 3}px "JetBrains Mono", ui-monospace, monospace`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = cor;
+    for (const c of colunas) {
+      c.y += c.v * dt;
+      if (c.y - c.n * T > alt) { c.y = -Math.random() * alt * .3; c.v = 40 + Math.random() * 90; }
+      if (Math.random() < .04) c.g[Math.floor(Math.random() * c.g.length)] = sorteio();
+      for (let i = 0; i < c.n; i++) {
+        const y = c.y - i * T;
+        if (y < -T || y > alt + T) continue;
+        ctx.globalAlpha = (i === 0 ? .5 : .28 * (1 - i / c.n)) * c.f;
+        ctx.fillText(c.g[(Math.floor(c.y / T) - i + 220) % c.g.length], c.x + T / 2, y);
+      }
+    }
+    ctx.font = `700 44px "Chakra Petch", system-ui, sans-serif`;
+    for (const m of moedas) {
+      m.y += m.v * dt; m.ang += m.giro * dt;
+      if (m.y > alt + 50) { m.y = -50; }
+      ctx.save(); ctx.translate(m.x, m.y); ctx.scale(Math.cos(m.ang), 1);
+      ctx.globalAlpha = .16 + .1 * Math.abs(Math.cos(m.ang));
+      ctx.shadowColor = cor; ctx.shadowBlur = 12;
+      ctx.fillText("$", 0, 0); ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  }
+  let espera;
+  addEventListener("resize", () => { clearTimeout(espera); espera = setTimeout(montar, 200); });
+  parado.addEventListener("change", montar);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", montar);
+  document.fonts?.ready.then(montar); montar();
 })();
 </script>
 </body>
