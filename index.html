@@ -468,6 +468,8 @@ const pct = v => (v * 100).toLocaleString("pt-BR", {maximumFractionDigits: 1}) +
 const dataDia = iso => { const [a, m, d] = iso.split("-").map(Number); return new Date(a, m - 1, d, 12); };
 const isoDia = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const ddmm = d => d.toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit"});
+const hhmm = d => d.toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"});
+const quandoTxt = (d, hora) => ddmm(d) + (hora ? " às " + hora : "");
 const ddmmaa = d => d.toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"});
 const semAcento = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 const mediana = a => { const o = [...a].sort((x, y) => x - y), m = o.length >> 1; return o.length ? (o.length % 2 ? o[m] : (o[m - 1] + o[m]) / 2) : NaN; };
@@ -582,7 +584,7 @@ const ROTULOS_SPECS = [
 let dados, produtos = [], porId = new Map(), referencia;
 
 function preparar(p) {
-  p.serie = p.dias.map(([dia, preco, loja, cupom, pag, link, canal]) => ({dia, data: dataDia(dia), preco, loja, cupom, pag, link, canal}));
+  p.serie = p.dias.map(([dia, preco, loja, cupom, pag, link, canal, post, hora]) => ({dia, data: dataDia(dia), preco, loja, cupom, pag, link, canal, hora: hora || ""}));
   const [quando, preco, loja, cupom, pag, link, canal] = p.ult;
   p.u = {data: new Date(quando), preco, loja, cupom, pag, link, canal};
   const precos = p.serie.map(d => d.preco);
@@ -672,7 +674,7 @@ function card(p) {
         onclick: e => { e.stopPropagation(); alternarSelecao(p); }}, "+ comparar")),
     el("span", {class: "nome"}, p.nome),
     el("span", {class: "preco"}, reais(p.u.preco)),
-    el("span", {class: "sub"}, "último · " + ddmm(p.u.data) + " · ", el("b", {class: "cor-v"}, variacaoTxt(p))),
+    el("span", {class: "sub"}, "último · " + ddmm(p.u.data) + " " + hhmm(p.u.data) + " · ", el("b", {class: "cor-v"}, variacaoTxt(p))),
     sparkline(p),
     el("span", {class: "rodape"}, el("span", {}, "menor ", el("b", {}, reais(p.menor))), selo(p.v)));
 }
@@ -748,7 +750,7 @@ function desenharQuedas() {
   const lista = quedas(diasQuedas).slice(0, 80);
   $("lista-quedas").replaceChildren(...(lista.length ? lista.map(a => el("div", {class: "linha-item realce", tabindex: 0, role: "link",
       onclick: () => { location.hash = "p-" + a.p.id; }, onkeydown: e => { if (e.key === "Enter") location.hash = "p-" + a.p.id; }},
-    el("span", {class: "n"}, a.p.nome, el("small", {}, [a.tipo, ddmm(a.d.data), a.d.loja].filter(Boolean).join(" · "))),
+    el("span", {class: "n"}, a.p.nome, el("small", {}, [a.tipo, quandoTxt(a.d.data, a.d.hora), a.d.loja].filter(Boolean).join(" · "))),
     el("span", {class: "m"}, "mediana " + reaisRedondo(a.med)),
     el("span", {class: "p"}, reais(a.d.preco)),
     el("span", {class: "q", style: `color:${a.q >= .4 ? "var(--razoavel)" : "var(--top)"}`}, "−" + Math.round(a.q * 100) + "%")))
@@ -837,7 +839,7 @@ function grafico(caixa, series, ini, fim, opc = {}) {
     const doDia = dentro.map(sr => ({sr, d: sr.pts.find(q => q.dia === d.dia)})).filter(o => o.d);
     const prim = doDia[0];
     marca.setAttribute("cx", cx); marca.setAttribute("cy", y(prim.d.preco)); marca.setAttribute("fill", prim.sr.cor); marca.setAttribute("opacity", 1);
-    dica.replaceChildren(el("div", {class: "d"}, ddmmaa(d.data)),
+    dica.replaceChildren(el("div", {class: "d"}, ddmmaa(d.data) + (d.hora ? " às " + d.hora : "")),
       ...doDia.map(o => el("div", {}, el("b", {style: `color:${o.sr.cor}`}, reais(o.d.preco)), " ",
         dentro.length > 1 ? o.sr.p.nome.slice(0, 26) : [o.d.loja, o.d.cupom && "cupom " + o.d.cupom].filter(Boolean).join(" · "))));
     dica.hidden = false;
@@ -874,10 +876,10 @@ function montarProduto() {
 
   const [ini, fim] = intervalo(p, periodo), noPer = p.serie.filter(d => d.data >= ini && d.data <= fim);
   $("n-ult").textContent = reais(p.u.preco);
-  $("n-ult-s").textContent = [ddmm(p.u.data), p.u.loja, p.u.cupom && "cupom " + p.u.cupom].filter(Boolean).join(" · ");
+  $("n-ult-s").textContent = [ddmm(p.u.data) + " às " + hhmm(p.u.data), p.u.loja, p.u.cupom && "cupom " + p.u.cupom].filter(Boolean).join(" · ");
   if (noPer.length) {
     const mn = noPer.reduce((a, b) => b.preco < a.preco ? b : a);
-    $("n-menor").textContent = reais(mn.preco); $("n-menor-s").textContent = [ddmm(mn.data), mn.loja].filter(Boolean).join(" · ");
+    $("n-menor").textContent = reais(mn.preco); $("n-menor-s").textContent = [quandoTxt(mn.data, mn.hora), mn.loja].filter(Boolean).join(" · ");
     $("n-med").textContent = reais(mediana(noPer.map(d => d.preco)));
     const varia = noPer[noPer.length - 1].preco / noPer[0].preco - 1;
     $("n-med-s").textContent = noPer.length > 1 ? `variação no período ${varia <= 0 ? "↓" : "↑"} ${pct(Math.abs(varia))}` : "1 dia no período";
@@ -905,12 +907,12 @@ function montarProduto() {
   const lojas = new Map();
   for (const d of p.serie) { const l = d.loja || "Não informada"; if (!lojas.has(l) || d.preco < lojas.get(l).preco) lojas.set(l, d); }
   $("t-lojas").replaceChildren(el("thead", {}, el("tr", {}, el("th", {}, "Loja"), el("th", {class: "num"}, "Menor"), el("th", {class: "num"}, "Quando"))),
-    el("tbody", {}, ...[...lojas].sort((a, b) => a[1].preco - b[1].preco).map(([l, d]) => el("tr", {}, el("td", {}, l), el("td", {class: "num"}, reais(d.preco)), el("td", {class: "num"}, ddmm(d.data))))));
+    el("tbody", {}, ...[...lojas].sort((a, b) => a[1].preco - b[1].preco).map(([l, d]) => el("tr", {}, el("td", {}, l), el("td", {class: "num"}, reais(d.preco)), el("td", {class: "num"}, quandoTxt(d.data, d.hora))))));
   const linhasSpecs = ROTULOS_SPECS.filter(([k]) => p.spec[k] !== undefined);
   $("t-specs").replaceChildren(el("tbody", {}, ...(linhasSpecs.length ? linhasSpecs.map(([k, rot, fmt]) => el("tr", {}, el("td", {}, rot(p)), el("td", {class: "num"}, fmt(p.spec[k]))))
     : [el("tr", {}, el("td", {style: "color:var(--suave);white-space:normal"}, "O nome deste produto não traz especificações que o radar consiga ler."))])));
-  $("t-dias").replaceChildren(el("thead", {}, el("tr", {}, ...["Dia", "Menor preço", "Loja", "Cupom", "Pagamento"].map(t => el("th", {}, t)))),
-    el("tbody", {}, ...[...p.serie].reverse().map(d => el("tr", {}, el("td", {}, ddmmaa(d.data)), el("td", {}, reais(d.preco)),
+  $("t-dias").replaceChildren(el("thead", {}, el("tr", {}, ...["Dia", "Hora", "Menor preço", "Loja", "Cupom", "Pagamento"].map(t => el("th", {}, t)))),
+    el("tbody", {}, ...[...p.serie].reverse().map(d => el("tr", {}, el("td", {}, ddmmaa(d.data)), el("td", {}, d.hora || "—"), el("td", {}, reais(d.preco)),
       el("td", {}, d.loja || "—"), el("td", {}, d.cupom ? el("code", {}, d.cupom) : "—"), el("td", {}, d.pag || "—")))));
 }
 
@@ -1040,14 +1042,14 @@ function iniciarEmAlta() {
     geracao++; camada.replaceChildren(); emTela.clear(); vagas = [];
     const caixa = document.querySelector("main").getBoundingClientRect(), W = innerWidth, H = innerHeight;
     const lados = [[12, caixa.left - 14], [caixa.right + 14, W - 12]].filter(([a, b]) => b - a >= 190);
-    const topo = Math.max(H * .46, 140), fundo = H - ALT - 16;
-    const porLado = Math.max(0, Math.min(3, Math.floor((fundo - topo) / (ALT + 22)) + 1));
-    for (const [a, b] of lados) {
-      const w = Math.min(232, b - a - 8);
-      for (let i = 0; i < porLado; i++) {
-        const faixa = (fundo - topo) / porLado;
-        vagas.push({a, b, w, y0: topo + i * faixa, y1: topo + i * faixa + Math.max(0, faixa - ALT - 12), ocupada: false});
-      }
+    const topo = 150, fundo = H - ALT - 16;
+    const porLado = Math.max(0, Math.min(3, Math.floor((fundo - topo) / (ALT + 22))));
+    const faixa = (fundo - topo) / Math.max(1, porLado);
+    for (let i = 0; i < porLado; i++) {  // alterna esquerda e direita, cada uma numa faixa de altura diferente
+      lados.forEach(([a, b], lado) => {
+        const w = Math.min(232, b - a - 8), k = (i + lado) % porLado;  // a direita fica "fora de fase" da esquerda
+        vagas.push({a, b, w, y0: topo + k * faixa, y1: topo + k * faixa + Math.max(0, faixa - ALT - 8)});
+      });
     }
     const minha = geracao;
     vagas.forEach((v, i) => setTimeout(() => ciclo(v, minha), parado ? 0 : 400 + i * 900 + Math.random() * 1200));
@@ -1062,7 +1064,7 @@ function iniciarEmAlta() {
     emTela.add(p.id);
     const x = v.a + Math.random() * Math.max(0, v.b - v.a - v.w), y = v.y0 + Math.random() * Math.max(0, v.y1 - v.y0);
     const etiqueta = el("a", {class: "alta", href: "#p-" + p.id, tabindex: "-1", style: `left:${x}px;top:${y}px;width:${v.w}px`},
-      el("small", {}, (p.v === "top" ? "⚡ promoção top" : "compensa") + " · " + haQuanto(p.u.data)),
+      el("small", {}, (p.v === "top" ? "⚡ promoção top" : "compensa") + " · às " + hhmm(p.u.data) + " · " + haQuanto(p.u.data)),
       el("b", {}, p.nome),
       el("span", {}, el("strong", {}, reais(p.u.preco)), el("i", {}, "−" + Math.max(0, Math.round(p.queda * 100)) + "%")));
     camada.append(etiqueta);

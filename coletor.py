@@ -107,6 +107,26 @@ def escolher_preco(texto):
     return (com_por or candidatos)[0][:2]
 
 
+RE_CAPACIDADE = re.compile(r"(?<![\d.,])(\d{1,4})\s*(GB|TB)\b", re.I)
+
+
+def capacidades(texto):
+    """Capacidades citadas (ex.: {'250gb', '500gb', '1tb'})."""
+    return {f"{int(n)}{u.lower()}" for n, u in RE_CAPACIDADE.findall(texto)}
+
+
+def precos_por_versao(texto):
+    """Quando o post dá o preço de cada versão numa linha ('500GB: R$ 199,90'), devolve {'500gb': 199.9}."""
+    saida = {}
+    for linha in texto.splitlines():
+        caps = capacidades(linha)
+        if len(caps) == 1 and "R$" in linha:
+            achado = escolher_preco(linha)
+            if achado:
+                saida[next(iter(caps))] = achado[1]
+    return saida
+
+
 def interpretar_post(texto):
     """Recebe o texto de um post e devolve nome, preço, pagamento, cupom e link (ou None se não for oferta)."""
     escolhido = escolher_preco(texto)
@@ -146,7 +166,8 @@ def interpretar_post(texto):
             if urlparse(url).netloc.lower().removeprefix("www.") not in NAO_E_PRODUTO:
                 link = url
                 break
-    return {"nome": nome, "preco": preco, "pagamento": pagamento, "cupom": cupom, "link": link.rstrip(".,;")}
+    return {"nome": nome, "preco": preco, "pagamento": pagamento, "cupom": cupom, "link": link.rstrip(".,;"),
+            "versoes": precos_por_versao(texto) if len(capacidades(nome)) > 1 else {}}
 
 
 # ---------------------------------------------------------------- categorias e modelos
@@ -246,6 +267,10 @@ def tokens(nome):
 
 def mesmo_produto(a, b):
     """Compara dois conjuntos de palavras: os códigos com número precisam bater e o resto quase todo."""
+    ca = {t for t in a if re.fullmatch(r"\d+(gb|tb)", t)}
+    cb = {t for t in b if re.fullmatch(r"\d+(gb|tb)", t)}
+    if ca and cb and ca != cb:
+        return False  # 500GB não se junta com "250GB 500GB 1TB", nem 512GB com 1TB
     da = {t for t in a if any(c.isdigit() for c in t)}
     db = {t for t in b if any(c.isdigit() for c in t)}
     if da != db and not (da and db and (da <= db or db <= da) and len(da & db) >= 2):
@@ -425,7 +450,7 @@ def montar_indice(todos, canais):
             continue
         g["ofertas"].append({"quando": quando, "preco": info["preco"], "cupom": info["cupom"],
                              "pag": info["pagamento"], "link": info["link"], "loja": loja,
-                             "canal": p["canal"], "canais": {p["canal"]}, "posts": 1, "post": pid})
+                             "canal": p["canal"], "canais": {p["canal"]}, "posts": 1, "post": pid, "versoes": info["versoes"]})
 
     produtos, usados = [], set()
     for chave, g in grupos.items():
@@ -450,11 +475,12 @@ def montar_indice(todos, canais):
             if dia not in por_dia or o["preco"] < por_dia[dia]["preco"]:
                 por_dia[dia] = o
         linha = lambda o: [round(o["preco"], 2), o["loja"], o["cupom"], o["pag"], o["link"], o["canal"], o.get("post", "")]
+        ultima = lambda o: linha(o) + ([o["versoes"]] if o.get("versoes") else [])
         ult = validas[-1]
         produtos.append({
             "id": pid, "nome": nome, "cat": g["cat"], "posts": sum(o["posts"] for o in validas),
-            "dias": [[dia] + linha(o) for dia, o in sorted(por_dia.items())],
-            "ult": [ult["quando"].astimezone(timezone.utc).isoformat(timespec="minutes")] + linha(ult),
+            "dias": [[dia] + linha(o) + [o["quando"].astimezone(FUSO).strftime("%H:%M")] for dia, o in sorted(por_dia.items())],
+            "ult": [ult["quando"].astimezone(timezone.utc).isoformat(timespec="minutes")] + ultima(ult),
         })
     produtos.sort(key=lambda p: p["ult"][0], reverse=True)
     return {"versao": 2, "alertas": [{k: a[k] for k in ("arquivo", "produto", "nome", "busca", "top", "maximo")} for a in ler_alertas()], "atualizado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -516,6 +542,13 @@ def termos_busca(texto):
         if t:
             saida.append(t[:-1] if len(t) > 4 and t.endswith("s") else t)
     return saida
+
+
+def casa_busca(ts, prod):
+    """Todas as palavras da busca no nome; números precisam bater inteiros (500 casa com 500GB, não com 3500MB/s)."""
+    junto = texto_busca(prod)
+    espaco = re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", prod["nome"]).encode("ascii", "ignore").decode().lower())
+    return all(re.search(rf"(?<![0-9]){t}(?![0-9])", espaco) if t.isdigit() else t in junto for t in ts)
 
 
 def texto_busca(prod):
@@ -617,7 +650,7 @@ def descrever(a):
 def candidatos_do_alerta(a, indice, por_id):
     if a["busca"]:
         ts = termos_busca(a["busca"])
-        return [p for p in indice["produtos"] if ts and all(t in texto_busca(p) for t in ts)]
+        return [p for p in indice["produtos"] if ts and casa_busca(ts, p)]
     prod = por_id.get(a["produto"])
     if not prod and a["nome"]:  # o produto pode ter mudado de nome no radar
         tk = tokens(a["nome"])
@@ -665,7 +698,7 @@ def links_oferta(p):
 def linha_produto(p, agora, site, extra=""):
     v, queda = veredito(p, agora)
     nome = f'<a href="{site}#p-{p["id"]}">{h(p["nome"])}</a>' if site else h(p["nome"])
-    quando = datetime.fromisoformat(p["ult"][0]).astimezone(FUSO).strftime("%d/%m")
+    quando = datetime.fromisoformat(p["ult"][0]).astimezone(FUSO).strftime("%d/%m às %H:%M")
     partes = [reais_txt(p["ult"][1])]
     if v != "sem":
         partes.append(f"{'−' if queda >= 0 else '+'}{abs(queda):.0%} vs mediana".replace(".", ","))
@@ -707,7 +740,8 @@ def maiores_quedas(indice, agora, site, limite=10):
     for q, p, d in lista[:limite]:
         nome = f'<a href="{site}#p-{p["id"]}">{h(p["nome"])}</a>' if site else h(p["nome"])
         tipo = "⚡ possível erro de preço" if q >= 0.4 else "📉"
-        linhas.append(f"{tipo} {nome}\n     {reais_txt(d[1])} · −{q:.0%} da mediana{' · ' + h(d[2]) if d[2] else ''}")
+        hora = f" · {d[0][8:10]}/{d[0][5:7]}" + (f" às {d[8]}" if len(d) > 8 else "")
+        linhas.append(f"{tipo} {nome}\n     {reais_txt(d[1])} · −{q:.0%} da mediana{' · ' + h(d[2]) if d[2] else ''}{hora}")
     return "📉 <b>Maiores quedas</b> (últimas 36 horas)\n\n" + "\n\n".join(linhas)
 
 
@@ -727,7 +761,7 @@ def vale_a_pena(indice, agora, site):
 
 def pesquisar(texto, indice, agora, site):
     ts = termos_busca(texto)
-    achados = [p for p in indice["produtos"] if ts and all(t in texto_busca(p) for t in ts)]
+    achados = [p for p in indice["produtos"] if ts and casa_busca(ts, p)]
     if not achados:
         return (f"Não achei \"{h(texto)}\" no radar. Tente menos palavras, como só o modelo (ex.: ak400, 9060, 7800x3d).", None)
     modelo = lambda p: 0 if re.match(r"(?i)^(rtx|gtx|rx|arc|ryzen|core)", p["nome"]) else 1
@@ -924,6 +958,19 @@ def avisar(a, prod, base, agora, site, avisos, token, chat):
     if agora - quando > timedelta(hours=3):
         return  # só oferta nova
     preco, loja, cupom, _, link = prod["ult"][1:6]
+    versao = ""
+    caps_nome = capacidades(prod["nome"])
+    if len(caps_nome) > 1 and a["busca"]:
+        pedida = [c for c in caps_nome if any(re.fullmatch(rf"{t}(gb|tb)?", c) for t in termos_busca(a["busca"]))]
+        if pedida:
+            versoes = prod["ult"][8] if len(prod["ult"]) > 8 else {}
+            em_gb = lambda c: int(c[:-2]) * (1000 if c.endswith("tb") else 1)
+            if pedida[0] in versoes:
+                preco, versao = versoes[pedida[0]], pedida[0].upper()
+            elif pedida[0] == min(caps_nome, key=em_gb):
+                versao = f"{pedida[0].upper()} (o anúncio tem várias versões; o preço postado costuma ser o da menor)"
+            else:
+                return  # várias versões, um preço só, e a pedida não é a menor: o preço não é dela, não avisa
     v, queda = veredito(prod, agora)
     if not ((a["top"] and v == "top") or (a["maximo"] and preco <= a["maximo"])):
         return
@@ -933,8 +980,10 @@ def avisar(a, prod, base, agora, site, avisos, token, chat):
         return
     if ant and preco >= ant.get("preco", 0) and agora - datetime.fromisoformat(ant["enviado"]) < timedelta(hours=24):
         return
-    partes = ["🔥 PROMOÇÃO TOP" if v == "top" else "🔔 PREÇO DO SEU ALERTA", prod["nome"], "",
-              f"💰 {reais_txt(preco)}" + (f" ({queda:.0%} abaixo da mediana)".replace(".", ",") if queda > 0.01 else "")]
+    postado = quando.astimezone(FUSO).strftime("%d/%m às %H:%M")
+    partes = ["🔥 PROMOÇÃO TOP" if v == "top" else "🔔 PREÇO DO SEU ALERTA", prod["nome"], f"🕒 Postado em {postado}", "",
+              f"💰 {reais_txt(preco)}" + (f" na versão {versao}" if versao else "")
+              + (f" ({queda:.0%} abaixo da mediana)".replace(".", ",") if queda > 0.01 and not versao else "")]
     if cupom:
         partes.append(f"🎟 Cupom: {cupom}")
     if loja:
@@ -945,6 +994,7 @@ def avisar(a, prod, base, agora, site, avisos, token, chat):
         partes.append(f"📣 Post no canal (com os cupons): https://t.me/{prod['ult'][7]}")
     if site:
         partes.append(f"📈 Histórico: {site}#p-{prod['id']}")
+    partes.append("⚠️ Confira o preço e a versão na loja antes de pagar: o valor pode mudar depois do post.")
     if a["busca"]:
         partes.append(f"(alerta: \"{a['busca']}\")")
     try:
