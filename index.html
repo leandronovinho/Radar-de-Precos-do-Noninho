@@ -445,7 +445,7 @@ function exemplo() {
       lista.push([iso, p, lojas[Math.floor(rnd() * lojas.length)], rnd() < .3 ? "CUPOM" + (10 + Math.floor(rnd() * 40)) : "", rnd() < .4 ? "pix" : "", "", "exemplo"]);
     }
     const u = lista[lista.length - 1];
-    return {id: "ex-" + i, nome, cat, posts: lista.length * 2 + 3, dias: lista, ult: [u[0] + "T21:30Z", ...u.slice(1)]};
+    return {id: "ex-" + i, nome, cat, posts: lista.length * 2 + 3, dias: lista, ult: [u[0] + (u[0] === "2026-11-12" ? "T22:" + String(20 + i * 2).padStart(2, "0") + "Z" : "T21:30Z"), ...u.slice(1)]};
   });
   return {atualizado: "2026-11-12T23:10:00Z", canais: [], produtos, exemplo: true};
 }
