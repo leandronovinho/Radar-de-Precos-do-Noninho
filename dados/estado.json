@@ -1,35 +1,51 @@
 {
  "upandosetup": {
   "antes": 19788,
-  "completo": true
+  "completo": true,
+  "buracos_vistos": [
+   "31495-31499",
+   "31546-31550",
+   "32151-32155"
+  ]
  },
  "HardTecPromocoes": {
   "antes": 239682,
-  "completo": true
+  "completo": true,
+  "buracos_vistos": []
  },
  "grape_tec": {
   "antes": 193887,
-  "completo": true
+  "completo": true,
+  "buracos_vistos": [
+   "225769-225773"
+  ]
  },
  "IskandarSouza": {
   "antes": 171939,
-  "completo": true
+  "completo": true,
+  "buracos_vistos": []
  },
  "gtOFERTAS": {
   "antes": 173088,
-  "completo": true
+  "completo": true,
+  "buracos_vistos": []
  },
  "cuponsjersu": {
   "antes": 129482,
-  "completo": true
+  "completo": true,
+  "buracos_vistos": []
  },
  "TJGOFERTASs": {
   "antes": 87962,
-  "completo": true
+  "completo": true,
+  "buracos_vistos": [
+   "102680-102685"
+  ]
  },
  "PROMOSGERAISTJ": {
   "antes": 27764,
-  "completo": true
+  "completo": true,
+  "buracos_vistos": []
  },
  "_telegram": {
   "site": "https://leandronovinho.github.io/Radar-de-Precos-do-Noninho/",
