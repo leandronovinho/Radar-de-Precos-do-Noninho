@@ -234,16 +234,23 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
 }
 @media (prefers-reduced-motion:reduce){.realce::before,.realce::after{transition:none}.chip::after{display:none}}
 
-/* fundo decorativo: gráfico em queda e o nome, bem fracos */
-.fundo-deco{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
-.fundo-deco svg{width:100%;height:100%;display:block}
-.deco-t1,.deco-t2{font-family:var(--titulo);font-weight:700;letter-spacing:.06em}
-.deco-t1{font-size:150px;fill:none;stroke:var(--neon);stroke-width:1.2;opacity:.09}
-.deco-t2{font-size:210px;fill:var(--neon);opacity:.035}
-.deco-linha{fill:none;stroke:var(--neon);stroke-width:2.5;stroke-linejoin:round;opacity:.22;filter:drop-shadow(0 0 6px var(--neon))}
-.deco-q{font-family:var(--mono);font-size:28px;font-weight:700;fill:var(--neon);opacity:.22}
-@media (max-width:52rem){.fundo-deco{opacity:.55}.deco-q{display:none}}
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .deco-linha{opacity:.18;filter:none}}
+/* fundo decorativo: um radar varrendo a tela, com pontos que acendem quando o feixe passa */
+.fundo-deco{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;display:grid;place-items:center}
+.radar{position:relative;width:min(130vh,130vw);aspect-ratio:1;border-radius:50%;opacity:.55;
+  background:
+    linear-gradient(transparent calc(50% - .5px),color-mix(in srgb,var(--neon) 16%,transparent) calc(50% - .5px) calc(50% + .5px),transparent calc(50% + .5px)),
+    linear-gradient(90deg,transparent calc(50% - .5px),color-mix(in srgb,var(--neon) 16%,transparent) calc(50% - .5px) calc(50% + .5px),transparent calc(50% + .5px)),
+    repeating-radial-gradient(circle,transparent 0 calc(12.5% - 1px),color-mix(in srgb,var(--neon) 14%,transparent) calc(12.5% - 1px) 12.5%);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--neon) 18%,transparent),0 0 120px color-mix(in srgb,var(--neon) 8%,transparent) inset}
+.radar::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0deg 300deg,color-mix(in srgb,var(--neon) 32%,transparent) 360deg);
+  animation:varrer 8s linear infinite}
+.radar i{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--neon);opacity:0;
+  box-shadow:0 0 12px var(--neon);animation:blip 8s linear infinite}
+@keyframes varrer{to{transform:rotate(360deg)}}
+@keyframes blip{0%{opacity:0}2%{opacity:.9}35%{opacity:.15}60%,100%{opacity:0}}
+@media (max-width:52rem){.radar{width:150vw;opacity:.4}}
+@media (prefers-reduced-motion:reduce){.radar::before{animation:none}.radar i{animation:none;opacity:.35}}
 
 /* chuva de cifrões nas laterais (só em telas largas) */
 .chuva{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
@@ -264,19 +271,7 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
 </style>
 </head>
 <body>
-<div class="fundo-deco" aria-hidden="true">
-  <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <linearGradient id="deco-area" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" style="stop-color:var(--neon);stop-opacity:.10"/>
-        <stop offset="1" style="stop-color:var(--neon);stop-opacity:0"/>
-      </linearGradient>
-    </defs>
-    <path d="M0,900 L0,300 L40,279 L80,248 L120,239 L160,212 L200,180 L240,180 L280,208 L320,228 L360,245 L400,223 L440,223 L480,205 L520,250 L560,289 L600,267 L640,296 L680,317 L720,337 L760,357 L800,333 L840,317 L880,324 L920,339 L960,363 L1000,388 L1040,356 L1080,482 L1120,612 L1160,640 L1200,615 L1240,611 L1280,579 L1320,609 L1360,633 L1400,634 L1440,618 L1480,640 L1520,640 L1560,640 L1600,640 L1600,900Z" fill="url(#deco-area)"/>
-    <polyline class="deco-linha" points="0,300 40,279 80,248 120,239 160,212 200,180 240,180 280,208 320,228 360,245 400,223 440,223 480,205 520,250 560,289 600,267 640,296 680,317 720,337 760,357 800,333 840,317 880,324 920,339 960,363 1000,388 1040,356 1080,482 1120,612 1160,640 1200,615 1240,611 1280,579 1320,609 1360,633 1400,634 1440,618 1480,640 1520,640 1560,640 1600,640"/>
-    <text class="deco-q" x="1172" y="680">−38%</text>
-  </svg>
-</div>
+<div class="fundo-deco" aria-hidden="true"><div class="radar"><i style="left:42.3%;top:65.3%;animation-delay:4.59s"></i><i style="left:41.6%;top:38.2%;animation-delay:7.21s"></i><i style="left:26.2%;top:44.5%;animation-delay:6.29s"></i><i style="left:77.3%;top:60.4%;animation-delay:2.46s"></i><i style="left:76.0%;top:56.2%;animation-delay:2.30s"></i><i style="left:63.7%;top:56.4%;animation-delay:2.56s"></i><i style="left:14.3%;top:68.3%;animation-delay:5.40s"></i><i style="left:64.0%;top:63.7%;animation-delay:2.99s"></i><i style="left:19.2%;top:18.3%;animation-delay:7.02s"></i><i style="left:27.4%;top:38.1%;animation-delay:6.62s"></i><i style="left:63.4%;top:48.0%;animation-delay:1.81s"></i><i style="left:63.8%;top:33.0%;animation-delay:0.87s"></i><i style="left:59.9%;top:62.6%;animation-delay:3.15s"></i><i style="left:35.7%;top:87.1%;animation-delay:4.47s"></i></div></div>
 <canvas class="chuva" id="chuva" aria-hidden="true"></canvas>
 <header class="barra">
   <div class="barra-in">
@@ -1021,8 +1016,9 @@ const agoraAlta = () => dados.exemplo ? +referencia : Date.now();
 const fresca = p => agoraAlta() - p.u.data <= MAX_IDADE_ALTA;
 function escolherEmAlta() {
   const desde = referencia - 14 * DIA;
-  return produtos.filter(p => (p.v === "top" || p.v === "compensa") && fresca(p))
-    .map(p => ({p, n: p.serie.filter(d => d.data >= desde).length + (p.v === "top" ? 2 : 0)}))
+  const peso = {top: 30, compensa: 20, razoavel: 5, sem: 3};
+  return produtos.filter(p => p.v !== "caro" && fresca(p))
+    .map(p => ({p, n: peso[p.v] + p.serie.filter(d => d.data >= desde).length}))
     .sort((a, b) => b.n - a.n).slice(0, 18).map(o => o.p);
 }
 function haQuanto(data) {
@@ -1052,7 +1048,7 @@ function iniciarEmAlta() {
       });
     }
     const minha = geracao;
-    vagas.forEach((v, i) => setTimeout(() => ciclo(v, minha), parado ? 0 : 400 + i * 900 + Math.random() * 1200));
+    vagas.forEach((v, i) => setTimeout(() => ciclo(v, minha), parado ? 0 : 300 + i * 350 + Math.random() * 400));
   }
   function ciclo(v, minha) {
     if (minha !== geracao) return;
@@ -1064,16 +1060,16 @@ function iniciarEmAlta() {
     emTela.add(p.id);
     const x = v.a + Math.random() * Math.max(0, v.b - v.a - v.w), y = v.y0 + Math.random() * Math.max(0, v.y1 - v.y0);
     const etiqueta = el("a", {class: "alta", href: "#p-" + p.id, tabindex: "-1", style: `left:${x}px;top:${y}px;width:${v.w}px`},
-      el("small", {}, (p.v === "top" ? "⚡ promoção top" : "compensa") + " · às " + hhmm(p.u.data) + " · " + haQuanto(p.u.data)),
+      el("small", {}, ({top: "⚡ promoção top", compensa: "compensa", razoavel: "preço razoável", sem: "oferta nova"})[p.v] + " · às " + hhmm(p.u.data) + " · " + haQuanto(p.u.data)),
       el("b", {}, p.nome),
-      el("span", {}, el("strong", {}, reais(p.u.preco)), el("i", {}, "−" + Math.max(0, Math.round(p.queda * 100)) + "%")));
+      el("span", {}, el("strong", {}, reais(p.u.preco)), p.v === "sem" ? null : el("i", {}, "−" + Math.max(0, Math.round(p.queda * 100)) + "%")));
     camada.append(etiqueta);
     requestAnimationFrame(() => requestAnimationFrame(() => etiqueta.classList.add("mostra")));
     if (parado) return;
-    const fica = 4500 + Math.random() * 3000;
+    const fica = 8000 + Math.random() * 5000;
     setTimeout(() => {
       etiqueta.classList.remove("mostra");
-      setTimeout(() => { etiqueta.remove(); emTela.delete(p.id); setTimeout(() => ciclo(v, minha), 600 + Math.random() * 2600); }, 1500);
+      setTimeout(() => { etiqueta.remove(); emTela.delete(p.id); setTimeout(() => ciclo(v, minha), 300 + Math.random() * 900); }, 1500);
     }, fica);
   }
   let espera;
