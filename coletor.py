@@ -280,6 +280,37 @@ def ler_canal(canal, html=None, antes=None):
     return posts
 
 
+def tapar_buracos(canal, recentes, todos, e, numero_post, paginas_max=15):
+    """A página pública mostra só os 20 posts mais novos. Se o canal postou mais que isso entre duas coletas
+    (ou uma coleta atrasou), sobra um buraco na numeração. Aqui o coletor volta para buscar o que faltou
+    nos últimos 3 dias."""
+    limite = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
+    conhecidos = {int(pid.split("/")[1]) for pid, p in todos.items() if p["canal"] == canal and p["data"] >= limite}
+    conhecidos |= {numero_post(p) for p in recentes}
+    if len(conhecidos) < 2:
+        return []
+    vistos = set(e.get("buracos_vistos", []))
+    ordem = sorted(conhecidos)
+    buracos = [(a, b) for a, b in zip(ordem, ordem[1:]) if b - a > 3 and f"{a}-{b}" not in vistos]
+    achados, paginas = [], 0
+    for a, b in reversed(buracos):  # do mais novo para o mais antigo
+        antes = b
+        while antes > a + 1 and paginas < paginas_max:
+            pagina = ler_canal(canal, antes=antes)
+            paginas += 1
+            if not pagina:
+                break
+            achados += [p for p in pagina if numero_post(p) not in conhecidos]
+            antes = min(map(numero_post, pagina))
+            time.sleep(0.4)
+        if antes <= a + 1:
+            vistos.add(f"{a}-{b}")
+        if paginas >= paginas_max:
+            break
+    e["buracos_vistos"] = sorted(vistos, key=lambda x: int(x.split("-")[0]))[-60:]
+    return achados
+
+
 def resolver_link(link):
     """Abre o link encurtado e devolve (endereço final, nome da loja)."""
     final = link
@@ -824,8 +855,8 @@ def responder_mensagens(token, tg, pessoas, indice, por_id):
                                                     indice, por_id))
                 else:
                     enviar(chat["id"], *pesquisar(texto, indice, agora, site))
-        except requests.RequestException as erro:
-            print(f"robô: falha ao responder ({erro})", file=sys.stderr)
+        except Exception as erro:  # uma mensagem estranha não pode travar o robô nem a coleta
+            print(f"robô: falha ao responder ({type(erro).__name__}: {erro})", file=sys.stderr)
 
     # resumo diário: a partir das 9h, uma vez por dia
     hoje = agora.astimezone(FUSO)
@@ -920,8 +951,8 @@ def avisar(a, prod, base, agora, site, avisos, token, chat):
         telegram(token, "sendMessage", chat_id=chat, text="\n".join(partes))
         avisos[chave] = {"quando": prod["ult"][0], "preco": preco, "enviado": agora.isoformat()}
         print(f"alertas: aviso enviado para {prod['nome']} ({reais_txt(preco)})")
-    except requests.RequestException as erro:
-        print(f"alertas: falha ao enviar aviso ({erro})", file=sys.stderr)
+    except Exception as erro:
+        print(f"alertas: falha ao enviar aviso ({type(erro).__name__}: {erro})", file=sys.stderr)
 
 def main():
     canais = [l.strip() for l in ARQ_CANAIS.read_text(encoding="utf-8").splitlines()
@@ -938,6 +969,8 @@ def main():
                 continue
             novos += posts
             e = estado.setdefault(canal, {"antes": min(map(numero_post, posts)), "completo": False})
+            buracos = tapar_buracos(canal, posts, todos, e, numero_post)
+            novos += buracos
             antigos = 0
             for _ in range(0 if e["completo"] else PAGINAS_ANTIGAS_POR_RODADA):
                 pagina = ler_canal(canal, antes=e["antes"])
@@ -952,13 +985,16 @@ def main():
                     break
                 time.sleep(0.4)
             situacao = "histórico completo" if e["completo"] else "ainda buscando o histórico"
-            print(f"{canal}: {len(posts)} recentes, {antigos} antigos ({situacao})")
+            print(f"{canal}: {len(posts)} recentes, {len(buracos)} recuperados, {antigos} antigos ({situacao})")
         except requests.RequestException as erro:
             print(f"{canal}: falhou ({erro})", file=sys.stderr)
     entraram = guardar_novos(todos, novos)
     salvar_posts(todos)
     indice = montar_indice(todos, canais)
-    verificar_alertas(indice, estado)
+    try:
+        verificar_alertas(indice, estado)
+    except Exception as erro:  # problema no robô ou nos alertas não impede o site de atualizar
+        print(f"alertas: erro inesperado ({type(erro).__name__}: {erro}), o site foi atualizado mesmo assim", file=sys.stderr)
     ARQ_ESTADO.write_text(json.dumps(estado, indent=1), encoding="utf-8")
     ARQ_INDICE.write_text(json.dumps(indice, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     if ARQ_ANTIGO.exists():
