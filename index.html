@@ -68,17 +68,18 @@ nav.abas-topo a{position:relative;text-decoration:none;color:var(--suave);font-f
   padding:.5rem .85rem;border-radius:.4rem;white-space:nowrap;border:1px solid transparent}
 nav.abas-topo a[aria-current="page"]{color:var(--neon);border-color:var(--linha);background:var(--papel)}
 nav.abas-topo a[aria-current="page"]::after{content:"";position:absolute;left:.75rem;right:.75rem;bottom:-1px;height:2px;background:var(--neon);box-shadow:0 0 10px var(--neon)}
-/* chave de tema claro / escuro */
-.tema{margin-left:auto;display:flex;align-items:center;gap:.55rem;border:1px solid var(--linha);background:var(--papel);border-radius:999px;
-  padding:.3rem .35rem .3rem .8rem;cursor:pointer;color:var(--suave);font-family:var(--titulo);font-weight:600;font-size:.85rem;white-space:nowrap;transition:border-color .2s,color .2s}
-.tema:hover{border-color:var(--neon);color:var(--tinta)}
-.trilho{position:relative;width:2.6rem;height:1.4rem;border-radius:999px;background:var(--papel2);border:1px solid var(--linha);transition:background .25s,box-shadow .25s}
-.bolinha{position:absolute;top:50%;left:.15rem;width:1.05rem;height:1.05rem;margin-top:-.525rem;border-radius:50%;background:var(--suave);transition:transform .25s,background .25s}
-.tema[aria-checked="true"] .trilho{background:var(--neon);border-color:var(--neon);box-shadow:0 0 12px var(--brilho)}
-.tema[aria-checked="true"] .bolinha{transform:translateX(1.18rem);background:var(--neon-tinta)}
+/* seletor de tema: Escuro | Claro */
+.tema{margin-left:auto;display:flex;gap:.2rem;padding:.22rem;border:1px solid var(--linha);background:var(--papel);border-radius:.75rem}
+.tema button{display:flex;align-items:center;gap:.4rem;border:0;background:none;color:var(--suave);cursor:pointer;
+  font-family:var(--titulo);font-weight:700;font-size:.88rem;padding:.38rem .8rem;border-radius:.55rem;transition:background .2s,color .2s,box-shadow .2s}
+.tema button:hover{color:var(--tinta)}
+.tema svg{width:1.05rem;height:1.05rem;transition:transform .35s ease}
+.tema button[aria-pressed="true"]{background:var(--neon);color:var(--neon-tinta);box-shadow:0 0 16px var(--brilho)}
+.tema button[data-tema="dark"][aria-pressed="true"] svg{transform:rotate(-18deg)}
+.tema button[data-tema="light"][aria-pressed="true"] svg{transform:rotate(45deg)}
 nav.abas-topo{flex-basis:100%;justify-content:flex-end}
-@media (max-width:46rem){nav.abas-topo{margin-left:0;width:100%;justify-content:flex-start}.ao-vivo{margin-left:0}.barra-in{gap:.4rem 1rem}.tema-txt{font-size:.78rem}}
-@media (prefers-reduced-motion:reduce){.trilho,.bolinha{transition:none}}
+@media (max-width:46rem){nav.abas-topo{margin-left:0;width:100%;justify-content:flex-start}.ao-vivo{margin-left:0}.barra-in{gap:.4rem 1rem}.tema button{font-size:.8rem;padding:.32rem .65rem}}
+@media (prefers-reduced-motion:reduce){.tema svg,.tema button{transition:none}}
 
 main{max-width:68rem;margin:0 auto;padding:1.6rem 1rem 6rem}
 .cabeca h1{font-family:var(--titulo);font-size:clamp(1.9rem,4.5vw,2.7rem);line-height:1.05;font-weight:700;margin:0;letter-spacing:.01em}
@@ -298,10 +299,16 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
   <div class="barra-in">
     <a class="marca" href="#ofertas">RADAR<b>//</b>PREÇOS <span>NOVINHO</span></a>
     <span class="ao-vivo caps"><i></i><span id="atualizado">carregando</span></span>
-    <button class="tema" id="tema" type="button" role="switch" aria-checked="true">
-      <span class="tema-txt" id="tema-txt">Ativar modo claro</span>
-      <span class="trilho" aria-hidden="true"><span class="bolinha"></span></span>
-    </button>
+    <div class="tema" id="tema" role="group" aria-label="Tema da página">
+      <button type="button" data-tema="dark" aria-pressed="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1Z" fill="currentColor"/><path d="M17.2 3.2l.55 1.45 1.45.55-1.45.55-.55 1.45-.55-1.45-1.45-.55 1.45-.55Z" fill="currentColor"/></svg>
+        Escuro
+      </button>
+      <button type="button" data-tema="light" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2"/><path d="M5.3 5.3l1.3 1.3M17.4 17.4l1.3 1.3M5.3 18.7l1.3-1.3M17.4 6.6l1.3-1.3" stroke-width="1.6"/></g></svg>
+        Claro
+      </button>
+    </div>
     <nav class="abas-topo" aria-label="Seções">
       <a href="#ofertas" data-aba="ofertas">Ofertas</a>
       <a href="#top" data-aba="top">Promoções top</a>
@@ -1042,18 +1049,16 @@ function temaAtual() {
   return t === "light" || t === "dark" ? t : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 }
 function mostrarTema() {
-  const escuro = temaAtual() === "dark";
-  $("tema").setAttribute("aria-checked", String(escuro));
-  $("tema").setAttribute("aria-label", escuro ? "Modo escuro ligado. Ativar modo claro" : "Modo claro ligado. Ativar modo escuro");
-  $("tema-txt").textContent = escuro ? "Ativar modo claro" : "Ativar modo escuro";
+  const atual = temaAtual();
+  document.querySelectorAll("#tema button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tema === atual)));
 }
-$("tema").addEventListener("click", () => {
-  const novo = temaAtual() === "dark" ? "light" : "dark";
-  document.documentElement.dataset.theme = novo;
-  try { localStorage.setItem("radar-tema", novo); } catch (e) { /* sem armazenamento: vale só nesta visita */ }
+document.querySelectorAll("#tema button").forEach(b => b.addEventListener("click", () => {
+  if (b.dataset.tema === temaAtual() && document.documentElement.dataset.theme) return;
+  document.documentElement.dataset.theme = b.dataset.tema;
+  try { localStorage.setItem("radar-tema", b.dataset.tema); } catch (e) { /* sem armazenamento: vale só nesta visita */ }
   mostrarTema();
   dispatchEvent(new Event("resize"));  // redesenha gráfico e chuva com as cores novas
-});
+}));
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", mostrarTema);
 mostrarTema();
 
