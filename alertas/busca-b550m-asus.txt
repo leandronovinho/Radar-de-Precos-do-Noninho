@@ -1,3 +1,0 @@
-busca: b550m asus
-avisar_quando: preco
-preco_maximo: 550
