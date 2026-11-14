@@ -384,6 +384,36 @@ def salvar_posts(todos):
         arq.write_text(json.dumps(posts, ensure_ascii=False, sort_keys=True, indent=0), encoding="utf-8")
 
 
+FOTOS_ANTIGAS_POR_RODADA = 60
+
+
+def foto_do_post(pid):
+    """Abre um post sozinho (t.me/canal/123?embed=1) e devolve o endereço da foto, ou "" se não tiver."""
+    r = requests.get(f"https://t.me/{pid}?embed=1&mode=tme", headers=UA, timeout=15)
+    r.raise_for_status()
+    for el in BeautifulSoup(r.text, "html.parser").select(
+            ".tgme_widget_message_photo_wrap, .tgme_widget_message_video_thumb, .link_preview_image"):
+        m = re.search(r"url\(['\"]?(https://[^'\")]+)", el.get("style", ""))
+        if m:
+            return m.group(1)
+    return ""
+
+
+def buscar_fotos_antigas(todos, limite=FOTOS_ANTIGAS_POR_RODADA):
+    """Posts guardados antes de o radar pegar fotos: busca a foto de alguns por rodada, dos mais novos para os mais antigos."""
+    faltando = sorted((pid for pid, p in todos.items() if "foto" not in p), key=lambda pid: todos[pid]["data"], reverse=True)
+    achadas = 0
+    for pid in faltando[:limite]:
+        try:
+            todos[pid]["foto"] = foto_do_post(pid)
+            achadas += bool(todos[pid]["foto"])
+        except requests.RequestException:
+            break  # o Telegram não respondeu: tenta de novo na próxima rodada
+        time.sleep(0.3)
+    if faltando:
+        print(f"fotos antigas: {achadas} encontradas, faltam {max(0, len(faltando) - limite)} posts para conferir")
+
+
 def guardar_novos(todos, novos, resolver=resolver_link):
     """Guarda os posts que ainda não existem e descobre a loja dos recentes. Devolve quantos entraram.
     Posts com mais de 3 dias (do histórico) não têm o link aberto, para a coleta não demorar."""
@@ -1052,6 +1082,7 @@ def main():
         except requests.RequestException as erro:
             print(f"{canal}: falhou ({erro})", file=sys.stderr)
     entraram = guardar_novos(todos, novos)
+    buscar_fotos_antigas(todos)
     salvar_posts(todos)
     indice = montar_indice(todos, canais)
     try:
