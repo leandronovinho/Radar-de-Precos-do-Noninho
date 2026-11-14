@@ -69,16 +69,18 @@ nav.abas-topo a{position:relative;text-decoration:none;color:var(--suave);font-f
 nav.abas-topo a[aria-current="page"]{color:var(--neon);border-color:var(--linha);background:var(--papel)}
 nav.abas-topo a[aria-current="page"]::after{content:"";position:absolute;left:.75rem;right:.75rem;bottom:-1px;height:2px;background:var(--neon);box-shadow:0 0 10px var(--neon)}
 /* seletor de tema: Escuro | Claro */
-.tema{margin-left:auto;display:flex;gap:.2rem;padding:.22rem;border:1px solid var(--linha);background:var(--papel);border-radius:.75rem}
-.tema button{display:flex;align-items:center;gap:.4rem;border:0;background:none;color:var(--suave);cursor:pointer;
-  font-family:var(--titulo);font-weight:700;font-size:.88rem;padding:.38rem .8rem;border-radius:.55rem;transition:background .2s,color .2s,box-shadow .2s}
-.tema button:hover{color:var(--tinta)}
-.tema svg{width:1.05rem;height:1.05rem;transition:transform .35s ease}
-.tema button[aria-pressed="true"]{background:var(--neon);color:var(--neon-tinta);box-shadow:0 0 16px var(--brilho)}
+.tema{margin-left:auto;display:flex;gap:.25rem;padding:.28rem;border:1px solid var(--linha);background:var(--papel);border-radius:.9rem;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--neon) 8%,transparent)}
+.tema button{display:flex;align-items:center;gap:.5rem;border:0;background:none;color:var(--suave);cursor:pointer;
+  font-family:var(--mono);font-weight:700;font-size:.9rem;letter-spacing:.12em;text-transform:uppercase;
+  padding:.55rem 1.05rem;border-radius:.65rem;transition:background .2s,color .2s,box-shadow .2s}
+.tema button:hover{color:var(--tinta);background:var(--papel2)}
+.tema svg{width:1.3rem;height:1.3rem;transition:transform .35s ease}
+.tema button[aria-pressed="true"]{background:var(--neon);color:var(--neon-tinta);box-shadow:0 0 18px var(--brilho)}
 .tema button[data-tema="dark"][aria-pressed="true"] svg{transform:rotate(-18deg)}
 .tema button[data-tema="light"][aria-pressed="true"] svg{transform:rotate(45deg)}
 nav.abas-topo{flex-basis:100%;justify-content:flex-end}
-@media (max-width:46rem){nav.abas-topo{margin-left:0;width:100%;justify-content:flex-start}.ao-vivo{margin-left:0}.barra-in{gap:.4rem 1rem}.tema button{font-size:.8rem;padding:.32rem .65rem}}
+@media (max-width:46rem){nav.abas-topo{margin-left:0;width:100%;justify-content:flex-start}.ao-vivo{margin-left:0}.barra-in{gap:.4rem 1rem}.tema button{font-size:.8rem;padding:.45rem .8rem}.tema svg{width:1.1rem;height:1.1rem}}
 @media (prefers-reduced-motion:reduce){.tema svg,.tema button{transition:none}}
 
 main{max-width:68rem;margin:0 auto;padding:1.6rem 1rem 6rem}
