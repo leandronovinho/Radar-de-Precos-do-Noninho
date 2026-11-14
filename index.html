@@ -110,6 +110,16 @@ select{padding:.38rem .55rem;border:1px solid var(--linha);border-radius:.4rem;b
 /* cards */
 .grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.7rem;margin-top:1.2rem}
 .card{display:flex;flex-direction:column;border:1px solid var(--linha);background:var(--papel);border-radius:.55rem;padding:.85rem .9rem .8rem;cursor:pointer;min-width:0;transition:border-color .2s,box-shadow .2s}
+/* foto do produto, tirada do post do canal */
+.foto{position:relative;margin:-.85rem -.9rem .7rem;height:9.5rem;border-radius:.55rem .55rem 0 0;overflow:hidden;background:#F4F6F5;display:grid;place-items:center}
+.foto img{width:100%;height:100%;object-fit:contain;padding:.4rem;transition:transform .35s ease}
+.card:hover .foto img{transform:scale(1.05)}
+.foto::after{content:"";position:absolute;inset:auto 0 0;height:2px;background:linear-gradient(90deg,transparent,var(--v,var(--neon)),transparent);opacity:.8}
+.foto.vazia{background:repeating-linear-gradient(135deg,var(--papel2) 0 10px,var(--papel) 10px 20px)}
+.foto.vazia span{font-family:var(--titulo);font-size:2.4rem;font-weight:700;color:var(--neon);opacity:.35}
+.d-foto{float:right;width:11rem;height:8rem;margin:0 0 .6rem 1rem;border-radius:.5rem;overflow:hidden;background:#F4F6F5;border:1px solid var(--linha)}
+.d-foto img{width:100%;height:100%;object-fit:contain;padding:.3rem}
+@media (max-width:40rem){.foto{height:7rem}.d-foto{width:7.5rem;height:6rem}}
 .card:hover{box-shadow:0 0 0 1px var(--neon),0 10px 30px -12px var(--brilho)}
 .card .topo-card{display:flex;justify-content:space-between;align-items:center;gap:.4rem}
 .card .cat{color:var(--suave)}
@@ -261,12 +271,12 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
   background:color-mix(in srgb,var(--papel) 72%,transparent);border:1px solid color-mix(in srgb,var(--neon) 30%,transparent);
   border-left:3px solid var(--neon);border-radius:.45rem;padding:.55rem .7rem;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
   box-shadow:0 0 24px var(--area);opacity:0;transform:translateY(10px) scale(.97);transition:opacity 1.4s ease,transform 1.4s ease}
-.alta.mostra{opacity:.62;transform:none;pointer-events:auto}
+.alta.mostra{opacity:.85;transform:none;pointer-events:auto}
 .alta.mostra:hover{opacity:1;box-shadow:0 0 0 1px var(--neon),0 0 30px var(--brilho)}
-.alta small{display:block;font-family:var(--mono);font-size:.56rem;letter-spacing:.14em;color:var(--neon);text-transform:uppercase}
-.alta b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.8rem;line-height:1.25;margin:.2rem 0 .3rem}
+.alta small{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:var(--neon);text-transform:uppercase}
+.alta b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.9rem;line-height:1.25;margin:.2rem 0 .3rem}
 .alta span{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem}
-.alta strong{font-family:var(--titulo);font-size:1.12rem;font-weight:700}
+.alta strong{font-family:var(--titulo);font-size:1.3rem;font-weight:700}
 .alta i{font-style:normal;font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--top)}
 </style>
 </head>
@@ -660,10 +670,20 @@ function sparkline(p) {
   return svg;
 }
 
+const INICIAIS = {"Placas de vídeo": "GPU", "Processadores": "CPU", "Placas-mãe": "MB", "Memória RAM": "RAM", "SSD e HDs": "SSD", "Fontes": "PSU", "Monitores": "▭", "Notebooks": "NB"};
+function fotoProduto(p, classe = "foto") {
+  const vazia = () => el("div", {class: classe + " vazia"}, el("span", {}, INICIAIS[p.cat] || p.cat.slice(0, 2).toUpperCase()));
+  if (!/^https:\/\//.test(p.foto || "")) return classe === "foto" ? vazia() : null;
+  const img = el("img", {src: p.foto, alt: "", loading: "lazy", referrerpolicy: "no-referrer"});
+  const caixa = el("div", {class: classe}, img);
+  img.addEventListener("error", () => { if (classe === "foto") caixa.replaceWith(vazia()); else caixa.remove(); });
+  return caixa;
+}
 function card(p) {
   const abrir = () => { location.hash = "p-" + p.id; };
   return el("div", {class: "card realce " + VEREDITOS[p.v].cls, tabindex: 0, role: "link", "aria-label": p.nome, onclick: abrir,
     onkeydown: e => { if (e.key === "Enter") abrir(); }},
+    fotoProduto(p),
     el("div", {class: "topo-card"}, el("span", {class: "cat caps"}, alertaPorProduto.has(p.id) ? el("span", {class: "sino", title: "Alerta ligado"}, "🔔") : null, p.cat),
       el("button", {class: "cmp", type: "button", "data-id": p.id, "aria-pressed": String(selecao.includes(p.id)), title: "Adicionar ao comparador",
         onclick: e => { e.stopPropagation(); alternarSelecao(p); }}, "+ comparar")),
@@ -859,7 +879,7 @@ function intervalo(p, per) {
 }
 function montarProduto() {
   const p = atual;
-  $("d-cat").textContent = p.cat; $("d-nome").textContent = p.nome; document.title = p.nome + " · Radar de preços";
+  $("d-cat").textContent = p.cat; $("d-nome").replaceChildren(...[fotoProduto(p, "d-foto"), p.nome].filter(Boolean)); document.title = p.nome + " · Radar de preços";
   const meses = [...new Set(p.serie.map(d => d.dia.slice(0, 7)))].sort().slice(-3);
   const abas = [["d7", "7 dias"], ["d30", "30 dias"], ["d90", "90 dias"], ...meses.map(mm => ["m:" + mm, MESES[+mm.slice(5) - 1].replace(/^./, c => c.toUpperCase())]), ["tudo", "Tudo"]];
   $("abas-periodo").replaceChildren(...abas.map(([id, txt]) => el("button", {type: "button", "aria-pressed": String(id === periodo), onclick: () => { periodo = id; montarProduto(); }}, txt)));
@@ -1017,7 +1037,7 @@ const fresca = p => agoraAlta() - p.u.data <= MAX_IDADE_ALTA;
 function escolherEmAlta() {
   const desde = referencia - 14 * DIA;
   const peso = {top: 30, compensa: 20, razoavel: 5, sem: 3};
-  return produtos.filter(p => p.v !== "caro" && fresca(p))
+  return produtos.filter(p => p.v === "top" && fresca(p))  // só Promoção top da última hora
     .map(p => ({p, n: peso[p.v] + p.serie.filter(d => d.data >= desde).length}))
     .sort((a, b) => b.n - a.n).slice(0, 18).map(o => o.p);
 }
@@ -1033,7 +1053,7 @@ function iniciarEmAlta() {
   document.body.append(camada);
   const parado = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let vagas = [], emTela = new Set(), proximo = 0, geracao = 0;
-  const ALT = 104;
+  const ALT = 118;
   function montar() {
     geracao++; camada.replaceChildren(); emTela.clear(); vagas = [];
     const caixa = document.querySelector("main").getBoundingClientRect(), W = innerWidth, H = innerHeight;
@@ -1043,7 +1063,7 @@ function iniciarEmAlta() {
     const faixa = (fundo - topo) / Math.max(1, porLado);
     for (let i = 0; i < porLado; i++) {  // alterna esquerda e direita, cada uma numa faixa de altura diferente
       lados.forEach(([a, b], lado) => {
-        const w = Math.min(232, b - a - 8), k = (i + lado) % porLado;  // a direita fica "fora de fase" da esquerda
+        const w = Math.min(270, b - a - 8), k = (i + lado) % porLado;  // a direita fica "fora de fase" da esquerda
         vagas.push({a, b, w, y0: topo + k * faixa, y1: topo + k * faixa + Math.max(0, faixa - ALT - 8)});
       });
     }
