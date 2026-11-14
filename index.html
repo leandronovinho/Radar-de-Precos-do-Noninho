@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem("radar-tema");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
 :root{
   --fundo:#EEF3F0; --papel:#FFFFFF; --papel2:#F2F6F4; --tinta:#0C1410; --suave:#5A6762; --linha:#D5DED9;
@@ -67,7 +68,17 @@ nav.abas-topo a{position:relative;text-decoration:none;color:var(--suave);font-f
   padding:.5rem .85rem;border-radius:.4rem;white-space:nowrap;border:1px solid transparent}
 nav.abas-topo a[aria-current="page"]{color:var(--neon);border-color:var(--linha);background:var(--papel)}
 nav.abas-topo a[aria-current="page"]::after{content:"";position:absolute;left:.75rem;right:.75rem;bottom:-1px;height:2px;background:var(--neon);box-shadow:0 0 10px var(--neon)}
-@media (max-width:46rem){nav.abas-topo{margin-left:0;width:100%}.ao-vivo{margin-left:auto}.barra-in{gap:.4rem 1rem}}
+/* chave de tema claro / escuro */
+.tema{margin-left:auto;display:flex;align-items:center;gap:.55rem;border:1px solid var(--linha);background:var(--papel);border-radius:999px;
+  padding:.3rem .35rem .3rem .8rem;cursor:pointer;color:var(--suave);font-family:var(--titulo);font-weight:600;font-size:.85rem;white-space:nowrap;transition:border-color .2s,color .2s}
+.tema:hover{border-color:var(--neon);color:var(--tinta)}
+.trilho{position:relative;width:2.6rem;height:1.4rem;border-radius:999px;background:var(--papel2);border:1px solid var(--linha);transition:background .25s,box-shadow .25s}
+.bolinha{position:absolute;top:50%;left:.15rem;width:1.05rem;height:1.05rem;margin-top:-.525rem;border-radius:50%;background:var(--suave);transition:transform .25s,background .25s}
+.tema[aria-checked="true"] .trilho{background:var(--neon);border-color:var(--neon);box-shadow:0 0 12px var(--brilho)}
+.tema[aria-checked="true"] .bolinha{transform:translateX(1.18rem);background:var(--neon-tinta)}
+nav.abas-topo{flex-basis:100%;justify-content:flex-end}
+@media (max-width:46rem){nav.abas-topo{margin-left:0;width:100%;justify-content:flex-start}.ao-vivo{margin-left:0}.barra-in{gap:.4rem 1rem}.tema-txt{font-size:.78rem}}
+@media (prefers-reduced-motion:reduce){.trilho,.bolinha{transition:none}}
 
 main{max-width:68rem;margin:0 auto;padding:1.6rem 1rem 6rem}
 .cabeca h1{font-family:var(--titulo);font-size:clamp(1.9rem,4.5vw,2.7rem);line-height:1.05;font-weight:700;margin:0;letter-spacing:.01em}
@@ -287,6 +298,10 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
   <div class="barra-in">
     <a class="marca" href="#ofertas">RADAR<b>//</b>PREÇOS <span>NOVINHO</span></a>
     <span class="ao-vivo caps"><i></i><span id="atualizado">carregando</span></span>
+    <button class="tema" id="tema" type="button" role="switch" aria-checked="true">
+      <span class="tema-txt" id="tema-txt">Ativar modo claro</span>
+      <span class="trilho" aria-hidden="true"><span class="bolinha"></span></span>
+    </button>
     <nav class="abas-topo" aria-label="Seções">
       <a href="#ofertas" data-aba="ofertas">Ofertas</a>
       <a href="#top" data-aba="top">Promoções top</a>
@@ -1020,6 +1035,27 @@ function rota() {
   atualizarBandeja();
   window.scrollTo(0, 0);
 }
+
+/* ---------- tema claro / escuro ---------- */
+function temaAtual() {
+  const t = document.documentElement.dataset.theme;
+  return t === "light" || t === "dark" ? t : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+}
+function mostrarTema() {
+  const escuro = temaAtual() === "dark";
+  $("tema").setAttribute("aria-checked", String(escuro));
+  $("tema").setAttribute("aria-label", escuro ? "Modo escuro ligado. Ativar modo claro" : "Modo claro ligado. Ativar modo escuro");
+  $("tema-txt").textContent = escuro ? "Ativar modo claro" : "Ativar modo escuro";
+}
+$("tema").addEventListener("click", () => {
+  const novo = temaAtual() === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = novo;
+  try { localStorage.setItem("radar-tema", novo); } catch (e) { /* sem armazenamento: vale só nesta visita */ }
+  mostrarTema();
+  dispatchEvent(new Event("resize"));  // redesenha gráfico e chuva com as cores novas
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", mostrarTema);
+mostrarTema();
 
 $("busca").addEventListener("input", () => { limite = 48; if ($("busca").value) categoria = "Todos"; desenharOfertas(); });
 $("limpar").addEventListener("click", () => { $("busca").value = ""; desenharOfertas(); $("busca").focus(); });
