@@ -301,7 +301,13 @@ def ler_canal(canal, html=None, antes=None):
             riscado.decompose()
         for br in corpo.find_all("br"):
             br.replace_with("\n")
-        posts.append({"post": msg["data-post"], "data": hora["datetime"], "texto": corpo.get_text()})
+        foto = ""
+        for el in msg.select(".tgme_widget_message_photo_wrap, .tgme_widget_message_video_thumb, .link_preview_image"):
+            m = re.search(r"url\(['\"]?(https://[^'\")]+)", el.get("style", ""))
+            if m:
+                foto = m.group(1)
+                break
+        posts.append({"post": msg["data-post"], "data": hora["datetime"], "texto": corpo.get_text(), "foto": foto})
     return posts
 
 
@@ -384,10 +390,14 @@ def guardar_novos(todos, novos, resolver=resolver_link):
     entraram = 0
     recente = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
     for post in novos:
-        if post["post"] in todos or post["data"] < HISTORICO_DESDE:
+        if post["post"] in todos:
+            if post.get("foto") and not todos[post["post"]].get("foto"):
+                todos[post["post"]]["foto"] = post["foto"]  # posts antigos ganham a foto quando aparecem de novo
+            continue
+        if post["data"] < HISTORICO_DESDE:
             continue
         info = interpretar_post(post["texto"])
-        todos[post["post"]] = {"canal": post["post"].split("/")[0], "data": post["data"], "texto": post["texto"],
+        todos[post["post"]] = {"canal": post["post"].split("/")[0], "data": post["data"], "texto": post["texto"], "foto": post.get("foto", ""),
                                "link": info["link"] if info else "", "url": "", "loja": "",
                                "resolvido": not (info and info["link"]) or post["data"] < recente}
         entraram += 1
@@ -444,13 +454,15 @@ def montar_indice(todos, canais):
                          if o["preco"] == info["preco"] and o["cupom"] == info["cupom"]
                          and quando - o["quando"] <= JANELA_DUPLICATA), None)
         if repetida:
+            repetida["foto"] = repetida.get("foto") or p.get("foto", "")
             repetida["canais"].add(p["canal"])
             repetida["posts"] += 1
             repetida["loja"] = repetida["loja"] or loja
             continue
         g["ofertas"].append({"quando": quando, "preco": info["preco"], "cupom": info["cupom"],
                              "pag": info["pagamento"], "link": info["link"], "loja": loja,
-                             "canal": p["canal"], "canais": {p["canal"]}, "posts": 1, "post": pid, "versoes": info["versoes"]})
+                             "canal": p["canal"], "canais": {p["canal"]}, "posts": 1, "post": pid, "versoes": info["versoes"],
+                             "foto": p.get("foto", "")})
 
     produtos, usados = [], set()
     for chave, g in grupos.items():
@@ -477,8 +489,9 @@ def montar_indice(todos, canais):
         linha = lambda o: [round(o["preco"], 2), o["loja"], o["cupom"], o["pag"], o["link"], o["canal"], o.get("post", "")]
         ultima = lambda o: linha(o) + ([o["versoes"]] if o.get("versoes") else [])
         ult = validas[-1]
+        foto = next((o["foto"] for o in reversed(validas) if o.get("foto")), "")
         produtos.append({
-            "id": pid, "nome": nome, "cat": g["cat"], "posts": sum(o["posts"] for o in validas),
+            "id": pid, "nome": nome, "cat": g["cat"], "posts": sum(o["posts"] for o in validas), "foto": foto,
             "dias": [[dia] + linha(o) + [o["quando"].astimezone(FUSO).strftime("%H:%M")] for dia, o in sorted(por_dia.items())],
             "ult": [ult["quando"].astimezone(timezone.utc).isoformat(timespec="minutes")] + ultima(ult),
         })
