@@ -198,7 +198,9 @@ select{padding:.38rem .55rem;border:1px solid var(--linha);border-radius:.4rem;b
 .numeros dd{margin:.2rem 0 0;font-family:var(--titulo);font-size:1.45rem;font-weight:700;line-height:1.15}
 .numeros small{display:block;font-size:.68rem;color:var(--suave);line-height:1.3;margin-top:.2rem;font-family:var(--mono)}
 .numeros dd.neon{color:var(--neon);text-shadow:0 0 14px var(--brilho)}
-@media (max-width:44rem){.numeros{grid-template-columns:repeat(2,1fr)}}
+.numeros{clear:both}
+.numeros dd{overflow-wrap:anywhere}
+@media (max-width:44rem){.numeros{grid-template-columns:repeat(2,1fr)}.numeros dd{font-size:1.2rem}.numeros .caixa{padding:.7rem}}
 .veredito{margin-top:.7rem;border:1px solid var(--v);border-left-width:4px;border-radius:.5rem;padding:.85rem 1rem;
   background:linear-gradient(90deg,color-mix(in srgb,var(--v) 14%,transparent),transparent 65%);display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center}
 .veredito strong{font-family:var(--titulo);font-size:1.3rem;color:var(--v);text-shadow:0 0 16px color-mix(in srgb,var(--v) 40%,transparent)}
@@ -337,6 +339,19 @@ a.peca-nome:hover{color:var(--neon)}
 .caixa-alerta.vermelho{border-color:var(--caro);background:color-mix(in srgb,var(--caro) 12%,transparent)}.caixa-alerta.vermelho b{color:var(--caro)}
 body[data-aba="montar"] main,body[data-aba="montar"] .barra-in{max-width:min(96rem,100%)}
 body[data-aba="montar"] .montar-grade{grid-template-columns:minmax(0,1fr) 23rem}
+@media (max-width:60rem){
+  body[data-aba="montar"] .montar-grade{grid-template-columns:minmax(0,1fr)}
+  .resumo-pc{position:static}
+  .busca-linha{grid-template-columns:minmax(0,1fr)!important}
+  .perif-toggle{display:flex;flex-wrap:wrap;width:100%;box-sizing:border-box}
+  #v-montar .barra-total-pc{display:flex}
+  #v-montar{padding-bottom:4.5rem}
+}
+.barra-total-pc{display:none;position:fixed;left:.5rem;right:.5rem;bottom:.5rem;z-index:50;align-items:center;justify-content:space-between;gap:.6rem;
+  padding:.6rem .9rem;border:1.5px solid var(--neon);border-radius:.7rem;background:var(--papel);box-shadow:0 8px 24px rgba(0,0,0,.45);font:inherit;color:var(--tinta);cursor:pointer;text-align:left}
+.barra-total-pc b{font-family:var(--titulo);font-size:1.15rem;color:var(--neon)}
+.barra-total-pc .bt-nota{font-family:var(--titulo);font-weight:700;font-size:1.05rem}
+.barra-total-pc small{display:block;font-size:.65rem;color:var(--suave);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
 body:not([data-aba="ofertas"]) .em-alta{display:none}
 body[data-aba="montar"] .chuva{display:none}
 .btn-add-mon{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;width:100%;margin-top:.3rem;padding:.7rem .9rem;font:inherit;font-weight:700;font-size:.95rem;
@@ -1636,7 +1651,7 @@ function desenharMontar() {
   caixa.replaceChildren(
     el("div", {class: "montar-grade"},
       el("div", {class: "pecas"}, ...linhas),
-      el("aside", {class: "resumo-pc"},
+      el("aside", {class: "resumo-pc", id: "resumo-pc"},
         el("span", {class: "caps", style: "color:var(--suave)"}, "Total das peças"),
         el("strong", {class: "total-pc"}, reais(totalPc)),
         totalPerif ? el("p", {class: "sub-total"}, `+ ${reais(totalPerif)} em periféricos = `, el("b", {}, reais(totalPc + totalPerif))) : null,
@@ -1645,7 +1660,11 @@ function desenharMontar() {
         graves.length ? el("div", {class: "caixa-alerta vermelho"}, el("b", {}, "✖ Problemas: corrija antes de comprar"), el("ul", {}, ...graves.map(t => el("li", {}, t)))) : null,
         atencao.length ? el("div", {class: "caixa-alerta amarelo"}, el("b", {}, "! Atenção"), el("ul", {}, ...atencao.map(t => el("li", {}, t)))) : null,
         pros.length ? el("div", {class: "caixa-alerta verde"}, el("b", {}, "✓ Pontos fortes"), el("ul", {}, ...pros.map(t => el("li", {}, t)))) : null,
-        el("p", {class: "aviso-pc"}, "Preços das ofertas postadas nos canais nesta semana. Confira o valor e a compatibilidade na loja antes de comprar."))));
+        el("p", {class: "aviso-pc"}, "Preços das ofertas postadas nos canais nesta semana. Confira o valor e a compatibilidade na loja antes de comprar."))),
+    el("button", {type: "button", class: "barra-total-pc", onclick: () => $("resumo-pc").scrollIntoView({behavior: "smooth", block: "start"})},
+      el("span", {}, el("small", {}, totalPerif ? "Total com periféricos" : "Total das peças"), el("b", {}, reais(totalPc + totalPerif))),
+      temPecas ? el("span", {style: `text-align:right;color:${corNota}`}, el("small", {}, "Minha nota"), el("span", {class: "bt-nota"}, nota.toLocaleString("pt-BR") + "/10")) : null,
+      el("span", {style: "font-size:.8rem;color:var(--suave)"}, "ver resumo ▾")));
 }
 
 $("orcamento").addEventListener("change", () => {
