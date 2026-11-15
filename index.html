@@ -306,7 +306,19 @@ a.peca-nome:hover{color:var(--neon)}
 .dia7.menor{border-color:var(--top);color:var(--top);font-weight:700}
 .faixa7{font-family:var(--mono);margin-left:.2rem}
 .escolha-box{grid-area:sel;display:flex;flex-direction:column;gap:.4rem;margin:.2rem 0}
-.escolha-box > select{width:100%;font-size:.85rem}
+.combo{position:relative}
+.combo-campo{width:100%;font:inherit;font-size:.92rem;padding:.6rem 2.4rem .6rem .75rem;border:1.5px solid var(--neon);border-radius:.45rem;background:var(--area);color:var(--tinta);cursor:pointer;text-overflow:ellipsis}
+.combo-campo:focus{outline:none;box-shadow:0 0 0 3px var(--brilho);cursor:text}
+.combo-icone{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);pointer-events:none;font-size:1rem}
+.combo-lista{position:absolute;left:0;right:0;top:calc(100% + .25rem);z-index:30;max-height:20rem;overflow:auto;background:var(--papel);border:1.5px solid var(--neon);border-radius:.45rem;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.combo-lista[hidden]{display:none}
+.peca:has(.combo-campo:focus){z-index:40;overflow:visible}
+.combo-item{padding:.5rem .75rem;font-size:.88rem;cursor:pointer;border-bottom:1px solid var(--linha)}
+.combo-item:last-child{border-bottom:0}
+.combo-item:hover,.combo-item.marcada{background:color-mix(in srgb,var(--neon) 18%,var(--papel))}
+.combo-item.atual{font-weight:700;color:var(--neon)}
+.combo-vazio{padding:.7rem .75rem;font-size:.88rem;color:var(--suave)}
+.peca:has(.combo){grid-template-areas:"tipo nome preco" "tipo sel sel" "tipo info info" "tipo hist hist"}
 .busca-peca{width:100%;font:inherit;font-size:.95rem;padding:.55rem .75rem;border:1.5px solid var(--neon);border-radius:.45rem;background:var(--area);color:var(--tinta)}
 .busca-peca:focus{outline:none;box-shadow:0 0 0 3px var(--brilho)}
 .filtro-ram{display:flex;flex-direction:column;gap:.35rem;padding:.55rem;border:1px dashed var(--linha);border-radius:.45rem}
@@ -330,7 +342,7 @@ a.peca-nome:hover{color:var(--neon)}
 .perif-texto b{font-family:var(--titulo);font-size:1.25rem;color:var(--tinta)}
 .perif-texto small{font-size:.9rem;color:var(--suave)}
 @media (max-width:40rem){.perif-toggle{max-width:none;padding:.8rem}.perif-icones{font-size:1.25rem}.perif-texto b{font-size:1.1rem}
-  .peca,.peca:has(select){grid-template-areas:"tipo preco" "nome nome" "sel sel" "info info" "hist hist"}}
+  .peca,.peca:has(select),.peca:has(.combo){grid-template-areas:"tipo preco" "nome nome" "sel sel" "info info" "hist hist"}}
 
 /* como funciona */
 .guia{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin-top:1rem}
@@ -1220,7 +1232,7 @@ const capsNome = n => new Set([...n.replace(/\(?\d\s*x\s*\d+\s*gb\)?/g, " ").mat
 const KIT = /\+|\bkit\s+(upgrade|gamer)|\bcombo\b|processador.*placa|placa.*processador/;
 function infoPeca(p, tipo) {
   const n = baixa(p), sp = p.spec || {}, r = {qualidade: MARCAS.bom.test(n) ? 2 : MARCAS.medio.test(n) ? 1 : 0};
-  if (tipo === "gpu") { const g = GPU_INFO.find(([re]) => re.test(n)); if (!g) return null; r.perf = g[1]; r.watts = g[2]; r.qualidade = 2; }
+  if (tipo === "gpu") { const g = GPU_INFO.find(([re]) => re.test(n)); if (!g) return null; r.perf = g[1]; r.watts = g[2]; r.qualidade = MARCAS.medio.test(n) ? 1 : 2; }
   if (tipo === "cpu") { const c = CPU_INFO.find(([re]) => re.test(n.replace(/core\s*/, ""))); if (!c) return null; [, r.perf, r.soq, r.watts, r.cooler] = c; r.qualidade = 2; }
   if (tipo === "mb") { if (/processador|ryzen|core i\d/.test(n)) return null; const sq = SOQUETE_PLACA.find(([re]) => re.test(n)); if (!sq) return null; r.soq = sq[1];
     r.ddr = /ddr5|\bd5\b/.test(n) ? 5 : /ddr4|\bd4\b/.test(n) ? 4 : r.soq === "AM4" || r.soq === "LGA1200" ? 4 : r.soq === "AM5" || r.soq === "LGA1851" ? 5 : 0;
@@ -1304,7 +1316,8 @@ function montarAuto(modo, orcamento) {
   const complementos = (cpu, gpu, potente) => {
     const ssd = potente ? op.ssd.filter(o => o.i.nvme && o.i.gb >= 1000).sort((a, b) => b.i.qualidade - a.i.qualidade || precoDe(a) - precoDe(b))[0] || barato(op.ssd, o => o.i.nvme)
       : melhorValor(op.ssd, o => o.i.nvme && o.i.gb >= 480, o => Math.min(o.i.gb, 1000) * (1 + o.i.qualidade * .15)) || barato(op.ssd, () => true);
-    const mbs = op.mb.filter(o => o.i.soq === cpu.i.soq && o.i.ddr);
+    let mbs = op.mb.filter(o => o.i.soq === cpu.i.soq && o.i.ddr);
+    if (cpu.i.perf >= 125 && mbs.some(o => o.i.chip >= 2)) mbs = mbs.filter(o => o.i.chip >= 2);  // processador forte pede placa-mãe melhor que a de entrada
     let melhor = null;
     for (const mb of mbs) {
       const rams = op.ram.filter(o => !mb.i.ddr || o.i.ddr === mb.i.ddr);
@@ -1334,11 +1347,34 @@ function montarAuto(modo, orcamento) {
     const topC = [...cpus].sort((a, b) => b.i.perf - a.i.perf || precoDe(a) - precoDe(b)).slice(0, 6);
     for (const g of topG) for (const c of topC) { const b = complementos(c, g, true); if (b && (!melhor || perf(b) > perf(melhor) || (perf(b) === perf(melhor) && total(b) < total(melhor)))) melhor = b; }
   } else {
+    // com orçamento: depois de escolher processador e placa de vídeo, usa o que sobra para trocar
+    // as outras peças por marcas e modelos melhores (fonte com selo melhor, placa-mãe melhor, 2 pentes, SSD maior...)
+    const nivel = (t, o) => !o ? 0 : o.i.qualidade + (o.p.v === "top" ? .3 : o.p.v === "compensa" ? .15 : o.p.v === "caro" ? -.3 : 0) + ({
+      psu: (o.i.selo || 0) * .8, mb: (o.i.chip || 1) * .7 + (o.i.wifi ? .2 : 0),
+      ram: (o.i.kit ? .6 : 0) + (o.i.gb >= 32 ? .6 : 0) + (o.i.mhz >= 6000 ? .3 : o.i.mhz >= 3200 ? .15 : 0),
+      ssd: (o.i.nvme ? .6 : 0) + (o.i.gb >= 2000 ? 1.2 : o.i.gb >= 1000 ? .8 : 0), cooler: o.i.water ? .3 : 0})[t] || 0;
+    const melhorar = (base, limite) => {
+      const b = {...base}, consumo = b.cpu.i.watts + (b.gpu ? b.gpu.i.watts : 0) + 90;
+      const ok = {mb: o => o.i.soq === b.cpu.i.soq && o.i.ddr === b.ram.i.ddr && o.i.chip >= b.mb.i.chip, ram: o => o.i.ddr === b.mb.i.ddr && o.i.gb >= b.ram.i.gb, ssd: o => o.i.gb >= b.ssd.i.gb && (o.i.nvme || !b.ssd.i.nvme),
+        psu: o => o.i.watts >= consumo * 1.25, gab: () => true, cooler: () => true, gpu: o => b.gpu && o.i.perf === b.gpu.i.perf};
+      for (let passo = 0; passo < 14; passo++) {
+        const sobra = limite - total(b); let troca = null;
+        for (const t in ok) { const atual = b[t]; if (!atual) continue;
+          for (const o of op[t]) { if (!ok[t](o)) continue;
+            const extra = precoDe(o) - precoDe(atual), ganho = nivel(t, o) - nivel(t, atual);
+            if (ganho <= .05 || extra > sobra) continue;
+            const r = ganho / Math.max(extra, 1); if (!troca || r > troca.r) troca = {t, o, r}; } }
+        if (!troca) break; b[troca.t] = troca.o;
+      }
+      return b;
+    };
+    const qualidadeTotal = b => Object.entries(b).reduce((s, [t, o]) => s + nivel(t, o), 0);
     for (const g of gpus.filter(o => o.i.perf >= 90)) for (const c of cpus.filter(o => o.i.perf >= 95)) {
       const r = g.i.perf / c.i.perf; if (r > 1.8 || r < .7) continue;  // evita gargalo
-      const b = complementos(c, g, false); if (!b) continue;
+      let b = complementos(c, g, false); if (!b) continue;
       const t = total(b); if (orcamento && t > orcamento) continue;
-      const nota = orcamento ? perf(b) - t / 1e5 : perf(b) / Math.pow(t, .85);
+      if (orcamento) b = melhorar(b, orcamento);
+      const nota = orcamento ? perf(b) + qualidadeTotal(b) * 4 : perf(b) / Math.pow(t, .85);
       if (!melhor || nota > melhor.nota) melhor = {...b, nota};
     }
     if (melhor) delete melhor.nota;
@@ -1429,20 +1465,37 @@ function desenharMontar() {
           sel.mb && sel.mb.i.ddr ? el("small", {class: "dica-ram"}, `Sua placa-mãe usa DDR${sel.mb.i.ddr}.`) : null,
           el("small", {class: "dica-ram"}, `${lista.length} ${lista.length === 1 ? "opção" : "opções"}`));
       }
-      const caixaSel = el("select", {"aria-label": x.nome});
-      const busca = el("input", {type: "search", class: "busca-peca", placeholder: `🔍 Procurar ${x.nome.toLowerCase()}… (ex.: ${({cpu: "5600", mb: "B550", ram: "corsair 16gb", gpu: "4060", ssd: "1tb", psu: "650w bronze", gab: "rise", cooler: "water", monitor: "27 165hz", teclado: "mecânico", mouse: "logitech", headset: "hyperx"})[x.id] || "marca"})`, "aria-label": "Procurar " + x.nome, value: buscaPeca[x.id] || ""});
+      // campo único: mostra a peça escolhida; ao clicar vira busca e abre a lista logo abaixo
+      const exemplo = ({cpu: "5600", mb: "B550", ram: "corsair 16gb", gpu: "4060", ssd: "1tb", psu: "650w bronze", gab: "rise", cooler: "water", monitor: "27 165hz", teclado: "mecânico", mouse: "logitech", headset: "hyperx"})[x.id] || "marca";
+      const textoAtual = o ? textoOpcao(x, o) : "";
+      const campo = el("input", {type: "text", class: "combo-campo", autocomplete: "off", role: "combobox", "aria-expanded": "false", "aria-label": "Escolher " + x.nome,
+        placeholder: x.perif || !x.obrigatoria ? "— nenhum — (clique para escolher)" : "Escolha…", value: textoAtual});
+      const listaEl = el("div", {class: "combo-lista", role: "listbox", hidden: true});
+      let marcada = -1, itens = [];
+      const escolher = op => { if (op) minhaMontagem[x.id] = op; else delete minhaMontagem[x.id]; salvarMinha(); desenharMontar(); };
+      const marcar = k => { itens.forEach((n, z) => n.classList.toggle("marcada", z === k)); marcada = k; if (itens[k]) itens[k].scrollIntoView({block: "nearest"}); };
       const preencher = () => {
-        const termos = semAcento(busca.value).split(/\s+/).filter(Boolean);
+        const termos = semAcento(campo.value).split(/\s+/).filter(Boolean);
         const achadas = lista.filter(op => { const t = semAcento(textoOpcao(x, op)); return termos.every(w => t.includes(w)); });
-        if (o && !achadas.some(op => chaveOp(op) === chaveOp(o))) achadas.unshift(o);
-        caixaSel.replaceChildren(el("option", {value: ""}, termos.length && !achadas.length ? "Nada encontrado" : x.perif || !x.obrigatoria ? "— nenhum —" : "Escolha…"),
-          ...achadas.map(op => el("option", {value: chaveOp(op)}, textoOpcao(x, op))));
-        caixaSel.value = o ? chaveOp(o) : "";
+        const opc = [...(!x.obrigatoria || x.perif ? [null] : []), ...achadas];
+        itens = opc.map(op => el("div", {class: "combo-item" + (op && o && chaveOp(op) === chaveOp(o) ? " atual" : ""), role: "option",
+          onmousedown: e => { e.preventDefault(); escolher(op); }}, op ? textoOpcao(x, op) : "— nenhum —"));
+        listaEl.replaceChildren(...(itens.length ? itens : [el("div", {class: "combo-vazio"}, "Nada encontrado. Tente outra palavra.")]));
+        marcada = -1;
       };
-      preencher();
-      busca.addEventListener("input", () => { buscaPeca[x.id] = busca.value; preencher(); });
-      caixaSel.addEventListener("change", () => { const it = todas.find(op => chaveOp(op) === caixaSel.value); if (it) minhaMontagem[x.id] = it; else delete minhaMontagem[x.id]; salvarMinha(); desenharMontar(); });
-      escolha = el("div", {class: "escolha-box"}, extras, busca, caixaSel);
+      const abrir = () => { campo.value = ""; campo.placeholder = `🔍 Digite para procurar… (ex.: ${exemplo})`; preencher(); listaEl.hidden = false; campo.setAttribute("aria-expanded", "true"); };
+      const fechar = () => { listaEl.hidden = true; campo.setAttribute("aria-expanded", "false"); campo.value = textoAtual; campo.placeholder = x.perif || !x.obrigatoria ? "— nenhum — (clique para escolher)" : "Escolha…"; };
+      campo.addEventListener("focus", abrir);
+      campo.addEventListener("input", preencher);
+      campo.addEventListener("blur", fechar);
+      campo.addEventListener("keydown", e => {
+        if (e.key === "ArrowDown") { e.preventDefault(); marcar(Math.min(marcada + 1, itens.length - 1)); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); marcar(Math.max(marcada - 1, 0)); }
+        else if (e.key === "Enter") { e.preventDefault(); const k = marcada >= 0 ? marcada : (itens.length === 1 ? 0 : -1); if (k >= 0) itens[k].dispatchEvent(new MouseEvent("mousedown", {cancelable: true})); }
+        else if (e.key === "Escape") campo.blur();
+      });
+      const combo = el("div", {class: "combo"}, campo, el("span", {class: "combo-icone", "aria-hidden": "true"}, "🔍"), listaEl);
+      escolha = el("div", {class: "escolha-box"}, extras, combo);
     }
     return el("div", {class: "peca realce" + (o ? "" : " vazia-peca")},
       el("span", {class: "caps peca-tipo"}, x.nome),
