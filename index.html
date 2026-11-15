@@ -339,6 +339,12 @@ body[data-aba="montar"] main,body[data-aba="montar"] .barra-in{max-width:min(96r
 body[data-aba="montar"] .montar-grade{grid-template-columns:minmax(0,1fr) 23rem}
 body:not([data-aba="ofertas"]) .em-alta{display:none}
 body[data-aba="montar"] .chuva{display:none}
+.btn-add-mon{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;width:100%;margin-top:.3rem;padding:.7rem .9rem;font:inherit;font-weight:700;font-size:.95rem;
+  color:var(--neon);background:var(--area);border:2px dashed var(--neon);border-radius:.5rem;cursor:pointer;text-align:left}
+.btn-add-mon small{font-weight:400;font-size:.8rem;color:var(--suave)}
+.btn-add-mon:hover{background:color-mix(in srgb,var(--neon) 18%,var(--papel))}
+.btn-remover-mon{order:9;align-self:end;font:inherit;font-size:.82rem;padding:.6rem .8rem;border:1.5px solid var(--caro);color:var(--caro);background:transparent;border-radius:.45rem;cursor:pointer}
+.btn-remover-mon:hover{background:color-mix(in srgb,var(--caro) 14%,transparent)}
 .combo-vazio{padding:.7rem .75rem;font-size:.88rem;color:var(--suave)}
 .peca:has(.combo){grid-template-areas:"tipo nome preco" "tipo sel sel" "tipo info info" "tipo hist hist"}
 .busca-peca{width:100%;font:inherit;font-size:.95rem;padding:.55rem .75rem;border:1.5px solid var(--neon);border-radius:.45rem;background:var(--area);color:var(--tinta)}
@@ -532,7 +538,7 @@ body[data-aba="montar"] .chuva{display:none}
     </div>
     <label class="perif-toggle"><input type="checkbox" id="montar-perif">
       <span class="perif-icones" aria-hidden="true">🖥️ ⌨️ 🖱️ 🎧</span>
-      <span class="perif-texto"><b>Incluir periféricos</b><small>monitor, teclado, mouse, headset, webcam e microfone</small></span>
+      <span class="perif-texto"><b>Incluir periféricos</b><small>monitor, teclado, mouse, headset, webcam, microfone, mousepad, mesa e cadeira</small></span>
       <span class="novo">OPCIONAL</span>
     </label>
     <div id="montar-conteudo"></div>
@@ -1249,6 +1255,9 @@ const PECAS = [
   {id: "headset", nome: "Headset", cat: "Headsets e fones", perif: true},
   {id: "webcam", nome: "Webcam", cat: "Setup e acessórios", perif: true, nomeRe: /webcam|web cam/},
   {id: "microfone", nome: "Microfone", cat: "Setup e acessórios", perif: true, nomeRe: /microfone|\bmic\b/},
+  {id: "mousepad", nome: "Mousepad", cat: "Setup e acessórios", perif: true, nomeRe: /mouse\s*pad|desk\s*pad/},
+  {id: "mesa", nome: "Mesa", cat: "Móveis", perif: true, soMeu: true, nomeRe: /^(mesa|escrivaninha)\b|mesa (gamer|para computador|home office|de escritorio|eletrica)/},
+  {id: "cadeira", nome: "Cadeira", cat: "Móveis", perif: true, soMeu: true, nomeRe: /^cadeira\b/},
 ];
 const baixa = p => semAcento(p.nome);
 // certificação de modelos conhecidos quando o anúncio não escreve o selo
@@ -1286,9 +1295,12 @@ function infoPeca(p, tipo) {
     r.pol = sp.tela || (tam ? parseFloat(tam[1] + "." + (tam[2] || 0)) : 0);
     r.res = /\b4k\b|uhd|3840/.test(n) ? "4K" : /\bqhd|\b2k\b|1440|wqhd|quad/.test(n) ? "QHD" : /full\s*hd|\bfhd|1080/.test(n) ? "Full HD" : ""; }
   if (tipo === "webcam") { if (!/webcam|web cam/.test(n) || /computador|all in one|notebook|suporte/.test(n)) return null; r.res = /\b4k\b/.test(n) ? "4K" : /2k|1440/.test(n) ? "2K" : /1080|full\s*hd/.test(n) ? "Full HD" : /720/.test(n) ? "HD" : ""; }
+  if (tipo === "mousepad") { if (!/mouse\s*pad|desk\s*pad/.test(n) || /^mouse\b(?!\s*pad)/.test(n)) return null; }
+  if (tipo === "mesa") { if (/cabeceira|centro|jantar|cozinha|lateral|apoio|cama|notebook\b.*colo|dobravel de praia|mesa de som|bilhar|ping|cabo|suporte/.test(n)) return null; }
+  if (tipo === "cadeira") { if (!/gamer|escritorio|office|ergonomic|presidente|diretor|mesh|reclinavel|home/.test(n) || /infantil|praia|alta aco|bebe|banho|rodas? para|capa|tapete/.test(n)) return null; }
   if (tipo === "microfone") { if (!/microfone|\bmic\b/.test(n) || /^(suporte|braco|fone|headset|headphone|webcam)|para microfone|fone de ouvido|headset|headphone|webcam|partybox|caixa de som/.test(n)) return null; r.lapela = /lapela/.test(n); }
   if (["teclado", "mouse", "headset"].includes(tipo)) { if (/kit|combo/.test(n) && tipo !== "teclado") return null; }
-  if (tipo !== "mb" && tipo !== "cpu" && KIT.test(n) && !["teclado", "mouse", "headset", "microfone"].includes(tipo)) return null;
+  if (tipo !== "mb" && tipo !== "cpu" && KIT.test(n) && !["teclado", "mouse", "headset", "microfone", "mousepad", "mesa", "cadeira"].includes(tipo)) return null;
   return r;
 }
 function opcoes(tipo, dias = 7) {
@@ -1348,7 +1360,7 @@ const MARCAS_GERAL = [["Asus", /\basus\b|\brog\b|\btuf\b/], ["MSI", /\bmsi\b/], 
   ["Duex", /duex/], ["Mach1", /mach1/], ["Kalkan", /kalkan/], ["Aerocool", /aerocool/], ["Thermalright", /thermalright/], ["Arctic", /arctic/], ["Noctua", /noctua/], ["Ninja", /ninja/],
   ["Liketec", /liketec/], ["Acegeek", /acegeek/], ["Logitech", /logitech/], ["Razer", /razer/], ["HyperX", /hyperx/], ["SteelSeries", /steelseries/], ["Attack Shark", /attack shark/],
   ["Machenike", /machenike/], ["Aula", /\baula\b/], ["Havit", /havit/], ["Fortrek", /fortrek/], ["LG", /\blg\b/], ["AOC", /\baoc\b/], ["Samsung", /samsung|odyssey/], ["Dell", /\bdell\b/],
-  ["BenQ", /benq/], ["Philips", /philips/], ["Acer", /\bacer\b/], ["Lenovo", /lenovo/], ["Koorui", /koorui/], ["Emeet", /emeet/], ["Ugreen", /ugreen/], ["Fifine", /fifine/], ["Hollyland", /hollyland/], ["Intelbras", /intelbras/], ["Maono", /maono/], ["Rode", /\brode\b/], ["Elgato", /elgato/], ["Gigabyte", /gigabyte/], ["Jbl", /\bjbl\b/], ["Sony", /\bsony\b/]];
+  ["BenQ", /benq/], ["Philips", /philips/], ["Acer", /\bacer\b/], ["Lenovo", /lenovo/], ["Koorui", /koorui/], ["ThunderX3", /thunderx3/], ["SuperFrame", /superframe/], ["Dr. Office", /dr\.? office/], ["Elements", /elements/], ["Madesa", /madesa/], ["Weishi", /weishi/], ["Elite5", /elite5/], ["ATK", /\batk\b/], ["Darmoshark", /darmoshark/], ["X-raypad", /x-?raypad/], ["Emeet", /emeet/], ["Ugreen", /ugreen/], ["Fifine", /fifine/], ["Hollyland", /hollyland/], ["Intelbras", /intelbras/], ["Maono", /maono/], ["Rode", /\brode\b/], ["Elgato", /elgato/], ["Gigabyte", /gigabyte/], ["Jbl", /\bjbl\b/], ["Sony", /\bsony\b/]];
 function marcaDe(tipo, o) {
   const n = baixa(o.p);
   if (tipo === "ram") return marcaRam(o);
@@ -1469,7 +1481,7 @@ function montarAuto(modo, orcamento) {
 }
 function perifericos(potente) {
   const res = {};
-  for (const t of ["monitor", "teclado", "mouse", "headset", "webcam", "microfone"]) {
+  for (const t of ["monitor", "teclado", "mouse", "headset", "webcam", "microfone", "mousepad"]) {
     const lista = opcoes(t);
     const nota = o => (1 + o.i.qualidade * .35) * (o.p.v === "top" ? 1.25 : o.p.v === "compensa" ? 1.1 : o.p.v === "caro" ? .85 : 1)
       * (t === "monitor" ? Math.min(o.i.hz, 240) / 144 * (o.i.pol >= 27 ? 1.15 : 1) : 1);
@@ -1507,7 +1519,7 @@ function notaPC(sel) {
   if (sel.ram && sel.ram.i.pentes === 4) contras.push("4 pentes de memória: confira se a placa-mãe tem 4 slots (muitas placas Micro-ATX de entrada têm só 2).");
   const nMon = Object.keys(sel).filter(t => /^monitor/.test(t)).length;
   if (nMon > 1) pros.push(`${nMon} monitores: ótimo para trabalhar e jogar ao mesmo tempo. Confira se a placa de vídeo tem saídas suficientes.`);
-  const perif = ["monitor", "monitor2", "monitor3", "monitor4", "monitor5", "teclado", "mouse", "headset", "webcam", "microfone"].filter(t => sel[t]);
+  const perif = ["monitor", "monitor2", "monitor3", "monitor4", "monitor5", "teclado", "mouse", "headset", "webcam", "microfone", "mousepad", "mesa", "cadeira"].filter(t => sel[t]);
   if (perif.length) { const q = perif.filter(t => sel[t].i.qualidade === 2).length; if (q === perif.length) pros.push("Periféricos de marcas reconhecidas."); else if (perif.some(t => sel[t].i.qualidade === 0)) contras.push("Algum periférico é de marca pouco conhecida."); }
   if (sel.monitor && g && g.i.perf >= 115 && sel.monitor.i.hz < 144) contras.push("O monitor é de 60/75 Hz: a placa de vídeo aguenta um monitor de 144 Hz ou mais.");
   if (contras.length && nota > 9.5) nota = 9.5;
@@ -1515,8 +1527,9 @@ function notaPC(sel) {
 }
 
 let montagem = {}, minhaMontagem = null, montarModo = "custo", orcamento = 0, comPerifericos = false;
-function salvarMinha() { try { localStorage.setItem("radar-meu-pc", JSON.stringify(Object.fromEntries(Object.entries(minhaMontagem || {}).filter(([, o]) => o).map(([t, o]) => [t, chaveOp(o)])))); } catch (e) {} }
+function salvarMinha() { try { localStorage.setItem("radar-qtd-monitores", String(qtdMonitor)); localStorage.setItem("radar-meu-pc", JSON.stringify(Object.fromEntries(Object.entries(minhaMontagem || {}).filter(([, o]) => o).map(([t, o]) => [t, chaveOp(o)])))); } catch (e) {} }
 function lerMinha() {
+  try { qtdMonitor = Math.min(5, Math.max(1, +localStorage.getItem("radar-qtd-monitores") || 1)); } catch (e) {}
   try { const s = JSON.parse(localStorage.getItem("radar-meu-pc") || "null"); if (!s) return null; const r = {};
     for (const [t, k] of Object.entries(s)) { const ops = opcoes(t); let o = ops.find(x => chaveOp(x) === k);
       if (!o && /^monitor/.test(t)) o = ops.find(x => x.p.id === k.split("#")[0]);
@@ -1537,8 +1550,8 @@ function desenharMontar() {
   } else if (!minhaMontagem) minhaMontagem = lerMinha() || {...montagem};
   const base = montarModo === "meu" ? minhaMontagem : montagem;
   const sel = Object.fromEntries(Object.entries(base).filter(([t, o]) => { const x0 = PECAS.find(x => x.id === t);
-    return o && x0 && (comPerifericos || !x0.perif) && (!x0.extraMon || (montarModo === "meu" && x0.extraMon <= qtdMonitor)); })), {avisos, consumo} = compativel(sel), {nota, pros, contras, graves} = notaPC(sel), atencao = contras.filter(t => !graves.includes(t));
-  const linhas = PECAS.filter(x => (!x.perif || comPerifericos) && (!x.extraMon || (montarModo === "meu" && x.extraMon <= qtdMonitor))).map(x => {
+    return o && x0 && (comPerifericos || !x0.perif) && (!x0.extraMon || (montarModo === "meu" && x0.extraMon <= qtdMonitor)) && (!x0.soMeu || montarModo === "meu"); })), {avisos, consumo} = compativel(sel), {nota, pros, contras, graves} = notaPC(sel), atencao = contras.filter(t => !graves.includes(t));
+  const linhas = PECAS.filter(x => (!x.perif || comPerifericos) && (!x.extraMon || (montarModo === "meu" && x.extraMon <= qtdMonitor)) && (!x.soMeu || montarModo === "meu")).map(x => {
     const nomeLinha = x.id === "monitor" && montarModo === "meu" && qtdMonitor > 1 ? "Monitor 1" : x.nome;
     const o = sel[x.id];
     let escolha;
@@ -1555,8 +1568,12 @@ function desenharMontar() {
         ...opts.map(([v, t]) => el("option", {value: String(v)}, t))); s2.value = String(valor); return el("label", {class: "filtro-caixa"}, el("span", {class: "caps"}, rotulo), s2); };
       const marcaSel = seletor("Marca", filtroMarca[x.id] || "", [["", "Todas as marcas"], ...marcas.map(m => [m, m])], v => { if (v) filtroMarca[x.id] = v; else delete filtroMarca[x.id]; });
       const extras = tipoBase(x.id) === "monitor" ? el("div", {class: "filtro-linha"},
-        x.id === "monitor" ? seletor("Quantos monitores", qtdMonitor, [1, 2, 3, 4, 5].map(q => [q, q === 1 ? "1 monitor" : q + " monitores"]), v => {
-          qtdMonitor = +v; for (const k of [2, 3, 4, 5]) if (k > qtdMonitor) delete minhaMontagem["monitor" + k]; salvarMinha(); }) : null,
+        x.extraMon ? el("button", {type: "button", class: "btn-remover-mon", title: "Tirar este monitor", onclick: () => {
+          // tira este monitor e puxa os de baixo uma posição para cima
+          const ids = monitoresAtivos(), pos = ids.indexOf(x.id);
+          for (let z = pos; z < ids.length - 1; z++) { const de = ids[z + 1], para = ids[z];
+            if (minhaMontagem[de]) minhaMontagem[para] = minhaMontagem[de]; else delete minhaMontagem[para]; filtroMon[para] = filtroMon[de] || {hz: "", pol: "", res: ""}; }
+          delete minhaMontagem[ids[ids.length - 1]]; delete filtroMon[ids[ids.length - 1]]; qtdMonitor--; salvarMinha(); desenharMontar(); }}, "✕ Tirar este monitor") : null,
         seletor("Frequência", fm.hz, FAIXA_HZ, v => { fm.hz = v; }),
         seletor("Tamanho", fm.pol, FAIXA_POL, v => { fm.pol = v; }),
         seletor("Resolução", fm.res, [["", "Todas"], ["Full HD", "Full HD"], ["QHD", "QHD / 2K"], ["4K", "4K"]], v => { fm.res = v; }))
@@ -1565,7 +1582,7 @@ function desenharMontar() {
         seletor("Tipo", filtroRam.ddr, [[0, "DDR4 e DDR5"], [4, "Só DDR4"], [5, "Só DDR5"]], v => { filtroRam.ddr = +v; }),
         sel.mb && sel.mb.i.ddr ? el("small", {class: "dica-ram"}, `Sua placa-mãe usa DDR${sel.mb.i.ddr}.`) : null);
       // campo único: mostra a peça escolhida; ao clicar vira busca e abre a lista logo abaixo
-      const exemplo = ({cpu: "5600", mb: "B550", ram: "corsair 16gb", gpu: "4060", ssd: "1tb", psu: "650w bronze", gab: "rise", cooler: "water", monitor: "aoc 27 180hz", teclado: "mecânico", mouse: "logitech", headset: "hyperx", webcam: "4k", microfone: "fifine"})[tipoBase(x.id)] || "marca";
+      const exemplo = ({cpu: "5600", mb: "B550", ram: "corsair 16gb", gpu: "4060", ssd: "1tb", psu: "650w bronze", gab: "rise", cooler: "water", monitor: "aoc 27 180hz", teclado: "mecânico", mouse: "logitech", headset: "hyperx", webcam: "4k", microfone: "fifine", mousepad: "grande", mesa: "gamer 120", cadeira: "ergonômica"})[tipoBase(x.id)] || "marca";
       const textoAtual = o ? textoOpcao(x, o) : "";
       const campo = el("input", {type: "text", class: "combo-campo", autocomplete: "off", role: "combobox", "aria-expanded": "false", "aria-label": "Escolher " + nomeLinha,
         placeholder: x.perif || !x.obrigatoria ? "— nenhum — (clique para escolher)" : "Escolha…", value: textoAtual});
@@ -1595,9 +1612,12 @@ function desenharMontar() {
         else if (e.key === "Escape") campo.blur();
       });
       const combo = el("div", {class: "combo"}, campo, el("span", {class: "combo-icone", "aria-hidden": "true"}, "🔍"), listaEl);
+      const ultimoMon = tipoBase(x.id) === "monitor" && x.id === monitoresAtivos().slice(-1)[0];
+      const addMon = ultimoMon && qtdMonitor < 5 ? el("button", {type: "button", class: "btn-add-mon", onclick: () => { qtdMonitor++; salvarMinha(); desenharMontar(); }},
+        "➕ Adicionar outro monitor", el("small", {}, "pode ser de outro tamanho, Hz e resolução")) : null;
       escolha = el("div", {class: "escolha-box"}, extras,
         el("div", {class: "busca-linha"}, combo, marcaSel),
-        el("small", {class: "dica-ram"}, `${lista.length} ${lista.length === 1 ? "opção" : "opções"}${filtroMarca[x.id] ? " da " + filtroMarca[x.id] : ""}`));
+        el("small", {class: "dica-ram"}, `${lista.length} ${lista.length === 1 ? "opção" : "opções"}${filtroMarca[x.id] ? " da " + filtroMarca[x.id] : ""}`), addMon);
     }
     return el("div", {class: "peca realce" + (o ? "" : " vazia-peca")},
       el("span", {class: "caps peca-tipo"}, nomeLinha),
