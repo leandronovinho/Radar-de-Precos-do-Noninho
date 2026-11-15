@@ -532,7 +532,7 @@ body[data-aba="montar"] .chuva{display:none}
     </div>
     <label class="perif-toggle"><input type="checkbox" id="montar-perif">
       <span class="perif-icones" aria-hidden="true">🖥️ ⌨️ 🖱️ 🎧</span>
-      <span class="perif-texto"><b>Incluir periféricos</b><small>monitor, teclado, mouse e headset</small></span>
+      <span class="perif-texto"><b>Incluir periféricos</b><small>monitor, teclado, mouse, headset, webcam e microfone</small></span>
       <span class="novo">OPCIONAL</span>
     </label>
     <div id="montar-conteudo"></div>
@@ -1246,6 +1246,8 @@ const PECAS = [
   {id: "teclado", nome: "Teclado", cat: "Teclados", perif: true},
   {id: "mouse", nome: "Mouse", cat: "Mouses", perif: true},
   {id: "headset", nome: "Headset", cat: "Headsets e fones", perif: true},
+  {id: "webcam", nome: "Webcam", cat: "Setup e acessórios", perif: true, nomeRe: /webcam|web cam/},
+  {id: "microfone", nome: "Microfone", cat: "Setup e acessórios", perif: true, nomeRe: /microfone|\bmic\b/},
 ];
 const baixa = p => semAcento(p.nome);
 // certificação de modelos conhecidos quando o anúncio não escreve o selo
@@ -1276,17 +1278,25 @@ function infoPeca(p, tipo) {
     r.selo = /titanium|platinum/.test(n) ? 4 : /gold/.test(n) ? 3 : /silver/.test(n) ? 2.5 : /bronze/.test(n) ? 2 : (SELO_FONTE.find(([re]) => re.test(n)) || [])[1] || (/white|standard|80\s*plus/.test(n) ? 1 : 0); }
   if (tipo === "gab") { if (!/(^|\s)gabinete\b/.test(n) || /^(kit|ventoinha|filtro|cabo)|filtro de linha|tomada|regua|ventoinhas? para|suporte|para gabinete/.test(n)) return null; }
   if (tipo === "cooler") { if (!/cooler|water/.test(n) || /notebook|base|suporte|pasta/.test(n)) return null; r.water = /water/.test(n); }
-  if (tipo === "monitor") { if (!/monitor/.test(n)) return null; r.hz = sp.hz || 60; r.pol = sp.tela || 0; }
+  if (tipo === "monitor") { if (!/monitor/.test(n) || /suporte|braco|cabo|limpa|pelicula|portatil/.test(n)) return null; r.hz = sp.hz || +(n.match(/(\d{2,3})\s*hz/) || [])[1] || 60;
+    const tam = n.match(/\b(1[5-9]|[2-4]\d)(?:[.,](\d))?(?=\s*(?:"|''|”|'|pol|\s|$|\/|,))(?!\s*(?:hz|ms|fps))/);
+    r.pol = sp.tela || (tam ? parseFloat(tam[1] + "." + (tam[2] || 0)) : 0);
+    r.res = /\b4k\b|uhd|3840/.test(n) ? "4K" : /\bqhd|\b2k\b|1440|wqhd|quad/.test(n) ? "QHD" : /full\s*hd|\bfhd|1080/.test(n) ? "Full HD" : ""; }
+  if (tipo === "webcam") { if (!/webcam|web cam/.test(n) || /computador|all in one|notebook|suporte/.test(n)) return null; r.res = /\b4k\b/.test(n) ? "4K" : /2k|1440/.test(n) ? "2K" : /1080|full\s*hd/.test(n) ? "Full HD" : /720/.test(n) ? "HD" : ""; }
+  if (tipo === "microfone") { if (!/microfone|\bmic\b/.test(n) || /^(suporte|braco|fone|headset|headphone|webcam)|para microfone|fone de ouvido|headset|headphone|webcam|partybox|caixa de som/.test(n)) return null; r.lapela = /lapela/.test(n); }
   if (["teclado", "mouse", "headset"].includes(tipo)) { if (/kit|combo/.test(n) && tipo !== "teclado") return null; }
-  if (tipo !== "mb" && tipo !== "cpu" && KIT.test(n) && !["teclado", "mouse", "headset"].includes(tipo)) return null;
+  if (tipo !== "mb" && tipo !== "cpu" && KIT.test(n) && !["teclado", "mouse", "headset", "microfone"].includes(tipo)) return null;
   return r;
 }
 function opcoes(tipo, dias = 7) {
   const peca = PECAS.find(x => x.id === tipo);
-  const daCategoria = p => p.cat === peca.cat || (tipo === "ram" && p.cat === "PCs montados" && /^(memoria|kit de memoria|corsair|kingston|cusu)\b|memoria ram/.test(baixa(p)));
+  const daCategoria = p => (peca.nomeRe ? peca.nomeRe.test(baixa(p)) : p.cat === peca.cat) || (tipo === "ram" && p.cat === "PCs montados" && /^(memoria|kit de memoria|corsair|kingston|cusu)\b|memoria ram/.test(baixa(p)));
   const lista = produtos.filter(p => daCategoria(p) && referencia - p.u.data <= dias * DIA)
     .map(p => ({p, i: infoPeca(p, tipo)})).filter(o => o.i);
-  if (tipo === "ram") for (const o of [...lista]) if (!o.i.kit && o.i.gb <= 32) lista.push({p: o.p, qtd: 2, i: {...o.i, gb: o.i.gb * 2, pentes: 2, kit: true}});
+  if (tipo === "ram") for (const o of [...lista]) {
+    if (!o.i.kit && o.i.gb <= 32) { lista.push({p: o.p, qtd: 2, i: {...o.i, gb: o.i.gb * 2, pentes: 2, kit: true}}); lista.push({p: o.p, qtd: 4, i: {...o.i, gb: o.i.gb * 4, pentes: 4, kit: true}}); }
+    else if (o.i.pentes === 2 && o.i.gb <= 64) lista.push({p: o.p, qtd: 2, i: {...o.i, gb: o.i.gb * 2, pentes: 4, kit: true}});  // dois kits de 2 = 4 pentes
+  }
   return lista.length || dias > 7 ? lista : opcoes(tipo, 15);
 }
 function videoIntegrado(p) {
@@ -1311,7 +1321,9 @@ const precoDe = o => o ? o.p.u.preco * (o.qtd || 1) : 0;
 const chaveOp = o => o.p.id + (o.qtd ? "#" + o.qtd : "");
 function rotuloPeca(tipo, o) {
   const i = o.i;
-  if (tipo === "ram") return i.pentes >= 2 ? `${i.pentes} pentes de ${i.gb / i.pentes} GB = ${i.gb} GB · DDR${i.ddr} · dual channel` : `1 pente de ${i.gb} GB · DDR${i.ddr}`;
+  if (tipo === "ram") return i.pentes >= 2 ? `${i.pentes} pentes de ${i.gb / i.pentes} GB = ${i.gb} GB · DDR${i.ddr} · ${i.pentes === 4 ? "4 slots" : "dual channel"}` : `1 pente de ${i.gb} GB · DDR${i.ddr}`;
+  if (tipo === "monitor") return [i.pol ? i.pol.toLocaleString("pt-BR") + '"' : "", i.hz + " Hz", i.res].filter(Boolean).join(" · ");
+  if (tipo === "webcam") return i.res;
   if (tipo === "psu") return `${i.watts}W · ${NOME_SELO[Math.floor(i.selo)]}`;
   if (tipo === "ssd") return `${i.gb >= 1000 ? i.gb / 1000 + " TB" : i.gb + " GB"} · ${i.nvme ? "NVMe" : "SATA"}`;
   if (tipo === "mb") return `${i.soq} · DDR${i.ddr || "?"}`;
@@ -1332,7 +1344,7 @@ const MARCAS_GERAL = [["Asus", /\basus\b|\brog\b|\btuf\b/], ["MSI", /\bmsi\b/], 
   ["Duex", /duex/], ["Mach1", /mach1/], ["Kalkan", /kalkan/], ["Aerocool", /aerocool/], ["Thermalright", /thermalright/], ["Arctic", /arctic/], ["Noctua", /noctua/], ["Ninja", /ninja/],
   ["Liketec", /liketec/], ["Acegeek", /acegeek/], ["Logitech", /logitech/], ["Razer", /razer/], ["HyperX", /hyperx/], ["SteelSeries", /steelseries/], ["Attack Shark", /attack shark/],
   ["Machenike", /machenike/], ["Aula", /\baula\b/], ["Havit", /havit/], ["Fortrek", /fortrek/], ["LG", /\blg\b/], ["AOC", /\baoc\b/], ["Samsung", /samsung|odyssey/], ["Dell", /\bdell\b/],
-  ["BenQ", /benq/], ["Philips", /philips/], ["Acer", /\bacer\b/], ["Lenovo", /lenovo/], ["Koorui", /koorui/], ["Jbl", /\bjbl\b/], ["Sony", /\bsony\b/]];
+  ["BenQ", /benq/], ["Philips", /philips/], ["Acer", /\bacer\b/], ["Lenovo", /lenovo/], ["Koorui", /koorui/], ["Emeet", /emeet/], ["Ugreen", /ugreen/], ["Fifine", /fifine/], ["Hollyland", /hollyland/], ["Intelbras", /intelbras/], ["Maono", /maono/], ["Rode", /\brode\b/], ["Elgato", /elgato/], ["Gigabyte", /gigabyte/], ["Jbl", /\bjbl\b/], ["Sony", /\bsony\b/]];
 function marcaDe(tipo, o) {
   const n = baixa(o.p);
   if (tipo === "ram") return marcaRam(o);
@@ -1340,7 +1352,12 @@ function marcaDe(tipo, o) {
   if (tipo === "gpu") { const m = MARCAS_GERAL.find(([, re]) => re.test(n)); return m ? m[0] : /\brtx|gtx/.test(n) ? "NVIDIA (sem marca no anúncio)" : /\brx\s*\d/.test(n) ? "AMD Radeon (sem marca no anúncio)" : /\barc\b/.test(n) ? "Intel Arc" : "Outras"; }
   return (MARCAS_GERAL.find(([, re]) => re.test(n)) || ["Outras"])[0];
 }
-const CONF_RAM = [["", "Todas"], ["1x8", "1 pente de 8 GB"], ["1x16", "1 pente de 16 GB"], ["1x32", "1 pente de 32 GB"], ["2x8", "2 pentes de 8 GB"], ["2x16", "2 pentes de 16 GB"], ["2x32", "2 pentes de 32 GB"]];
+const CONF_RAM = [["", "Todas"], ["1x8", "1 pente de 8 GB"], ["1x16", "1 pente de 16 GB"], ["1x32", "1 pente de 32 GB"], ["2x8", "2 pentes de 8 GB (16 GB)"], ["2x16", "2 pentes de 16 GB (32 GB)"], ["2x32", "2 pentes de 32 GB (64 GB)"],
+  ["4x8", "4 pentes de 8 GB (32 GB)"], ["4x16", "4 pentes de 16 GB (64 GB)"], ["4x32", "4 pentes de 32 GB (128 GB)"]];
+const FAIXA_HZ = [["", "Todos"], ["60-75", "60 a 75 Hz"], ["100-120", "100 a 120 Hz"], ["144-170", "144 a 170 Hz"], ["180-180", "180 Hz"], ["200-240", "200 a 240 Hz"], ["241-999", "Acima de 240 Hz"]];
+const FAIXA_POL = [["", "Todos"], ["0-22.9", "Até 22\""], ["23-24.9", "23\" a 24\""], ["25-27.9", "25\" a 27\""], ["28-32.9", "28\" a 32\""], ["33-99", "34\" ou mais"]];
+let filtroMon = {hz: "", pol: "", res: ""}, qtdMonitor = 1;
+const naFaixa = (v, f) => { if (!f) return true; const [a, b] = f.split("-").map(Number); return v >= a && v <= b; };
 const confRam = o => o.i.pentes + "x" + o.i.gb / o.i.pentes;
 let filtroRam = {conf: "", ddr: 0}; const filtroMarca = {};
 // busca tolerante: aceita sem espaço ("75700x"), siglas ("r5 5600", "i5 12400") e uma letra errada
@@ -1364,12 +1381,12 @@ function notaBusca(consulta, texto) {
   if (termos.every(parecido)) return 2;
   return 0;
 }
-const textoOpcao = (x, op) => `${reais(precoDe(op))} · ${op.qtd ? op.qtd + "× " : ""}${op.p.nome.slice(0, 64)}${op.p.u.loja ? " · " + op.p.u.loja : ""}${x.id === "ram" || x.id === "psu" ? " · " + rotuloPeca(x.id, op) : ""}`;
+const textoOpcao = (x, op) => `${reais(precoDe(op))} · ${op.qtd ? op.qtd + "× " : ""}${op.p.nome.slice(0, 64)}${op.p.u.loja ? " · " + op.p.u.loja : ""}${["ram", "psu", "monitor"].includes(x.id) && rotuloPeca(x.id, op) ? " · " + rotuloPeca(x.id, op) : ""}`;
 function historico7(o) {
   const desde = referencia - 7 * DIA, pts = o.p.serie.filter(s => s.data >= desde);
   if (!pts.length) return null;
   const menor = Math.min(...pts.map(s => s.preco)), maior = Math.max(...pts.map(s => s.preco));
-  return el("div", {class: "hist7"}, el("span", {class: "caps"}, "Últimos 7 dias" + (o.qtd ? " (preço de 1 pente)" : "")),
+  return el("div", {class: "hist7"}, el("span", {class: "caps"}, "Últimos 7 dias" + (o.qtd ? (o.i.pentes ? (o.i.pentes / o.qtd > 1 ? " (preço de 1 kit)" : " (preço de 1 pente)") : " (preço de 1 unidade)") : "")),
     ...pts.slice(-7).map(s => el("span", {class: "dia7" + (s.preco === menor ? " menor" : ""), title: s.loja || ""}, el("small", {}, ddmm(s.data)), reaisRedondo(s.preco))),
     pts.length > 1 && maior > menor ? el("span", {class: "faixa7"}, `menor ${reaisRedondo(menor)} · maior ${reaisRedondo(maior)}`) : null);
 }
@@ -1384,7 +1401,7 @@ function montarAuto(modo, orcamento) {
     if (cpu.i.perf >= 125 && mbs.some(o => o.i.chip >= 2)) mbs = mbs.filter(o => o.i.chip >= 2);  // processador forte pede placa-mãe melhor que a de entrada
     let melhor = null;
     for (const mb of mbs) {
-      const rams = op.ram.filter(o => !mb.i.ddr || o.i.ddr === mb.i.ddr);
+      const rams = op.ram.filter(o => (!mb.i.ddr || o.i.ddr === mb.i.ddr) && o.i.pentes <= 2);
       const ram = potente ? rams.filter(o => o.i.gb >= 32 && o.i.kit).sort((a, b) => b.i.qualidade - a.i.qualidade || precoDe(a) - precoDe(b))[0] || rams.sort((a, b) => b.i.gb - a.i.gb)[0]
         : melhorValor(rams, o => o.i.gb >= 16 && o.i.kit, o => Math.min(o.i.gb, 32) * (1 + o.i.qualidade * .2)) || melhorValor(rams, o => o.i.gb >= 16, o => Math.min(o.i.gb, 32)) || barato(rams, () => true);
       if (!ram) continue;
@@ -1419,7 +1436,7 @@ function montarAuto(modo, orcamento) {
       ssd: (o.i.nvme ? .6 : 0) + (o.i.gb >= 2000 ? 1.2 : o.i.gb >= 1000 ? .8 : 0), cooler: o.i.water ? .3 : 0})[t] || 0;
     const melhorar = (base, limite) => {
       const b = {...base}, consumo = b.cpu.i.watts + (b.gpu ? b.gpu.i.watts : 0) + 90;
-      const ok = {mb: o => o.i.soq === b.cpu.i.soq && o.i.ddr === b.ram.i.ddr && o.i.chip >= b.mb.i.chip, ram: o => o.i.ddr === b.mb.i.ddr && o.i.gb >= b.ram.i.gb, ssd: o => o.i.gb >= b.ssd.i.gb && (o.i.nvme || !b.ssd.i.nvme),
+      const ok = {mb: o => o.i.soq === b.cpu.i.soq && o.i.ddr === b.ram.i.ddr && o.i.chip >= b.mb.i.chip, ram: o => o.i.ddr === b.mb.i.ddr && o.i.gb >= b.ram.i.gb && o.i.pentes <= 2, ssd: o => o.i.gb >= b.ssd.i.gb && (o.i.nvme || !b.ssd.i.nvme),
         psu: o => o.i.watts >= consumo * 1.25, gab: () => true, cooler: () => true, gpu: o => b.gpu && o.i.perf === b.gpu.i.perf};
       for (let passo = 0; passo < 14; passo++) {
         const sobra = limite - total(b); let troca = null;
@@ -1447,10 +1464,11 @@ function montarAuto(modo, orcamento) {
 }
 function perifericos(potente) {
   const res = {};
-  for (const t of ["monitor", "teclado", "mouse", "headset"]) {
+  for (const t of ["monitor", "teclado", "mouse", "headset", "webcam", "microfone"]) {
     const lista = opcoes(t);
     const nota = o => (1 + o.i.qualidade * .35) * (o.p.v === "top" ? 1.25 : o.p.v === "compensa" ? 1.1 : o.p.v === "caro" ? .85 : 1)
       * (t === "monitor" ? Math.min(o.i.hz, 240) / 144 * (o.i.pol >= 27 ? 1.15 : 1) : 1);
+    if (t === "microfone") { lista.splice(0, lista.length, ...lista.filter(o => !o.i.lapela)); }
     res[t] = (potente ? lista.filter(o => o.i.qualidade === 2).sort((a, b) => nota(b) - nota(a))[0] : null) || lista.sort((a, b) => nota(b) / Math.sqrt(precoDe(b)) - nota(a) / Math.sqrt(precoDe(a)))[0];
   }
   return res;
@@ -1481,7 +1499,9 @@ function notaPC(sel) {
   const boas = pecas.filter(o => o.p.v === "top" || o.p.v === "compensa").length, caras = pecas.filter(o => o.p.v === "caro").length;
   if (boas >= pecas.length / 2) pros.push(`${boas} de ${pecas.length} peças estão com preço bom agora (Promoção top ou Compensa).`);
   if (caras) { nota -= .3 * caras; contras.push(`${caras} ${caras === 1 ? "peça está" : "peças estão"} acima do preço normal agora.`); }
-  const perif = ["monitor", "teclado", "mouse", "headset"].filter(t => sel[t]);
+  if (sel.ram && sel.ram.i.pentes === 4) contras.push("4 pentes de memória: confira se a placa-mãe tem 4 slots (muitas placas Micro-ATX de entrada têm só 2).");
+  if (sel.monitor && sel.monitor.qtd > 1) pros.push(`${sel.monitor.qtd} monitores: ótimo para trabalhar e jogar ao mesmo tempo. Confira se a placa de vídeo tem saídas suficientes.`);
+  const perif = ["monitor", "teclado", "mouse", "headset", "webcam", "microfone"].filter(t => sel[t]);
   if (perif.length) { const q = perif.filter(t => sel[t].i.qualidade === 2).length; if (q === perif.length) pros.push("Periféricos de marcas reconhecidas."); else if (perif.some(t => sel[t].i.qualidade === 0)) contras.push("Algum periférico é de marca pouco conhecida."); }
   if (sel.monitor && g && g.i.perf >= 115 && sel.monitor.i.hz < 144) contras.push("O monitor é de 60/75 Hz: a placa de vídeo aguenta um monitor de 144 Hz ou mais.");
   if (contras.length && nota > 9.5) nota = 9.5;
@@ -1492,7 +1512,9 @@ let montagem = {}, minhaMontagem = null, montarModo = "custo", orcamento = 0, co
 function salvarMinha() { try { localStorage.setItem("radar-meu-pc", JSON.stringify(Object.fromEntries(Object.entries(minhaMontagem || {}).filter(([, o]) => o).map(([t, o]) => [t, chaveOp(o)])))); } catch (e) {} }
 function lerMinha() {
   try { const s = JSON.parse(localStorage.getItem("radar-meu-pc") || "null"); if (!s) return null; const r = {};
-    for (const [t, k] of Object.entries(s)) { const o = opcoes(t).find(x => chaveOp(x) === k); if (o) r[t] = o; }
+    for (const [t, k] of Object.entries(s)) { const ops = opcoes(t); let o = ops.find(x => chaveOp(x) === k);
+      if (!o && t === "monitor") { const [id, q] = k.split("#"); const base = ops.find(x => x.p.id === id); if (base) { qtdMonitor = +q || 1; o = qtdMonitor > 1 ? {...base, qtd: qtdMonitor} : base; } }
+      if (o) r[t] = o; }
     return Object.keys(r).length ? r : null; } catch (e) { return null; }
 }
 function desenharMontar() {
@@ -1518,16 +1540,24 @@ function desenharMontar() {
       const marcas = [...new Set(todas.map(op => marcaDe(x.id, op)))].sort((a, b) => a === "Outras" ? 1 : b === "Outras" ? -1 : a.localeCompare(b));
       if (filtroMarca[x.id] && !marcas.includes(filtroMarca[x.id])) delete filtroMarca[x.id];
       const lista = todas.filter(op => (!filtroMarca[x.id] || marcaDe(x.id, op) === filtroMarca[x.id])
-        && (x.id !== "ram" || ((!filtroRam.conf || confRam(op) === filtroRam.conf) && (!filtroRam.ddr || op.i.ddr === filtroRam.ddr))));
+        && (x.id !== "ram" || ((!filtroRam.conf || confRam(op) === filtroRam.conf) && (!filtroRam.ddr || op.i.ddr === filtroRam.ddr)))
+        && (x.id !== "monitor" || (naFaixa(op.i.hz, filtroMon.hz) && naFaixa(op.i.pol, filtroMon.pol) && (!filtroMon.res || op.i.res === filtroMon.res))))
+        .map(op => x.id === "monitor" && qtdMonitor > 1 ? {...op, qtd: qtdMonitor} : op);
       const seletor = (rotulo, valor, opts, mudar) => { const s2 = el("select", {class: "filtro-sel", "aria-label": rotulo, onchange: e => { mudar(e.target.value); desenharMontar(); }},
         ...opts.map(([v, t]) => el("option", {value: String(v)}, t))); s2.value = String(valor); return el("label", {class: "filtro-caixa"}, el("span", {class: "caps"}, rotulo), s2); };
       const marcaSel = seletor("Marca", filtroMarca[x.id] || "", [["", "Todas as marcas"], ...marcas.map(m => [m, m])], v => { if (v) filtroMarca[x.id] = v; else delete filtroMarca[x.id]; });
-      const extras = x.id !== "ram" ? null : el("div", {class: "filtro-linha"},
+      const extras = x.id === "monitor" ? el("div", {class: "filtro-linha"},
+        seletor("Quantos monitores", qtdMonitor, [1, 2, 3, 4, 5].map(q => [q, q === 1 ? "1 monitor" : q + " monitores"]), v => {
+          qtdMonitor = +v; if (minhaMontagem.monitor) { const b0 = {...minhaMontagem.monitor}; delete b0.qtd; minhaMontagem.monitor = qtdMonitor > 1 ? {...b0, qtd: qtdMonitor} : b0; salvarMinha(); } }),
+        seletor("Frequência", filtroMon.hz, FAIXA_HZ, v => { filtroMon.hz = v; }),
+        seletor("Tamanho", filtroMon.pol, FAIXA_POL, v => { filtroMon.pol = v; }),
+        seletor("Resolução", filtroMon.res, [["", "Todas"], ["Full HD", "Full HD"], ["QHD", "QHD / 2K"], ["4K", "4K"]], v => { filtroMon.res = v; }))
+        : x.id !== "ram" ? null : el("div", {class: "filtro-linha"},
         seletor("Quantos pentes", filtroRam.conf, CONF_RAM.map(([v, t]) => [v, v ? t : "Todas as opções"]), v => { filtroRam.conf = v; }),
         seletor("Tipo", filtroRam.ddr, [[0, "DDR4 e DDR5"], [4, "Só DDR4"], [5, "Só DDR5"]], v => { filtroRam.ddr = +v; }),
         sel.mb && sel.mb.i.ddr ? el("small", {class: "dica-ram"}, `Sua placa-mãe usa DDR${sel.mb.i.ddr}.`) : null);
       // campo único: mostra a peça escolhida; ao clicar vira busca e abre a lista logo abaixo
-      const exemplo = ({cpu: "5600", mb: "B550", ram: "corsair 16gb", gpu: "4060", ssd: "1tb", psu: "650w bronze", gab: "rise", cooler: "water", monitor: "27 165hz", teclado: "mecânico", mouse: "logitech", headset: "hyperx"})[x.id] || "marca";
+      const exemplo = ({cpu: "5600", mb: "B550", ram: "corsair 16gb", gpu: "4060", ssd: "1tb", psu: "650w bronze", gab: "rise", cooler: "water", monitor: "aoc 27 180hz", teclado: "mecânico", mouse: "logitech", headset: "hyperx", webcam: "4k", microfone: "fifine"})[x.id] || "marca";
       const textoAtual = o ? textoOpcao(x, o) : "";
       const campo = el("input", {type: "text", class: "combo-campo", autocomplete: "off", role: "combobox", "aria-expanded": "false", "aria-label": "Escolher " + x.nome,
         placeholder: x.perif || !x.obrigatoria ? "— nenhum — (clique para escolher)" : "Escolha…", value: textoAtual});
