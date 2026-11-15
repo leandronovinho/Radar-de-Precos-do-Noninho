@@ -1243,6 +1243,7 @@ const PECAS = [
   {id: "gab", nome: "Gabinete", cat: "Gabinetes", obrigatoria: true},
   {id: "cooler", nome: "Cooler", cat: "Coolers", obrigatoria: false},
   {id: "monitor", nome: "Monitor", cat: "Monitores", perif: true},
+  ...[2, 3, 4, 5].map(k => ({id: "monitor" + k, nome: "Monitor " + k, cat: "Monitores", perif: true, extraMon: k})),
   {id: "teclado", nome: "Teclado", cat: "Teclados", perif: true},
   {id: "mouse", nome: "Mouse", cat: "Mouses", perif: true},
   {id: "headset", nome: "Headset", cat: "Headsets e fones", perif: true},
@@ -1258,7 +1259,9 @@ const SELO_FONTE = [
 const NOME_SELO = ["sem selo 80 Plus", "80 Plus White", "80 Plus Bronze", "80 Plus Gold", "80 Plus Platinum"];
 const capsNome = n => new Set([...n.replace(/\(?\d\s*x\s*\d+\s*gb\)?/g, " ").matchAll(/(?<![\d.,])(\d{1,4})\s*(gb|tb)\b/g)].map(m => m[1] + m[2])).size;
 const KIT = /\+|\bkit\s+(upgrade|gamer)|\bcombo\b|processador.*placa|placa.*processador/;
+const tipoBase = t => /^monitor\d$/.test(t) ? "monitor" : t;
 function infoPeca(p, tipo) {
+  tipo = tipoBase(tipo);
   const n = baixa(p), sp = p.spec || {}, r = {qualidade: MARCAS.bom.test(n) ? 2 : MARCAS.medio.test(n) ? 1 : 0};
   if (tipo === "gpu") { const g = GPU_INFO.find(([re]) => re.test(n)); if (!g) return null; r.perf = g[1]; r.watts = g[2]; r.qualidade = MARCAS.medio.test(n) ? 1 : 2; }
   if (tipo === "cpu") { const c = CPU_INFO.find(([re]) => re.test(n.replace(/core\s*/, ""))); if (!c) return null; [, r.perf, r.soq, r.watts, r.cooler] = c; r.qualidade = 2; }
@@ -1320,6 +1323,7 @@ function compativel(sel) {
 const precoDe = o => o ? o.p.u.preco * (o.qtd || 1) : 0;
 const chaveOp = o => o.p.id + (o.qtd ? "#" + o.qtd : "");
 function rotuloPeca(tipo, o) {
+  tipo = tipoBase(tipo);
   const i = o.i;
   if (tipo === "ram") return i.pentes >= 2 ? `${i.pentes} pentes de ${i.gb / i.pentes} GB = ${i.gb} GB · DDR${i.ddr} · ${i.pentes === 4 ? "4 slots" : "dual channel"}` : `1 pente de ${i.gb} GB · DDR${i.ddr}`;
   if (tipo === "monitor") return [i.pol ? i.pol.toLocaleString("pt-BR") + '"' : "", i.hz + " Hz", i.res].filter(Boolean).join(" · ");
@@ -1356,7 +1360,8 @@ const CONF_RAM = [["", "Todas"], ["1x8", "1 pente de 8 GB"], ["1x16", "1 pente d
   ["4x8", "4 pentes de 8 GB (32 GB)"], ["4x16", "4 pentes de 16 GB (64 GB)"], ["4x32", "4 pentes de 32 GB (128 GB)"]];
 const FAIXA_HZ = [["", "Todos"], ["60-75", "60 a 75 Hz"], ["100-120", "100 a 120 Hz"], ["144-170", "144 a 170 Hz"], ["180-180", "180 Hz"], ["200-240", "200 a 240 Hz"], ["241-999", "Acima de 240 Hz"]];
 const FAIXA_POL = [["", "Todos"], ["0-22.9", "Até 22\""], ["23-24.9", "23\" a 24\""], ["25-27.9", "25\" a 27\""], ["28-32.9", "28\" a 32\""], ["33-99", "34\" ou mais"]];
-let filtroMon = {hz: "", pol: "", res: ""}, qtdMonitor = 1;
+const filtroMon = {}; let qtdMonitor = 1;
+const monitoresAtivos = () => ["monitor", ...[2, 3, 4, 5].filter(k => k <= qtdMonitor).map(k => "monitor" + k)];
 const naFaixa = (v, f) => { if (!f) return true; const [a, b] = f.split("-").map(Number); return v >= a && v <= b; };
 const confRam = o => o.i.pentes + "x" + o.i.gb / o.i.pentes;
 let filtroRam = {conf: "", ddr: 0}; const filtroMarca = {};
@@ -1381,7 +1386,7 @@ function notaBusca(consulta, texto) {
   if (termos.every(parecido)) return 2;
   return 0;
 }
-const textoOpcao = (x, op) => `${reais(precoDe(op))} · ${op.qtd ? op.qtd + "× " : ""}${op.p.nome.slice(0, 64)}${op.p.u.loja ? " · " + op.p.u.loja : ""}${["ram", "psu", "monitor"].includes(x.id) && rotuloPeca(x.id, op) ? " · " + rotuloPeca(x.id, op) : ""}`;
+const textoOpcao = (x, op) => `${reais(precoDe(op))} · ${op.qtd ? op.qtd + "× " : ""}${op.p.nome.slice(0, 64)}${op.p.u.loja ? " · " + op.p.u.loja : ""}${["ram", "psu", "monitor"].includes(tipoBase(x.id)) && rotuloPeca(x.id, op) ? " · " + rotuloPeca(x.id, op) : ""}`;
 function historico7(o) {
   const desde = referencia - 7 * DIA, pts = o.p.serie.filter(s => s.data >= desde);
   if (!pts.length) return null;
@@ -1500,8 +1505,9 @@ function notaPC(sel) {
   if (boas >= pecas.length / 2) pros.push(`${boas} de ${pecas.length} peças estão com preço bom agora (Promoção top ou Compensa).`);
   if (caras) { nota -= .3 * caras; contras.push(`${caras} ${caras === 1 ? "peça está" : "peças estão"} acima do preço normal agora.`); }
   if (sel.ram && sel.ram.i.pentes === 4) contras.push("4 pentes de memória: confira se a placa-mãe tem 4 slots (muitas placas Micro-ATX de entrada têm só 2).");
-  if (sel.monitor && sel.monitor.qtd > 1) pros.push(`${sel.monitor.qtd} monitores: ótimo para trabalhar e jogar ao mesmo tempo. Confira se a placa de vídeo tem saídas suficientes.`);
-  const perif = ["monitor", "teclado", "mouse", "headset", "webcam", "microfone"].filter(t => sel[t]);
+  const nMon = Object.keys(sel).filter(t => /^monitor/.test(t)).length;
+  if (nMon > 1) pros.push(`${nMon} monitores: ótimo para trabalhar e jogar ao mesmo tempo. Confira se a placa de vídeo tem saídas suficientes.`);
+  const perif = ["monitor", "monitor2", "monitor3", "monitor4", "monitor5", "teclado", "mouse", "headset", "webcam", "microfone"].filter(t => sel[t]);
   if (perif.length) { const q = perif.filter(t => sel[t].i.qualidade === 2).length; if (q === perif.length) pros.push("Periféricos de marcas reconhecidas."); else if (perif.some(t => sel[t].i.qualidade === 0)) contras.push("Algum periférico é de marca pouco conhecida."); }
   if (sel.monitor && g && g.i.perf >= 115 && sel.monitor.i.hz < 144) contras.push("O monitor é de 60/75 Hz: a placa de vídeo aguenta um monitor de 144 Hz ou mais.");
   if (contras.length && nota > 9.5) nota = 9.5;
@@ -1513,8 +1519,8 @@ function salvarMinha() { try { localStorage.setItem("radar-meu-pc", JSON.stringi
 function lerMinha() {
   try { const s = JSON.parse(localStorage.getItem("radar-meu-pc") || "null"); if (!s) return null; const r = {};
     for (const [t, k] of Object.entries(s)) { const ops = opcoes(t); let o = ops.find(x => chaveOp(x) === k);
-      if (!o && t === "monitor") { const [id, q] = k.split("#"); const base = ops.find(x => x.p.id === id); if (base) { qtdMonitor = +q || 1; o = qtdMonitor > 1 ? {...base, qtd: qtdMonitor} : base; } }
-      if (o) r[t] = o; }
+      if (!o && /^monitor/.test(t)) o = ops.find(x => x.p.id === k.split("#")[0]);
+      if (o) { r[t] = o; const m = t.match(/^monitor(\d)$/); if (m) qtdMonitor = Math.max(qtdMonitor, +m[1]); } }
     return Object.keys(r).length ? r : null; } catch (e) { return null; }
 }
 function desenharMontar() {
@@ -1530,8 +1536,10 @@ function desenharMontar() {
     montagem = {...b, ...(comPerifericos ? perifericos(montarModo === "potente") : {})};
   } else if (!minhaMontagem) minhaMontagem = lerMinha() || {...montagem};
   const base = montarModo === "meu" ? minhaMontagem : montagem;
-  const sel = Object.fromEntries(Object.entries(base).filter(([t, o]) => o && (comPerifericos || !PECAS.find(x => x.id === t).perif))), {avisos, consumo} = compativel(sel), {nota, pros, contras, graves} = notaPC(sel), atencao = contras.filter(t => !graves.includes(t));
-  const linhas = PECAS.filter(x => !x.perif || comPerifericos).map(x => {
+  const sel = Object.fromEntries(Object.entries(base).filter(([t, o]) => { const x0 = PECAS.find(x => x.id === t);
+    return o && x0 && (comPerifericos || !x0.perif) && (!x0.extraMon || (montarModo === "meu" && x0.extraMon <= qtdMonitor)); })), {avisos, consumo} = compativel(sel), {nota, pros, contras, graves} = notaPC(sel), atencao = contras.filter(t => !graves.includes(t));
+  const linhas = PECAS.filter(x => (!x.perif || comPerifericos) && (!x.extraMon || (montarModo === "meu" && x.extraMon <= qtdMonitor))).map(x => {
+    const nomeLinha = x.id === "monitor" && montarModo === "meu" && qtdMonitor > 1 ? "Monitor 1" : x.nome;
     const o = sel[x.id];
     let escolha;
     if (montarModo === "meu") {
@@ -1539,27 +1547,27 @@ function desenharMontar() {
       // filtros: marca para todas as peças; memória tem também quantidade de pentes e tipo
       const marcas = [...new Set(todas.map(op => marcaDe(x.id, op)))].sort((a, b) => a === "Outras" ? 1 : b === "Outras" ? -1 : a.localeCompare(b));
       if (filtroMarca[x.id] && !marcas.includes(filtroMarca[x.id])) delete filtroMarca[x.id];
+      const fm = filtroMon[x.id] || (filtroMon[x.id] = {hz: "", pol: "", res: ""});
       const lista = todas.filter(op => (!filtroMarca[x.id] || marcaDe(x.id, op) === filtroMarca[x.id])
         && (x.id !== "ram" || ((!filtroRam.conf || confRam(op) === filtroRam.conf) && (!filtroRam.ddr || op.i.ddr === filtroRam.ddr)))
-        && (x.id !== "monitor" || (naFaixa(op.i.hz, filtroMon.hz) && naFaixa(op.i.pol, filtroMon.pol) && (!filtroMon.res || op.i.res === filtroMon.res))))
-        .map(op => x.id === "monitor" && qtdMonitor > 1 ? {...op, qtd: qtdMonitor} : op);
+        && (tipoBase(x.id) !== "monitor" || (naFaixa(op.i.hz, fm.hz) && naFaixa(op.i.pol, fm.pol) && (!fm.res || op.i.res === fm.res))));
       const seletor = (rotulo, valor, opts, mudar) => { const s2 = el("select", {class: "filtro-sel", "aria-label": rotulo, onchange: e => { mudar(e.target.value); desenharMontar(); }},
         ...opts.map(([v, t]) => el("option", {value: String(v)}, t))); s2.value = String(valor); return el("label", {class: "filtro-caixa"}, el("span", {class: "caps"}, rotulo), s2); };
       const marcaSel = seletor("Marca", filtroMarca[x.id] || "", [["", "Todas as marcas"], ...marcas.map(m => [m, m])], v => { if (v) filtroMarca[x.id] = v; else delete filtroMarca[x.id]; });
-      const extras = x.id === "monitor" ? el("div", {class: "filtro-linha"},
-        seletor("Quantos monitores", qtdMonitor, [1, 2, 3, 4, 5].map(q => [q, q === 1 ? "1 monitor" : q + " monitores"]), v => {
-          qtdMonitor = +v; if (minhaMontagem.monitor) { const b0 = {...minhaMontagem.monitor}; delete b0.qtd; minhaMontagem.monitor = qtdMonitor > 1 ? {...b0, qtd: qtdMonitor} : b0; salvarMinha(); } }),
-        seletor("Frequência", filtroMon.hz, FAIXA_HZ, v => { filtroMon.hz = v; }),
-        seletor("Tamanho", filtroMon.pol, FAIXA_POL, v => { filtroMon.pol = v; }),
-        seletor("Resolução", filtroMon.res, [["", "Todas"], ["Full HD", "Full HD"], ["QHD", "QHD / 2K"], ["4K", "4K"]], v => { filtroMon.res = v; }))
+      const extras = tipoBase(x.id) === "monitor" ? el("div", {class: "filtro-linha"},
+        x.id === "monitor" ? seletor("Quantos monitores", qtdMonitor, [1, 2, 3, 4, 5].map(q => [q, q === 1 ? "1 monitor" : q + " monitores"]), v => {
+          qtdMonitor = +v; for (const k of [2, 3, 4, 5]) if (k > qtdMonitor) delete minhaMontagem["monitor" + k]; salvarMinha(); }) : null,
+        seletor("Frequência", fm.hz, FAIXA_HZ, v => { fm.hz = v; }),
+        seletor("Tamanho", fm.pol, FAIXA_POL, v => { fm.pol = v; }),
+        seletor("Resolução", fm.res, [["", "Todas"], ["Full HD", "Full HD"], ["QHD", "QHD / 2K"], ["4K", "4K"]], v => { fm.res = v; }))
         : x.id !== "ram" ? null : el("div", {class: "filtro-linha"},
         seletor("Quantos pentes", filtroRam.conf, CONF_RAM.map(([v, t]) => [v, v ? t : "Todas as opções"]), v => { filtroRam.conf = v; }),
         seletor("Tipo", filtroRam.ddr, [[0, "DDR4 e DDR5"], [4, "Só DDR4"], [5, "Só DDR5"]], v => { filtroRam.ddr = +v; }),
         sel.mb && sel.mb.i.ddr ? el("small", {class: "dica-ram"}, `Sua placa-mãe usa DDR${sel.mb.i.ddr}.`) : null);
       // campo único: mostra a peça escolhida; ao clicar vira busca e abre a lista logo abaixo
-      const exemplo = ({cpu: "5600", mb: "B550", ram: "corsair 16gb", gpu: "4060", ssd: "1tb", psu: "650w bronze", gab: "rise", cooler: "water", monitor: "aoc 27 180hz", teclado: "mecânico", mouse: "logitech", headset: "hyperx", webcam: "4k", microfone: "fifine"})[x.id] || "marca";
+      const exemplo = ({cpu: "5600", mb: "B550", ram: "corsair 16gb", gpu: "4060", ssd: "1tb", psu: "650w bronze", gab: "rise", cooler: "water", monitor: "aoc 27 180hz", teclado: "mecânico", mouse: "logitech", headset: "hyperx", webcam: "4k", microfone: "fifine"})[tipoBase(x.id)] || "marca";
       const textoAtual = o ? textoOpcao(x, o) : "";
-      const campo = el("input", {type: "text", class: "combo-campo", autocomplete: "off", role: "combobox", "aria-expanded": "false", "aria-label": "Escolher " + x.nome,
+      const campo = el("input", {type: "text", class: "combo-campo", autocomplete: "off", role: "combobox", "aria-expanded": "false", "aria-label": "Escolher " + nomeLinha,
         placeholder: x.perif || !x.obrigatoria ? "— nenhum — (clique para escolher)" : "Escolha…", value: textoAtual});
       const listaEl = el("div", {class: "combo-lista", role: "listbox", hidden: true});
       let marcada = -1, itens = [];
@@ -1592,7 +1600,7 @@ function desenharMontar() {
         el("small", {class: "dica-ram"}, `${lista.length} ${lista.length === 1 ? "opção" : "opções"}${filtroMarca[x.id] ? " da " + filtroMarca[x.id] : ""}`));
     }
     return el("div", {class: "peca realce" + (o ? "" : " vazia-peca")},
-      el("span", {class: "caps peca-tipo"}, x.nome),
+      el("span", {class: "caps peca-tipo"}, nomeLinha),
       o ? el("a", {class: "peca-nome", href: "#p-" + o.p.id}, (o.qtd ? o.qtd + "× " : "") + o.p.nome) : el("span", {class: "peca-nome", style: "color:var(--suave)"}, x.id === "cooler" && sel.cpu && sel.cpu.i.cooler ? "não precisa (vem na caixa)" : "—"),
       escolha || null,
       el("span", {class: "peca-preco"}, o ? reais(precoDe(o)) : ""),
