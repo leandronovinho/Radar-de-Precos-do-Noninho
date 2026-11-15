@@ -275,7 +275,7 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
 .peca-tipo{grid-area:tipo;color:var(--neon)}
 .peca-nome{grid-area:nome;font-weight:700;color:var(--tinta);text-decoration:none;line-height:1.25;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 a.peca-nome:hover{color:var(--neon)}
-.peca select{grid-area:sel;width:100%;font-size:.85rem}
+.peca > select{grid-area:sel;width:100%;font-size:.85rem}
 .peca-preco{grid-area:preco;font-family:var(--titulo);font-weight:700;font-size:1.15rem;white-space:nowrap}
 .peca-info{grid-area:info;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.74rem;color:var(--suave)}
 .peca-info small{font-family:var(--mono)}
@@ -305,6 +305,21 @@ a.peca-nome:hover{color:var(--neon)}
 .dia7 small{color:var(--suave);margin-right:.25rem}
 .dia7.menor{border-color:var(--top);color:var(--top);font-weight:700}
 .faixa7{font-family:var(--mono);margin-left:.2rem}
+.escolha-box{grid-area:sel;display:flex;flex-direction:column;gap:.4rem;margin:.2rem 0}
+.escolha-box > select{width:100%;font-size:.85rem}
+.busca-peca{width:100%;font:inherit;font-size:.95rem;padding:.55rem .75rem;border:1.5px solid var(--neon);border-radius:.45rem;background:var(--area);color:var(--tinta)}
+.busca-peca:focus{outline:none;box-shadow:0 0 0 3px var(--brilho)}
+.filtro-ram{display:flex;flex-direction:column;gap:.35rem;padding:.55rem;border:1px dashed var(--linha);border-radius:.45rem}
+.linha-chips{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem}
+.linha-chips .caps{color:var(--suave);margin-right:.2rem}
+.chip-ram{font:inherit;font-size:.8rem;padding:.3rem .6rem;border:1px solid var(--linha);border-radius:999px;background:var(--papel);color:var(--tinta);cursor:pointer}
+.chip-ram:hover{border-color:var(--neon)}
+.chip-ram[aria-pressed="true"]{background:var(--neon);border-color:var(--neon);color:#04130a;font-weight:700}
+.linha-chips select{font-size:.85rem}
+.dica-ram{font-size:.75rem;color:var(--suave)}
+.orc-livre{display:inline-flex;align-items:center;gap:.3rem;margin-left:.4rem}
+.orc-livre input{width:7.5rem;font:inherit;padding:.35rem .5rem;border:1.5px solid var(--neon);border-radius:.4rem;background:var(--area);color:var(--tinta)}
+.orc-livre[hidden]{display:none}
 .perif-toggle{display:flex;align-items:center;gap:.9rem;margin-top:.9rem;padding:.9rem 1.2rem;border:2px solid var(--neon);border-radius:.7rem;background:var(--papel);cursor:pointer;
   box-shadow:0 0 18px var(--brilho);transition:background .2s,transform .15s;max-width:34rem}
 .perif-toggle:hover{transform:translateY(-1px)}
@@ -473,8 +488,9 @@ a.peca-nome:hover{color:var(--neon)}
         <select id="orcamento">
           <option value="0">Sem limite</option><option value="3000">R$ 3.000</option><option value="4000">R$ 4.000</option>
           <option value="5000">R$ 5.000</option><option value="6000">R$ 6.000</option><option value="8000">R$ 8.000</option>
-          <option value="10000">R$ 10.000</option><option value="15000">R$ 15.000</option>
+          <option value="10000">R$ 10.000</option><option value="15000">R$ 15.000</option><option value="livre">Outro valor…</option>
         </select>
+        <span class="orc-livre" id="orc-livre-box" hidden>R$ <input type="number" id="orcamento-livre" inputmode="numeric" min="500" step="100" placeholder="Ex.: 2700" aria-label="Quanto quer gastar"></span>
       </label>
     </div>
     <label class="perif-toggle"><input type="checkbox" id="montar-perif">
@@ -1264,6 +1280,15 @@ function rotuloPeca(tipo, o) {
   if (tipo === "cpu") return `${i.soq}${i.cooler ? " · cooler na caixa" : ""}`;
   return "";
 }
+const MARCAS_RAM = [["Corsair", /corsair/], ["Kingston Fury", /kingston|fury|\bkf\d/], ["XPG / Adata", /xpg|adata/], ["HyperX", /hyperx|\bhx\d/], ["Rise Mode", /rise mode/],
+  ["Redragon", /redragon/], ["Crucial", /crucial/], ["G.Skill", /g\.?skill/], ["TeamGroup", /teamgroup|t-force/], ["Patriot", /patriot/], ["Netac", /netac/], ["Hiksemi", /hiksemi/],
+  ["Next-Bit", /next-bit/], ["Gigabyte", /gigabyte|\bgbt\b/], ["Husky", /husky/], ["PCYes", /pcyes/], ["Juhor", /juhor/], ["Kingbank", /kingbank/], ["Puskill", /puskill/],
+  ["Kingfast", /kingfast/], ["Jazer", /jazer/], ["Samsung", /samsung/], ["SK Hynix", /hynix/]];
+const marcaRam = o => (MARCAS_RAM.find(([, re]) => re.test(baixa(o.p))) || ["Outras"])[0];
+const CONF_RAM = [["", "Todas"], ["1x8", "1 pente de 8 GB"], ["1x16", "1 pente de 16 GB"], ["1x32", "1 pente de 32 GB"], ["2x8", "2 pentes de 8 GB"], ["2x16", "2 pentes de 16 GB"], ["2x32", "2 pentes de 32 GB"]];
+const confRam = o => o.i.pentes + "x" + o.i.gb / o.i.pentes;
+let filtroRam = {conf: "", marca: "", ddr: 0}; const buscaPeca = {};
+const textoOpcao = (x, op) => `${reais(precoDe(op))} · ${op.qtd ? op.qtd + "× " : ""}${op.p.nome.slice(0, 64)}${op.p.u.loja ? " · " + op.p.u.loja : ""}${x.id === "ram" || x.id === "psu" ? " · " + rotuloPeca(x.id, op) : ""}`;
 function historico7(o) {
   const desde = referencia - 7 * DIA, pts = o.p.serie.filter(s => s.data >= desde);
   if (!pts.length) return null;
@@ -1388,11 +1413,36 @@ function desenharMontar() {
     const o = sel[x.id];
     let escolha;
     if (montarModo === "meu") {
-      const lista = opcoes(x.id).sort((a, b) => precoDe(a) - precoDe(b));
-      escolha = el("select", {"aria-label": x.nome}, el("option", {value: ""}, x.perif || !x.obrigatoria ? "— nenhum —" : "Escolha…"),
-        ...lista.map(op => el("option", {value: chaveOp(op)}, `${reais(precoDe(op))} · ${op.qtd ? op.qtd + "× " : ""}${op.p.nome.slice(0, 64)}${op.p.u.loja ? " · " + op.p.u.loja : ""}${x.id === "ram" || x.id === "psu" ? " · " + rotuloPeca(x.id, op) : ""}`)));
-      escolha.value = o ? chaveOp(o) : "";
-      escolha.addEventListener("change", () => { const it = lista.find(op => chaveOp(op) === escolha.value); if (it) minhaMontagem[x.id] = it; else delete minhaMontagem[x.id]; salvarMinha(); desenharMontar(); });
+      const todas = opcoes(x.id).sort((a, b) => precoDe(a) - precoDe(b));
+      let extras = null, lista = todas;
+      if (x.id === "ram") {
+        lista = todas.filter(op => (!filtroRam.conf || confRam(op) === filtroRam.conf) && (!filtroRam.marca || marcaRam(op) === filtroRam.marca) && (!filtroRam.ddr || op.i.ddr === filtroRam.ddr));
+        const marcas = [...new Set(todas.map(marcaRam))].sort((a, b) => a === "Outras" ? 1 : b === "Outras" ? -1 : a.localeCompare(b));
+        const chip = (ativo, txt, fn) => el("button", {type: "button", class: "chip-ram", "aria-pressed": String(ativo), onclick: fn}, txt);
+        const marcaSel = el("select", {"aria-label": "Marca da memória", onchange: e => { filtroRam.marca = e.target.value; desenharMontar(); }},
+          el("option", {value: ""}, "Todas as marcas"), ...marcas.map(m => el("option", {value: m}, m)));
+        marcaSel.value = filtroRam.marca;
+        extras = el("div", {class: "filtro-ram"},
+          el("div", {class: "linha-chips"}, el("span", {class: "caps"}, "Quantos pentes"), ...CONF_RAM.map(([v, t]) => chip(filtroRam.conf === v, t, () => { filtroRam.conf = v; desenharMontar(); }))),
+          el("div", {class: "linha-chips"}, el("span", {class: "caps"}, "Tipo"), ...[[0, "Todas"], [4, "DDR4"], [5, "DDR5"]].map(([v, t]) => chip(filtroRam.ddr === v, t, () => { filtroRam.ddr = v; desenharMontar(); })),
+            el("span", {class: "caps", style: "margin-left:.6rem"}, "Marca"), marcaSel),
+          sel.mb && sel.mb.i.ddr ? el("small", {class: "dica-ram"}, `Sua placa-mãe usa DDR${sel.mb.i.ddr}.`) : null,
+          el("small", {class: "dica-ram"}, `${lista.length} ${lista.length === 1 ? "opção" : "opções"}`));
+      }
+      const caixaSel = el("select", {"aria-label": x.nome});
+      const busca = el("input", {type: "search", class: "busca-peca", placeholder: `🔍 Procurar ${x.nome.toLowerCase()}… (ex.: ${({cpu: "5600", mb: "B550", ram: "corsair 16gb", gpu: "4060", ssd: "1tb", psu: "650w bronze", gab: "rise", cooler: "water", monitor: "27 165hz", teclado: "mecânico", mouse: "logitech", headset: "hyperx"})[x.id] || "marca"})`, "aria-label": "Procurar " + x.nome, value: buscaPeca[x.id] || ""});
+      const preencher = () => {
+        const termos = semAcento(busca.value).split(/\s+/).filter(Boolean);
+        const achadas = lista.filter(op => { const t = semAcento(textoOpcao(x, op)); return termos.every(w => t.includes(w)); });
+        if (o && !achadas.some(op => chaveOp(op) === chaveOp(o))) achadas.unshift(o);
+        caixaSel.replaceChildren(el("option", {value: ""}, termos.length && !achadas.length ? "Nada encontrado" : x.perif || !x.obrigatoria ? "— nenhum —" : "Escolha…"),
+          ...achadas.map(op => el("option", {value: chaveOp(op)}, textoOpcao(x, op))));
+        caixaSel.value = o ? chaveOp(o) : "";
+      };
+      preencher();
+      busca.addEventListener("input", () => { buscaPeca[x.id] = busca.value; preencher(); });
+      caixaSel.addEventListener("change", () => { const it = todas.find(op => chaveOp(op) === caixaSel.value); if (it) minhaMontagem[x.id] = it; else delete minhaMontagem[x.id]; salvarMinha(); desenharMontar(); });
+      escolha = el("div", {class: "escolha-box"}, extras, busca, caixaSel);
     }
     return el("div", {class: "peca realce" + (o ? "" : " vazia-peca")},
       el("span", {class: "caps peca-tipo"}, x.nome),
@@ -1422,7 +1472,13 @@ function desenharMontar() {
         el("p", {class: "aviso-pc"}, "Preços das ofertas postadas nos canais nesta semana. Confira o valor e a compatibilidade na loja antes de comprar."))));
 }
 
-$("orcamento").addEventListener("change", () => { orcamento = +$("orcamento").value; desenharMontar(); });
+$("orcamento").addEventListener("change", () => {
+  const livre = $("orcamento").value === "livre"; $("orc-livre-box").hidden = !livre;
+  if (livre) { $("orcamento-livre").focus(); orcamento = +$("orcamento-livre").value || 0; } else orcamento = +$("orcamento").value;
+  desenharMontar();
+});
+let tempoOrc;
+$("orcamento-livre").addEventListener("input", () => { clearTimeout(tempoOrc); tempoOrc = setTimeout(() => { const v = +$("orcamento-livre").value; orcamento = v >= 500 ? v : 0; desenharMontar(); }, 600); });
 $("montar-perif").addEventListener("change", () => { comPerifericos = $("montar-perif").checked; desenharMontar(); });
 
 /* ---------- rotas ---------- */
