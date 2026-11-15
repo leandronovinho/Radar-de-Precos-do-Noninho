@@ -265,6 +265,38 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
 .alerta-ativo{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;color:var(--neon)}
 .sino{color:var(--neon);font-size:.8rem;margin-right:.3rem}
 
+/* montar meu PC */
+.montar-grade{display:grid;grid-template-columns:minmax(0,1fr) 19rem;gap:.8rem;margin-top:1.1rem;align-items:start}
+@media (max-width:60rem){.montar-grade{grid-template-columns:1fr}}
+.pecas{display:flex;flex-direction:column;gap:.45rem}
+.peca{display:grid;grid-template-columns:8.5rem minmax(0,1fr) auto;grid-template-areas:"tipo nome preco" "tipo info info";gap:.2rem .8rem;align-items:center;
+  border:1px solid var(--linha);background:var(--papel);border-radius:.5rem;padding:.65rem .85rem}
+.peca:has(select){grid-template-areas:"tipo nome preco" "tipo sel sel" "tipo info info"}
+.peca-tipo{grid-area:tipo;color:var(--neon)}
+.peca-nome{grid-area:nome;font-weight:700;color:var(--tinta);text-decoration:none;line-height:1.25;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+a.peca-nome:hover{color:var(--neon)}
+.peca select{grid-area:sel;width:100%;font-size:.85rem}
+.peca-preco{grid-area:preco;font-family:var(--titulo);font-weight:700;font-size:1.15rem;white-space:nowrap}
+.peca-info{grid-area:info;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.74rem;color:var(--suave)}
+.peca-info small{font-family:var(--mono)}
+.peca-info a{color:var(--neon);font-weight:600}
+.vazia-peca{opacity:.7}
+@media (max-width:40rem){.peca{grid-template-columns:1fr auto;grid-template-areas:"tipo preco" "nome nome" "info info"}.peca:has(select){grid-template-areas:"tipo preco" "nome nome" "sel sel" "info info"}}
+.resumo-pc{position:sticky;top:7rem;border:1px solid var(--neon);background:linear-gradient(to bottom,var(--area),var(--papel) 40%);border-radius:.6rem;padding:1rem}
+.total-pc{display:block;font-family:var(--titulo);font-size:2.1rem;line-height:1.1;margin:.2rem 0 .3rem;color:var(--neon);text-shadow:0 0 18px var(--brilho)}
+.sub-total{margin:0 0 .6rem;font-size:.85rem;color:var(--suave)}
+.nota-pc{display:flex;align-items:baseline;gap:.35rem;margin:.6rem 0 .2rem;color:var(--cor)}
+.nota-pc .caps{color:var(--suave);margin-right:.3rem}
+.nota-pc b{font-family:var(--titulo);font-size:2.6rem;line-height:1;text-shadow:0 0 18px color-mix(in srgb,var(--cor) 45%,transparent)}
+.nota-pc small{font-family:var(--mono);color:var(--suave)}
+.consumo{margin:.2rem 0 .6rem;font-family:var(--mono);font-size:.75rem;color:var(--suave)}
+.resumo-pc ul{margin:.4rem 0;padding-left:1.1rem;font-size:.85rem;line-height:1.4}
+.resumo-pc li{margin:.25rem 0}
+.pros li::marker{content:"✓ ";color:var(--top)}
+.contras li::marker{content:"! ";color:var(--razoavel);font-weight:700}
+.aviso-pc{margin:.7rem 0 0;font-size:.72rem;color:var(--suave)}
+#v-montar .filtros label input{accent-color:var(--neon)}
+
 /* como funciona */
 .guia{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin-top:1rem}
 @media (max-width:44rem){.guia{grid-template-columns:1fr}}
@@ -340,6 +372,7 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
       <a href="#top" data-aba="top">Promoções top</a>
       <a href="#quedas" data-aba="quedas">Maiores quedas</a>
       <a href="#comparar" data-aba="comparar">Comparador</a>
+      <a href="#montar" data-aba="montar">Montar meu PC</a>
       <a href="#como" data-aba="como">Como funciona</a>
       <a id="link-robo" href="#como" hidden>🔔 Alertas</a>
     </nav>
@@ -406,6 +439,26 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
     <div class="filtros"><label class="ordem">Categoria <select id="comp-cat"></select></label></div>
     <div class="escolha" id="vagas"></div>
     <div id="comp-saida"></div>
+  </section>
+
+  <section id="v-montar" class="vista" hidden>
+    <div class="cabeca">
+      <p class="olho caps">Com as ofertas desta semana</p>
+      <h1>Montar meu PC</h1>
+      <p>Monte um PC só com peças em oferta nos canais. Veja o PC de melhor custo-benefício, o mais potente, ou escolha peça por peça: o radar soma tudo, confere se as peças encaixam e dá uma nota de 0 a 10.</p>
+    </div>
+    <div class="filtros">
+      <div class="seg" id="montar-modos" role="group" aria-label="Tipo de montagem"></div>
+      <label class="ordem" id="montar-orcamento">Orçamento até
+        <select id="orcamento">
+          <option value="0">Sem limite</option><option value="3000">R$ 3.000</option><option value="4000">R$ 4.000</option>
+          <option value="5000">R$ 5.000</option><option value="6000">R$ 6.000</option><option value="8000">R$ 8.000</option>
+          <option value="10000">R$ 10.000</option><option value="15000">R$ 15.000</option>
+        </select>
+      </label>
+      <label class="ordem"><input type="checkbox" id="montar-perif"> Incluir periféricos (monitor, teclado, mouse, headset)</label>
+    </div>
+    <div id="montar-conteudo"></div>
   </section>
 
   <section id="v-como" class="vista" hidden>
@@ -1054,13 +1107,268 @@ function desenharComparador() {
   grafico(caixaGraf, sel.map((p, i) => ({p, cor: CORES_SERIE[i]})), ini, fim, {});
 }
 
+/* ---------- Montar meu PC ---------- */
+// Desempenho relativo em jogos (RTX 4060 = 100) e consumo aproximado em watts.
+const GPU_INFO = [
+  [/rtx\s*5090/, 370, 575], [/rtx\s*4090/, 300, 450], [/rtx\s*5080/, 255, 360], [/rtx\s*4080\s*super/, 235, 320], [/rtx\s*4080/, 230, 320],
+  [/rtx\s*5070\s*ti/, 220, 300], [/rtx\s*4070\s*ti\s*super/, 195, 285], [/rtx\s*4070\s*ti/, 180, 285], [/rtx\s*5070/, 175, 250],
+  [/rtx\s*4070\s*super/, 170, 220], [/rtx\s*4070/, 150, 200], [/rtx\s*5060\s*ti/, 140, 180], [/rtx\s*4060\s*ti/, 120, 165],
+  [/rtx\s*5060/, 120, 145], [/rtx\s*4060/, 100, 115], [/rtx\s*5050/, 90, 130], [/rtx\s*3090/, 175, 350], [/rtx\s*3080\s*ti/, 160, 350],
+  [/rtx\s*3080/, 140, 320], [/rtx\s*3070\s*ti/, 120, 290], [/rtx\s*3070/, 110, 220], [/rtx\s*3060\s*ti/, 100, 200], [/rtx\s*3060/, 80, 170],
+  [/rtx\s*3050/, 55, 130], [/rtx\s*2080/, 105, 225], [/rtx\s*2070/, 85, 175], [/rtx\s*2060/, 65, 160],
+  [/gtx\s*1660/, 55, 125], [/gtx\s*1650/, 40, 75], [/gtx\s*1050/, 25, 75],
+  [/rx\s*9070\s*xt/, 215, 304], [/rx\s*9070\s*gre/, 165, 220], [/rx\s*9070/, 195, 220], [/rx\s*9060\s*xt/, 135, 160], [/rx\s*9060/, 115, 135], [/rx\s*9050/, 95, 120],
+  [/rx\s*7900\s*xtx/, 225, 355], [/rx\s*7900\s*xt/, 195, 315], [/rx\s*7900\s*gre/, 160, 260], [/rx\s*7800\s*xt/, 145, 263],
+  [/rx\s*7700\s*xt/, 125, 245], [/rx\s*7600\s*xt/, 100, 190], [/rx\s*7600/, 95, 165], [/rx\s*6950\s*xt/, 165, 335], [/rx\s*6900\s*xt/, 155, 300],
+  [/rx\s*6800\s*xt/, 145, 300], [/rx\s*6800/, 125, 250], [/rx\s*6750\s*xt/, 105, 250], [/rx\s*6700\s*xt/, 100, 230], [/rx\s*6700/, 92, 220],
+  [/rx\s*6650\s*xt/, 85, 180], [/rx\s*6600\s*xt/, 82, 160], [/rx\s*6600/, 75, 132], [/rx\s*6500\s*xt/, 40, 107], [/rx\s*6400/, 32, 53],
+  [/rx\s*5700\s*xt/, 80, 225], [/rx\s*5600\s*xt/, 65, 150], [/rx\s*5500\s*xt/, 45, 130], [/rx\s*580/, 40, 185], [/rx\s*570/, 35, 150],
+  [/arc\s*b580/, 105, 190], [/arc\s*b570/, 92, 150], [/arc\s*a770/, 95, 225], [/arc\s*a750/, 85, 225], [/arc\s*a380/, 35, 75],
+];
+// Desempenho em jogos (Ryzen 5 5600 = 100), soquete, consumo e se vem com cooler na caixa.
+const CPU_INFO = [
+  [/9950x3d/, 175, "AM5", 170, 0], [/9900x3d/, 172, "AM5", 120, 0], [/9800x3d/, 180, "AM5", 120, 0], [/7950x3d/, 165, "AM5", 120, 0],
+  [/7900x3d/, 158, "AM5", 120, 0], [/7800x3d/, 165, "AM5", 120, 0], [/9950x/, 145, "AM5", 170, 0], [/9900x/, 142, "AM5", 120, 0],
+  [/9700x/, 140, "AM5", 65, 0], [/9600x/, 135, "AM5", 65, 0], [/ryzen\s*5\s*9600\b/, 132, "AM5", 65, 1], [/7950x/, 140, "AM5", 170, 0],
+  [/7900x/, 137, "AM5", 170, 0], [/ryzen\s*9\s*7900\b/, 133, "AM5", 65, 1], [/7700x/, 132, "AM5", 105, 0], [/ryzen\s*7\s*7700\b/, 130, "AM5", 65, 1],
+  [/7600x/, 128, "AM5", 105, 0], [/ryzen\s*5\s*7600\b/, 125, "AM5", 65, 1], [/8700g/, 115, "AM5", 65, 1], [/8700f/, 118, "AM5", 65, 1],
+  [/8600g/, 110, "AM5", 65, 1], [/8400f/, 108, "AM5", 65, 1], [/8500g/, 100, "AM5", 65, 1],
+  [/5800x3d/, 130, "AM4", 105, 0], [/5700x3d/, 125, "AM4", 105, 0], [/5600x3d/, 123, "AM4", 105, 0], [/5500x3d/, 118, "AM4", 105, 0],
+  [/5950x/, 115, "AM4", 105, 0], [/5900xt/, 115, "AM4", 105, 0], [/5900x/, 113, "AM4", 105, 0], [/5800xt/, 111, "AM4", 105, 0],
+  [/5800x/, 110, "AM4", 105, 0], [/5700x/, 108, "AM4", 65, 0], [/ryzen\s*7\s*5700\b/, 102, "AM4", 65, 1], [/5700g/, 92, "AM4", 65, 1],
+  [/5600xt/, 105, "AM4", 65, 1], [/5600x/, 103, "AM4", 65, 1], [/5600gt/, 90, "AM4", 65, 1], [/5600g/, 86, "AM4", 65, 1],
+  [/ryzen\s*5\s*5600t\b/, 100, "AM4", 65, 1], [/ryzen\s*5\s*5600\b/, 100, "AM4", 65, 1], [/5500x3d/, 118, "AM4", 105, 0],
+  [/ryzen\s*5\s*5500\b/, 86, "AM4", 65, 1], [/5500f/, 84, "AM4", 65, 1], [/4600g/, 72, "AM4", 65, 1], [/ryzen\s*5\s*4500\b/, 75, "AM4", 65, 1],
+  [/3600/, 82, "AM4", 65, 1], [/ultra\s*9\s*285/, 145, "LGA1851", 125, 0], [/ultra\s*7\s*265/, 140, "LGA1851", 125, 0],
+  [/ultra\s*5\s*245/, 130, "LGA1851", 125, 0], [/ultra\s*5\s*225/, 115, "LGA1851", 65, 1],
+  [/i9-14900/, 152, "LGA1700", 125, 0], [/i9-13900/, 150, "LGA1700", 125, 0], [/i9-12900/, 133, "LGA1700", 125, 0],
+  [/i7-14700/, 145, "LGA1700", 125, 0], [/i7-13700/, 140, "LGA1700", 125, 0], [/i7-12700/, 125, "LGA1700", 125, 0],
+  [/i5-14600/, 133, "LGA1700", 125, 0], [/i5-13600/, 130, "LGA1700", 125, 0], [/i5-12600/, 118, "LGA1700", 125, 0],
+  [/i5-14400/, 112, "LGA1700", 65, 1], [/i5-13400/, 110, "LGA1700", 65, 1], [/i5-12400/, 105, "LGA1700", 65, 1],
+  [/i3-14100/, 92, "LGA1700", 60, 1], [/i3-13100/, 90, "LGA1700", 60, 1], [/i3-12100/, 88, "LGA1700", 60, 1],
+  [/i5-11400/, 88, "LGA1200", 65, 1], [/i5-10400/, 80, "LGA1200", 65, 1], [/i3-10100/, 65, "LGA1200", 65, 1],
+];
+const SOQUETE_PLACA = [
+  [/\b(a320|b350|b450|x470|a520|b550|x570)/, "AM4"], [/\b(a620|b650e?|x670e?|b840|b850|x870e?)/, "AM5"],
+  [/\b(h610|b660|h670|z690|b760|h770|z790)/, "LGA1700"], [/\b(h810|b860|z890)/, "LGA1851"], [/\b(h410|b460|h470|z490|h510|b560|z590)/, "LGA1200"],
+];
+const MARCAS = {
+  bom: /\b(asus|msi|gigabyte|aorus|asrock|corsair|seasonic|evga|be quiet|cooler master|xpg|adata|super flower|lian li|nzxt|thermaltake|kingston|fury|crucial|g\.?skill|teamgroup|t-force|patriot|samsung|western digital|wd|lexar|kioxia|solidigm|sk hynix|logitech|razer|hyperx|steelseries|lg|dell|benq|philips|aoc|acer|sapphire|powercolor|xfx|zotac|pny|galax|inno3d|palit|deepcool|thermalright|noctua|arctic|montech|lenovo|amd|intel|nvidia)\b/,
+  medio: /\b(redragon|rise mode|gamemax|pcyes|mancer|aerocool|husky|netac|biostar|attack shark|machenike|aula|havit|fortrek|kalkan|mach1|tgt|hayom|duex|pichau|ninja|superframe|husky|cusu|lexar|ocpc|bluecase|k-mex|c3tech|soyo|colorfire|jazer)\b/,
+};
+const PECAS = [
+  {id: "cpu", nome: "Processador", cat: "Processadores", obrigatoria: true},
+  {id: "mb", nome: "Placa-mãe", cat: "Placas-mãe", obrigatoria: true},
+  {id: "ram", nome: "Memória RAM", cat: "Memória RAM", obrigatoria: true},
+  {id: "gpu", nome: "Placa de vídeo", cat: "Placas de vídeo", obrigatoria: false},
+  {id: "ssd", nome: "SSD", cat: "SSD e HDs", obrigatoria: true},
+  {id: "psu", nome: "Fonte", cat: "Fontes", obrigatoria: true},
+  {id: "gab", nome: "Gabinete", cat: "Gabinetes", obrigatoria: true},
+  {id: "cooler", nome: "Cooler", cat: "Coolers", obrigatoria: false},
+  {id: "monitor", nome: "Monitor", cat: "Monitores", perif: true},
+  {id: "teclado", nome: "Teclado", cat: "Teclados", perif: true},
+  {id: "mouse", nome: "Mouse", cat: "Mouses", perif: true},
+  {id: "headset", nome: "Headset", cat: "Headsets e fones", perif: true},
+];
+const baixa = p => semAcento(p.nome);
+const capsNome = n => new Set([...n.replace(/\(?\d\s*x\s*\d+\s*gb\)?/g, " ").matchAll(/(?<![\d.,])(\d{1,4})\s*(gb|tb)\b/g)].map(m => m[1] + m[2])).size;
+const KIT = /\+|\bkit\s+(upgrade|gamer)|\bcombo\b|processador.*placa|placa.*processador/;
+function infoPeca(p, tipo) {
+  const n = baixa(p), sp = p.spec || {}, r = {qualidade: MARCAS.bom.test(n) ? 2 : MARCAS.medio.test(n) ? 1 : 0};
+  if (tipo === "gpu") { const g = GPU_INFO.find(([re]) => re.test(n)); if (!g) return null; r.perf = g[1]; r.watts = g[2]; r.qualidade = 2; }
+  if (tipo === "cpu") { const c = CPU_INFO.find(([re]) => re.test(n.replace(/core\s*/, ""))); if (!c) return null; [, r.perf, r.soq, r.watts, r.cooler] = c; r.qualidade = 2; }
+  if (tipo === "mb") { if (/processador|ryzen|core i\d/.test(n)) return null; const sq = SOQUETE_PLACA.find(([re]) => re.test(n)); if (!sq) return null; r.soq = sq[1];
+    r.ddr = /ddr5|\bd5\b/.test(n) ? 5 : /ddr4|\bd4\b/.test(n) ? 4 : r.soq === "AM4" || r.soq === "LGA1200" ? 4 : r.soq === "AM5" || r.soq === "LGA1851" ? 5 : 0;
+    r.wifi = /wi-?fi/.test(n); r.chip = /\b(x870e?|x670e?|z890|z790|z690|x570)/.test(n) ? 3 : /\b(b850|b650e?|b760|b660|b860|b550)/.test(n) ? 2 : 1; }
+  if (tipo === "ram") { if (!/ddr[45]/.test(n) || /notebook|sodimm|so-dimm|usad|ecc|servidor|impact|\bhx\d+s|\bkvr\d+s|\bsdram\b/.test(n) || capsNome(n) > 1) return null;
+    r.ddr = /ddr5/.test(n) ? 5 : 4; r.gb = sp.capacidade || 0; if (!r.gb || r.gb > 128) return null; r.kit = /\d\s*x\s*\d+\s*gb/.test(n); }
+  if (tipo === "ssd") { if (!/ssd|nvme|m\.?2/.test(n) || /externo|portatil|portátil|case|gaveta|adaptador/.test(n) || capsNome(n) > 1) return null;
+    r.gb = sp.capacidade || 0; if (r.gb < 240 || r.gb > 8000) return null; r.nvme = /nvme|m\.?2/.test(n); }
+  if (tipo === "psu") { if (!/fonte/.test(n) || /notebook|carregador|nobreak|externa/.test(n)) return null; r.watts = sp.watts || 0; if (r.watts < 400 || r.watts > 1650) return null;
+    r.selo = /titanium|platinum/.test(n) ? 4 : /gold/.test(n) ? 3 : /silver/.test(n) ? 2.5 : /bronze/.test(n) ? 2 : /white|standard|80\s*plus/.test(n) ? 1 : 0; }
+  if (tipo === "gab") { if (!/(^|\s)gabinete\b/.test(n) || /^(kit|ventoinha|filtro|cabo)|filtro de linha|tomada|regua|ventoinhas? para|suporte|para gabinete/.test(n)) return null; }
+  if (tipo === "cooler") { if (!/cooler|water/.test(n) || /notebook|base|suporte|pasta/.test(n)) return null; r.water = /water/.test(n); }
+  if (tipo === "monitor") { if (!/monitor/.test(n)) return null; r.hz = sp.hz || 60; r.pol = sp.tela || 0; }
+  if (["teclado", "mouse", "headset"].includes(tipo)) { if (/kit|combo/.test(n) && tipo !== "teclado") return null; }
+  if (tipo !== "mb" && tipo !== "cpu" && KIT.test(n) && !["teclado", "mouse", "headset"].includes(tipo)) return null;
+  return r;
+}
+function opcoes(tipo, dias = 7) {
+  const peca = PECAS.find(x => x.id === tipo);
+  const lista = produtos.filter(p => p.cat === peca.cat && referencia - p.u.data <= dias * DIA)
+    .map(p => ({p, i: infoPeca(p, tipo)})).filter(o => o.i);
+  return lista.length || dias > 7 ? lista : opcoes(tipo, 15);
+}
+function videoIntegrado(p) {
+  const n = baixa(p).replace(/core\s*/, "");
+  if (/\d{4}gt?\b/.test(n) && /ryzen/.test(n)) return true;                       // Ryzen 5600G, 8700G...
+  if (/ryzen\s*\d\s*[79]\d{3}(x3d|x)?\b/.test(n)) return true;                  // Ryzen 7000 e 9000 (menos os F)
+  if (/(i[3579]-\d{4,5}|ultra\s*\d\s*\d{3})k?\b/.test(n) && !/\d(kf|f)\b/.test(n)) return true;  // Intel sem "F"
+  return false;
+}
+function compativel(sel) {
+  const avisos = [], c = sel.cpu, m = sel.mb, r = sel.ram, g = sel.gpu, f = sel.psu;
+  if (c && m && c.i.soq !== m.i.soq) avisos.push(`O processador é ${c.i.soq} e a placa-mãe é ${m.i.soq}: não encaixam.`);
+  if (m && r && m.i.ddr && m.i.ddr !== r.i.ddr) avisos.push(`A placa-mãe usa DDR${m.i.ddr} e a memória é DDR${r.i.ddr}.`);
+  if (m && r && !m.i.ddr) avisos.push("O anúncio da placa-mãe não diz se ela é DDR4 ou DDR5: confira antes de comprar a memória.");
+  const consumo = (c ? c.i.watts : 90) + (g ? g.i.watts : 0) + 90;
+  if (f && f.i.watts < consumo * 1.2) avisos.push(`A fonte de ${f.i.watts}W é fraca: para estas peças, use pelo menos ${Math.ceil(consumo * 1.2 / 50) * 50}W.`);
+  if (c && !g && !videoIntegrado(c.p)) avisos.push("Este processador não tem vídeo integrado: sem placa de vídeo, o PC não dá imagem.");
+  if (c && !c.i.cooler && !sel.cooler) avisos.push("Este processador não vem com cooler na caixa: inclua um cooler.");
+  return {avisos, consumo};
+}
+const precoDe = o => o ? o.p.u.preco : 0;
+function montarAuto(modo, orcamento) {
+  const op = Object.fromEntries(PECAS.map(x => [x.id, opcoes(x.id)]));
+  const barato = (lista, filtro) => lista.filter(filtro).sort((a, b) => precoDe(a) - precoDe(b) || b.i.qualidade - a.i.qualidade)[0];
+  const melhorValor = (lista, filtro, nota) => lista.filter(filtro).sort((a, b) => nota(b) / precoDe(b) - nota(a) / precoDe(a))[0];
+  const complementos = (cpu, gpu, potente) => {
+    const ssd = potente ? op.ssd.filter(o => o.i.nvme && o.i.gb >= 1000).sort((a, b) => b.i.qualidade - a.i.qualidade || precoDe(a) - precoDe(b))[0] || barato(op.ssd, o => o.i.nvme)
+      : melhorValor(op.ssd, o => o.i.nvme && o.i.gb >= 480, o => Math.min(o.i.gb, 1000) * (1 + o.i.qualidade * .15)) || barato(op.ssd, () => true);
+    const mbs = op.mb.filter(o => o.i.soq === cpu.i.soq && o.i.ddr);
+    let melhor = null;
+    for (const mb of mbs) {
+      const rams = op.ram.filter(o => !mb.i.ddr || o.i.ddr === mb.i.ddr);
+      const ram = potente ? rams.filter(o => o.i.gb >= 32).sort((a, b) => b.i.qualidade - a.i.qualidade || precoDe(a) - precoDe(b))[0] || rams.sort((a, b) => b.i.gb - a.i.gb)[0]
+        : melhorValor(rams, o => o.i.gb >= 16, o => Math.min(o.i.gb, 32) * (1 + o.i.qualidade * .2)) || barato(rams, () => true);
+      if (!ram) continue;
+      const custo = precoDe(mb) * (potente ? .6 : 1) - mb.i.qualidade * (potente ? 120 : 25) - (potente ? mb.i.chip * 250 : (mb.i.chip >= 2 ? 40 : 0)) + precoDe(ram);
+      if (!melhor || custo < melhor.custo) melhor = {mb, ram, custo};
+    }
+    if (!melhor || !ssd) return null;
+    const consumo = cpu.i.watts + (gpu ? gpu.i.watts : 0) + 90;
+    let psus = op.psu.filter(o => o.i.watts >= consumo * (potente ? 1.4 : 1.25) && o.i.selo >= (potente ? 3 : 1));
+    if (!psus.length) psus = op.psu.filter(o => o.i.watts >= consumo * 1.2);
+    const psu = potente ? psus.sort((a, b) => b.i.qualidade - a.i.qualidade || precoDe(a) - precoDe(b))[0] : melhorValor(psus, () => true, o => 1 + o.i.qualidade * .35 + o.i.selo * .1);
+    const gab = potente ? op.gab.sort((a, b) => b.i.qualidade - a.i.qualidade || precoDe(a) - precoDe(b))[0] : melhorValor(op.gab, () => true, o => 1 + o.i.qualidade * .3);
+    const cooler = cpu.i.cooler ? null : (potente ? op.cooler.filter(o => o.i.water).sort((a, b) => b.i.qualidade - a.i.qualidade || precoDe(a) - precoDe(b))[0] : null)
+      || melhorValor(op.cooler, o => !o.i.water, o => 1 + o.i.qualidade * .3);
+    if (!psu || !gab || (!cpu.i.cooler && !cooler)) return null;
+    return {cpu, mb: melhor.mb, ram: melhor.ram, gpu, ssd, psu, gab, cooler};
+  };
+  const total = b => Object.values(b).reduce((s, o) => s + precoDe(o), 0);
+  const perf = b => (b.gpu ? b.gpu.i.perf : 20) * .7 + b.cpu.i.perf * .3;
+  let melhor = null;
+  const cpus = op.cpu, gpus = op.gpu;
+  if (modo === "potente") {
+    const topG = [...gpus].sort((a, b) => b.i.perf - a.i.perf || precoDe(a) - precoDe(b)).slice(0, 4);
+    const topC = [...cpus].sort((a, b) => b.i.perf - a.i.perf || precoDe(a) - precoDe(b)).slice(0, 6);
+    for (const g of topG) for (const c of topC) { const b = complementos(c, g, true); if (b && (!melhor || perf(b) > perf(melhor) || (perf(b) === perf(melhor) && total(b) < total(melhor)))) melhor = b; }
+  } else {
+    for (const g of gpus.filter(o => o.i.perf >= 90)) for (const c of cpus.filter(o => o.i.perf >= 95)) {
+      const r = g.i.perf / c.i.perf; if (r > 1.8 || r < .7) continue;  // evita gargalo
+      const b = complementos(c, g, false); if (!b) continue;
+      const t = total(b); if (orcamento && t > orcamento) continue;
+      const nota = orcamento ? perf(b) - t / 1e5 : perf(b) / Math.pow(t, .85);
+      if (!melhor || nota > melhor.nota) melhor = {...b, nota};
+    }
+    if (melhor) delete melhor.nota;
+  }
+  return melhor;
+}
+function perifericos(potente) {
+  const res = {};
+  for (const t of ["monitor", "teclado", "mouse", "headset"]) {
+    const lista = opcoes(t);
+    const nota = o => (1 + o.i.qualidade * .35) * (o.p.v === "top" ? 1.25 : o.p.v === "compensa" ? 1.1 : o.p.v === "caro" ? .85 : 1)
+      * (t === "monitor" ? Math.min(o.i.hz, 240) / 144 * (o.i.pol >= 27 ? 1.15 : 1) : 1);
+    res[t] = (potente ? lista.filter(o => o.i.qualidade === 2).sort((a, b) => nota(b) - nota(a))[0] : null) || lista.sort((a, b) => nota(b) / Math.sqrt(precoDe(b)) - nota(a) / Math.sqrt(precoDe(a)))[0];
+  }
+  return res;
+}
+function notaPC(sel) {
+  const pros = [], contras = [], {avisos} = compativel(sel);
+  let nota = 10;
+  if (avisos.length) { nota -= 2.5 * avisos.length; contras.push(...avisos); }
+  const c = sel.cpu, g = sel.gpu;
+  if (c && g) {
+    const r = g.i.perf / c.i.perf;
+    if (r > 1.9) { nota -= 1.2; contras.push("O processador é fraco para essa placa de vídeo: ele vai segurar o desempenho (gargalo)."); }
+    else if (r < .55) { nota -= .8; contras.push("A placa de vídeo é fraca perto do processador: vale investir mais nela."); }
+    else pros.push("Processador e placa de vídeo bem equilibrados.");
+    pros.push(g.i.perf >= 170 ? "Roda jogos pesados em 1440p no alto, e muitos em 4K." : g.i.perf >= 115 ? "Roda jogos atuais em 1080p no alto e muitos em 1440p." : g.i.perf >= 85 ? "Roda jogos atuais em 1080p no médio/alto." : "Bom para jogos leves e e-sports.");
+  } else if (c && !g) { nota -= 1.5; contras.push("Sem placa de vídeo: bom para trabalho e jogos leves, fraco para jogos atuais."); }
+  if (sel.ram) {
+    if (sel.ram.i.gb < 16) { nota -= 1; contras.push(`Só ${sel.ram.i.gb} GB de memória: o ideal hoje é 16 GB ou mais.`); }
+    else if (sel.ram.i.gb >= 32) pros.push(`${sel.ram.i.gb} GB de memória: sobra para jogos e programas abertos.`);
+    if (!sel.ram.i.kit && sel.ram.i.gb >= 16) contras.push("A memória é um pente só: dois pentes (dual channel) rendem um pouco mais.");
+  }
+  if (sel.ssd) { if (!sel.ssd.i.nvme) { nota -= .5; contras.push("SSD SATA: funciona bem, mas um NVMe carrega bem mais rápido."); } else pros.push("SSD NVMe: sistema e jogos carregam rápido."); }
+  if (sel.psu) { if (sel.psu.i.selo >= 3) pros.push("Fonte 80 Plus Gold: eficiente e protege melhor as peças."); else if (sel.psu.i.selo < 1) { nota -= 1; contras.push("Fonte sem certificação 80 Plus: é o ponto onde não vale economizar."); }
+    if (sel.psu.i.qualidade === 0) { nota -= .7; contras.push("Fonte de marca pouco conhecida."); } }
+  const pecas = Object.values(sel).filter(Boolean);
+  const fracas = pecas.filter(o => o.i.qualidade === 0).length;
+  if (fracas >= 2) { nota -= .4 * fracas; contras.push(`${fracas} peças são de marcas pouco conhecidas.`); }
+  const boas = pecas.filter(o => o.p.v === "top" || o.p.v === "compensa").length, caras = pecas.filter(o => o.p.v === "caro").length;
+  if (boas >= pecas.length / 2) pros.push(`${boas} de ${pecas.length} peças estão com preço bom agora (Promoção top ou Compensa).`);
+  if (caras) { nota -= .3 * caras; contras.push(`${caras} ${caras === 1 ? "peça está" : "peças estão"} acima do preço normal agora.`); }
+  const perif = ["monitor", "teclado", "mouse", "headset"].filter(t => sel[t]);
+  if (perif.length) { const q = perif.filter(t => sel[t].i.qualidade === 2).length; if (q === perif.length) pros.push("Periféricos de marcas reconhecidas."); else if (perif.some(t => sel[t].i.qualidade === 0)) contras.push("Algum periférico é de marca pouco conhecida."); }
+  if (sel.monitor && g && g.i.perf >= 115 && sel.monitor.i.hz < 144) contras.push("O monitor é de 60/75 Hz: a placa de vídeo aguenta um monitor de 144 Hz ou mais.");
+  if (contras.length && nota > 9.5) nota = 9.5;
+  return {nota: Math.max(0, Math.min(10, Math.round(nota * 2) / 2)), pros, contras};
+}
+
+let montagem = {}, montarModo = "custo", orcamento = 0, comPerifericos = false;
+function desenharMontar() {
+  const caixa = $("montar-conteudo");
+  const modos = [["custo", "Melhor custo-benefício"], ["potente", "Mais potente"], ["meu", "Montar do meu jeito"]];
+  $("montar-modos").replaceChildren(...modos.map(([id, txt]) => el("button", {type: "button", "aria-pressed": String(id === montarModo), onclick: () => {
+    montarModo = id; if (id !== "meu") montagem = {}; desenharMontar(); }}, txt)));
+  $("montar-orcamento").hidden = montarModo !== "custo";
+  $("montar-perif").checked = comPerifericos;
+  if (montarModo !== "meu") {
+    const b = montarAuto(montarModo, orcamento);
+    if (!b) { caixa.replaceChildren(el("p", {class: "vazio"}, orcamento ? `Não deu para montar um PC completo até ${reais(orcamento)} com as ofertas desta semana. Aumente o orçamento.` : "Ainda não há ofertas suficientes desta semana para montar um PC completo.")); return; }
+    montagem = {...b, ...(comPerifericos ? perifericos(montarModo === "potente") : {})};
+  }
+  const sel = montagem, {avisos, consumo} = compativel(sel), {nota, pros, contras} = notaPC(sel);
+  const linhas = PECAS.filter(x => !x.perif || comPerifericos || sel[x.id]).map(x => {
+    const o = sel[x.id];
+    let escolha;
+    if (montarModo === "meu") {
+      const lista = opcoes(x.id).sort((a, b) => precoDe(a) - precoDe(b));
+      escolha = el("select", {"aria-label": x.nome}, el("option", {value: ""}, x.perif || !x.obrigatoria ? "— nenhum —" : "Escolha…"),
+        ...lista.map(op => el("option", {value: op.p.id}, `${reais(op.p.u.preco)} · ${op.p.nome.slice(0, 70)}`)));
+      escolha.value = o ? o.p.id : "";
+      escolha.addEventListener("change", () => { const it = lista.find(op => op.p.id === escolha.value); if (it) montagem[x.id] = it; else delete montagem[x.id]; desenharMontar(); });
+    }
+    return el("div", {class: "peca realce" + (o ? "" : " vazia-peca")},
+      el("span", {class: "caps peca-tipo"}, x.nome),
+      o ? el("a", {class: "peca-nome", href: "#p-" + o.p.id}, o.p.nome) : el("span", {class: "peca-nome", style: "color:var(--suave)"}, x.id === "cooler" ? "não precisa (vem na caixa)" : "—"),
+      escolha || null,
+      el("span", {class: "peca-preco"}, o ? reais(precoDe(o)) : ""),
+      o ? el("span", {class: "peca-info"}, selo(o.p.v), el("small", {}, [o.p.u.loja, ddmm(o.p.u.data) + " " + hhmm(o.p.u.data)].filter(Boolean).join(" · ")),
+        linkSeguro(o.p.u.link) ? el("a", {href: o.p.u.link, target: "_blank", rel: "noopener noreferrer"}, "comprar") : null) : el("span"));
+  });
+  const totalPc = PECAS.filter(x => !x.perif).reduce((s2, x) => s2 + precoDe(sel[x.id]), 0);
+  const totalPerif = PECAS.filter(x => x.perif).reduce((s2, x) => s2 + precoDe(sel[x.id]), 0);
+  const corNota = nota >= 8.5 ? "var(--top)" : nota >= 7 ? "var(--compensa)" : nota >= 5 ? "var(--razoavel)" : "var(--caro)";
+  const temPecas = Object.values(sel).some(Boolean);
+  caixa.replaceChildren(
+    el("div", {class: "montar-grade"},
+      el("div", {class: "pecas"}, ...linhas),
+      el("aside", {class: "resumo-pc"},
+        el("span", {class: "caps", style: "color:var(--suave)"}, "Total das peças"),
+        el("strong", {class: "total-pc"}, reais(totalPc)),
+        totalPerif ? el("p", {class: "sub-total"}, `+ ${reais(totalPerif)} em periféricos = `, el("b", {}, reais(totalPc + totalPerif))) : null,
+        temPecas ? el("div", {class: "nota-pc", style: `--cor:${corNota}`}, el("span", {class: "caps"}, "Minha nota"), el("b", {}, nota.toLocaleString("pt-BR")), el("small", {}, "/10")) : null,
+        temPecas ? el("p", {class: "consumo"}, `Consumo estimado: ~${consumo} W`) : null,
+        pros.length ? el("ul", {class: "pros"}, ...pros.map(t => el("li", {}, t))) : null,
+        contras.length ? el("ul", {class: "contras"}, ...contras.map(t => el("li", {}, t))) : null,
+        el("p", {class: "aviso-pc"}, "Preços das ofertas postadas nos canais nesta semana. Confira o valor e a compatibilidade na loja antes de comprar."))));
+}
+
+$("orcamento").addEventListener("change", () => { orcamento = +$("orcamento").value; desenharMontar(); });
+$("montar-perif").addEventListener("change", () => { comPerifericos = $("montar-perif").checked; if (!comPerifericos) for (const x of PECAS) if (x.perif) delete montagem[x.id]; desenharMontar(); });
+
 /* ---------- rotas ---------- */
 let aba = "ofertas";
 function rota() {
   const h = decodeURIComponent(location.hash.slice(1));
   const p = h.startsWith("p-") ? porId.get(h.slice(2)) : null;
   if (h.startsWith("b-")) { $("busca").value = h.slice(2).replace(/-/g, " "); categoria = "Todos"; filtroV = "todos"; desenharFiltroV(); }
-  aba = p ? "produto" : ["ofertas", "top", "quedas", "comparar", "como"].includes(h) ? h : "ofertas";
+  aba = p ? "produto" : ["ofertas", "top", "quedas", "comparar", "montar", "como"].includes(h) ? h : "ofertas";
   document.querySelectorAll(".vista").forEach(v => { v.hidden = v.id !== "v-" + aba; });
   document.querySelectorAll("nav.abas-topo a").forEach(a => { if (a.dataset.aba === aba) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   if (aba !== "produto") document.title = "Radar de preços";
@@ -1069,6 +1377,7 @@ function rota() {
   if (aba === "top") desenharTop();
   if (aba === "quedas") desenharQuedas();
   if (aba === "comparar") desenharComparador();
+  if (aba === "montar") desenharMontar();
   atualizarBandeja();
   window.scrollTo(0, 0);
 }
