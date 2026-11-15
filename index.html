@@ -354,6 +354,12 @@ body[data-aba="montar"] .montar-grade{grid-template-columns:minmax(0,1fr) 23rem}
 .barra-total-pc small{display:block;font-size:.65rem;color:var(--suave);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
 body:not([data-aba="ofertas"]) .em-alta{display:none}
 body[data-aba="montar"] .chuva{display:none}
+.linha-perif{display:flex;align-items:center;flex-wrap:wrap;gap:.8rem;margin-top:.8rem}
+.linha-perif .perif-toggle{margin-top:0}
+.btn-limpar{font:inherit;font-weight:700;font-size:.92rem;padding:.6rem 1.1rem;border-radius:999px;border:2px solid var(--caro);color:var(--caro);background:color-mix(in srgb,var(--caro) 8%,var(--papel));cursor:pointer;transition:background .2s,transform .15s}
+.btn-limpar:hover{background:color-mix(in srgb,var(--caro) 18%,var(--papel));transform:translateY(-1px)}
+.limpo-ok{font-size:.85rem;color:var(--top);font-weight:700}
+.limpo-ok[hidden]{display:none}
 .btn-add-mon{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;width:100%;margin-top:.3rem;padding:.7rem .9rem;font:inherit;font-weight:700;font-size:.95rem;
   color:var(--neon);background:var(--area);border:2px dashed var(--neon);border-radius:.5rem;cursor:pointer;text-align:left}
 .btn-add-mon small{font-weight:400;font-size:.8rem;color:var(--suave)}
@@ -551,11 +557,15 @@ body[data-aba="montar"] .chuva{display:none}
         <span class="orc-livre" id="orc-livre-box" hidden>R$ <input type="number" id="orcamento-livre" inputmode="numeric" min="500" step="100" placeholder="Ex.: 2700" aria-label="Quanto quer gastar"></span>
       </label>
     </div>
+    <div class="linha-perif">
     <label class="perif-toggle"><input type="checkbox" id="montar-perif">
       <span class="perif-icones" aria-hidden="true">🖥️ ⌨️ 🖱️ 🎧</span>
       <span class="perif-texto"><b>Incluir periféricos</b><small>monitor, teclado, mouse, headset, webcam, microfone, mousepad, mesa e cadeira</small></span>
       <span class="novo">OPCIONAL</span>
     </label>
+    <button type="button" class="btn-limpar" id="montar-limpar" title="Apaga as peças escolhidas e todos os filtros">↺ Limpar filtros</button>
+    <span class="limpo-ok" id="montar-limpo" hidden>✓ Tudo zerado. Comece de novo!</span>
+    </div>
     <div id="montar-conteudo"></div>
   </section>
 
@@ -1529,7 +1539,7 @@ function notaPC(sel) {
   const fracas = pecas.filter(o => o.i.qualidade === 0).length;
   if (fracas >= 2) { nota -= .4 * fracas; contras.push(`${fracas} peças são de marcas pouco conhecidas.`); }
   const boas = pecas.filter(o => o.p.v === "top" || o.p.v === "compensa").length, caras = pecas.filter(o => o.p.v === "caro").length;
-  if (boas >= pecas.length / 2) pros.push(`${boas} de ${pecas.length} peças estão com preço bom agora (Promoção top ou Compensa).`);
+  if (pecas.length && boas >= pecas.length / 2) pros.push(`${boas} de ${pecas.length} peças estão com preço bom agora (Promoção top ou Compensa).`);
   if (caras) { nota -= .3 * caras; contras.push(`${caras} ${caras === 1 ? "peça está" : "peças estão"} acima do preço normal agora.`); }
   if (sel.ram && sel.ram.i.pentes === 4) contras.push("4 pentes de memória: confira se a placa-mãe tem 4 slots (muitas placas Micro-ATX de entrada têm só 2).");
   const nMon = Object.keys(sel).filter(t => /^monitor/.test(t)).length;
@@ -1549,7 +1559,7 @@ function lerMinha() {
     for (const [t, k] of Object.entries(s)) { const ops = opcoes(t); let o = ops.find(x => chaveOp(x) === k);
       if (!o && /^monitor/.test(t)) o = ops.find(x => x.p.id === k.split("#")[0]);
       if (o) { r[t] = o; const m = t.match(/^monitor(\d)$/); if (m) qtdMonitor = Math.max(qtdMonitor, +m[1]); } }
-    return Object.keys(r).length ? r : null; } catch (e) { return null; }
+    return !Object.keys(s).length ? {} : Object.keys(r).length ? r : null; } catch (e) { return null; }
 }
 function desenharMontar() {
   const caixa = $("montar-conteudo");
@@ -1674,6 +1684,16 @@ $("orcamento").addEventListener("change", () => {
 });
 let tempoOrc;
 $("orcamento-livre").addEventListener("input", () => { clearTimeout(tempoOrc); tempoOrc = setTimeout(() => { const v = +$("orcamento-livre").value; orcamento = v >= 500 ? v : 0; desenharMontar(); }, 600); });
+$("montar-limpar").addEventListener("click", () => {
+  // zera tudo o que a pessoa escolheu à mão: peças, filtros, monitores extras, orçamento e periféricos
+  minhaMontagem = {}; qtdMonitor = 1; filtroRam = {conf: "", ddr: 0};
+  for (const k in filtroMarca) delete filtroMarca[k]; for (const k in filtroMon) delete filtroMon[k];
+  salvarMinha();
+  orcamento = 0; $("orcamento").value = "0"; $("orcamento-livre").value = ""; $("orc-livre-box").hidden = true;
+  comPerifericos = false; $("montar-perif").checked = false;
+  montarModo = "meu"; desenharMontar();
+  const ok = $("montar-limpo"); ok.hidden = false; clearTimeout(ok._t); ok._t = setTimeout(() => { ok.hidden = true; }, 2500);
+});
 $("montar-perif").addEventListener("change", () => { comPerifericos = $("montar-perif").checked; desenharMontar(); });
 
 /* ---------- rotas ---------- */
