@@ -268,6 +268,7 @@ details{margin-top:.7rem} summary{cursor:pointer;color:var(--neon);font-weight:6
 /* montar meu PC */
 .montar-grade{display:grid;grid-template-columns:minmax(0,1fr) 19rem;gap:.8rem;margin-top:1.1rem;align-items:start}
 @media (max-width:60rem){.montar-grade{grid-template-columns:1fr}}
+@media (max-width:60rem){body[data-aba="montar"] .montar-grade{grid-template-columns:1fr}}
 .pecas{display:flex;flex-direction:column;gap:.45rem}
 .peca{display:grid;grid-template-columns:8.5rem minmax(0,1fr) auto;grid-template-areas:"tipo nome preco" "tipo info info";gap:.2rem .8rem;align-items:center;
   border:1px solid var(--linha);background:var(--papel);border-radius:.5rem;padding:.65rem .85rem}
@@ -326,6 +327,18 @@ a.peca-nome:hover{color:var(--neon)}
 .combo-item:last-child{border-bottom:0}
 .combo-item:hover,.combo-item.marcada{background:color-mix(in srgb,var(--neon) 18%,var(--papel))}
 .combo-item.atual{font-weight:700;color:var(--neon)}
+.ponto-v{display:inline-block;width:.6rem;height:.6rem;border-radius:50%;margin-right:.5rem;vertical-align:.05rem;flex:none}
+.caixa-alerta{border-radius:.5rem;padding:.55rem .7rem;margin:.5rem 0;border:1px solid;border-left-width:4px}
+.caixa-alerta b{display:block;font-size:.8rem;letter-spacing:.02em;margin-bottom:.2rem}
+.caixa-alerta ul{margin:0;padding-left:1rem;list-style:disc}
+.caixa-alerta li{margin:.2rem 0;font-size:.84rem}
+.caixa-alerta.verde{border-color:var(--top);background:color-mix(in srgb,var(--top) 9%,transparent)}.caixa-alerta.verde b{color:var(--top)}
+.caixa-alerta.amarelo{border-color:var(--razoavel);background:color-mix(in srgb,var(--razoavel) 10%,transparent)}.caixa-alerta.amarelo b{color:var(--razoavel)}
+.caixa-alerta.vermelho{border-color:var(--caro);background:color-mix(in srgb,var(--caro) 12%,transparent)}.caixa-alerta.vermelho b{color:var(--caro)}
+body[data-aba="montar"] main,body[data-aba="montar"] .barra-in{max-width:min(96rem,100%)}
+body[data-aba="montar"] .montar-grade{grid-template-columns:minmax(0,1fr) 23rem}
+body:not([data-aba="ofertas"]) .em-alta{display:none}
+body[data-aba="montar"] .chuva{display:none}
 .combo-vazio{padding:.7rem .75rem;font-size:.88rem;color:var(--suave)}
 .peca:has(.combo){grid-template-areas:"tipo nome preco" "tipo sel sel" "tipo info info" "tipo hist hist"}
 .busca-peca{width:100%;font:inherit;font-size:.95rem;padding:.55rem .75rem;border:1.5px solid var(--neon);border-radius:.45rem;background:var(--area);color:var(--tinta)}
@@ -1330,6 +1343,27 @@ function marcaDe(tipo, o) {
 const CONF_RAM = [["", "Todas"], ["1x8", "1 pente de 8 GB"], ["1x16", "1 pente de 16 GB"], ["1x32", "1 pente de 32 GB"], ["2x8", "2 pentes de 8 GB"], ["2x16", "2 pentes de 16 GB"], ["2x32", "2 pentes de 32 GB"]];
 const confRam = o => o.i.pentes + "x" + o.i.gb / o.i.pentes;
 let filtroRam = {conf: "", ddr: 0}; const filtroMarca = {};
+// busca tolerante: aceita sem espaço ("75700x"), siglas ("r5 5600", "i5 12400") e uma letra errada
+const compacto = t => semAcento(t).replace(/[^a-z0-9]/g, "");
+function distancia1(a, b) {  // true se a e b diferem em no máximo 1 letra (troca, sobra ou falta)
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0, j = 0, erros = 0;
+  while (i < a.length && j < b.length) { if (a[i] === b[j]) { i++; j++; continue; } if (++erros > 1) return false;
+    if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; } }
+  return erros + (a.length - i) + (b.length - j) <= 1;
+}
+const trocaVizinha = (a, b) => a.length === b.length && [...a].some((_, k) => k < a.length - 1 && a.slice(0, k) + a[k + 1] + a[k] + a.slice(k + 2) === b);
+function notaBusca(consulta, texto) {
+  const q = semAcento(consulta).replace(/\br\s*([3579])\b/g, "ryzen $1").replace(/\bi([3579])\b/g, "i$1-").trim();
+  if (!q) return 1;
+  const t = semAcento(texto), tc = compacto(texto), termos = q.split(/\s+/).filter(Boolean), palavras = t.split(/[^a-z0-9]+/).filter(Boolean);
+  if (termos.every(w => t.includes(w.replace(/-$/, "")))) return 4;
+  if (tc.includes(compacto(q))) return 3.5;
+  if (termos.every(w => tc.includes(compacto(w)))) return 3;
+  const parecido = w => { const c = compacto(w); if (/^\d+$/.test(c)) return tc.includes(c); return tc.includes(c) || palavras.some(p => (c.length >= 3 && p.startsWith(c)) || (c.length >= 4 && (distancia1(c, p) || trocaVizinha(c, p)))) || (c.length >= 5 && [...Array(c.length).keys()].some(k => tc.includes(c.slice(0, k) + c.slice(k + 1)))); };
+  if (termos.every(parecido)) return 2;
+  return 0;
+}
 const textoOpcao = (x, op) => `${reais(precoDe(op))} · ${op.qtd ? op.qtd + "× " : ""}${op.p.nome.slice(0, 64)}${op.p.u.loja ? " · " + op.p.u.loja : ""}${x.id === "ram" || x.id === "psu" ? " · " + rotuloPeca(x.id, op) : ""}`;
 function historico7(o) {
   const desde = referencia - 7 * DIA, pts = o.p.serie.filter(s => s.data >= desde);
@@ -1451,7 +1485,7 @@ function notaPC(sel) {
   if (perif.length) { const q = perif.filter(t => sel[t].i.qualidade === 2).length; if (q === perif.length) pros.push("Periféricos de marcas reconhecidas."); else if (perif.some(t => sel[t].i.qualidade === 0)) contras.push("Algum periférico é de marca pouco conhecida."); }
   if (sel.monitor && g && g.i.perf >= 115 && sel.monitor.i.hz < 144) contras.push("O monitor é de 60/75 Hz: a placa de vídeo aguenta um monitor de 144 Hz ou mais.");
   if (contras.length && nota > 9.5) nota = 9.5;
-  return {nota: Math.max(0, Math.min(10, Math.round(nota * 2) / 2)), pros, contras};
+  return {nota: Math.max(0, Math.min(10, Math.round(nota * 2) / 2)), pros, contras, graves: avisos};
 }
 
 let montagem = {}, minhaMontagem = null, montarModo = "custo", orcamento = 0, comPerifericos = false;
@@ -1474,7 +1508,7 @@ function desenharMontar() {
     montagem = {...b, ...(comPerifericos ? perifericos(montarModo === "potente") : {})};
   } else if (!minhaMontagem) minhaMontagem = lerMinha() || {...montagem};
   const base = montarModo === "meu" ? minhaMontagem : montagem;
-  const sel = Object.fromEntries(Object.entries(base).filter(([t, o]) => o && (comPerifericos || !PECAS.find(x => x.id === t).perif))), {avisos, consumo} = compativel(sel), {nota, pros, contras} = notaPC(sel);
+  const sel = Object.fromEntries(Object.entries(base).filter(([t, o]) => o && (comPerifericos || !PECAS.find(x => x.id === t).perif))), {avisos, consumo} = compativel(sel), {nota, pros, contras, graves} = notaPC(sel), atencao = contras.filter(t => !graves.includes(t));
   const linhas = PECAS.filter(x => !x.perif || comPerifericos).map(x => {
     const o = sel[x.id];
     let escolha;
@@ -1502,11 +1536,12 @@ function desenharMontar() {
       const escolher = op => { if (op) minhaMontagem[x.id] = op; else delete minhaMontagem[x.id]; salvarMinha(); desenharMontar(); };
       const marcar = k => { itens.forEach((n, z) => n.classList.toggle("marcada", z === k)); marcada = k; if (itens[k]) itens[k].scrollIntoView({block: "nearest"}); };
       const preencher = () => {
-        const termos = semAcento(campo.value).split(/\s+/).filter(Boolean);
-        const achadas = lista.filter(op => { const t = semAcento(textoOpcao(x, op)); return termos.every(w => t.includes(w)); });
+        const consulta = campo.value.trim();
+        const achadas = lista.map(op => ({op, n: notaBusca(consulta, op.p.nome + " " + rotuloPeca(x.id, op) + " " + marcaDe(x.id, op) + " " + (op.p.u.loja || ""))}))
+          .filter(r => r.n > 0).sort((a, b) => b.n - a.n || precoDe(a.op) - precoDe(b.op)).map(r => r.op);
         const opc = [...(!x.obrigatoria || x.perif ? [null] : []), ...achadas];
         itens = opc.map(op => el("div", {class: "combo-item" + (op && o && chaveOp(op) === chaveOp(o) ? " atual" : ""), role: "option",
-          onmousedown: e => { e.preventDefault(); escolher(op); }}, op ? textoOpcao(x, op) : "— nenhum —"));
+          onmousedown: e => { e.preventDefault(); escolher(op); }}, op ? [el("span", {class: "ponto-v", title: ({top: "Promoção top", compensa: "Compensa", razoavel: "Razoável", caro: "Acima do normal", sem: "Pouco histórico"})[op.p.v] || "", style: `background:var(--${({top: "top", compensa: "compensa", razoavel: "razoavel", caro: "caro"})[op.p.v] || "suave"})`}), textoOpcao(x, op)] : "— nenhum —"));
         listaEl.replaceChildren(...(itens.length ? itens : [el("div", {class: "combo-vazio"}, "Nada encontrado. Tente outra palavra.")]));
         marcada = -1;
       };
@@ -1549,8 +1584,9 @@ function desenharMontar() {
         totalPerif ? el("p", {class: "sub-total"}, `+ ${reais(totalPerif)} em periféricos = `, el("b", {}, reais(totalPc + totalPerif))) : null,
         temPecas ? el("div", {class: "nota-pc", style: `--cor:${corNota}`}, el("span", {class: "caps"}, "Minha nota"), el("b", {}, nota.toLocaleString("pt-BR")), el("small", {}, "/10")) : null,
         temPecas ? el("p", {class: "consumo"}, `Consumo estimado: ~${consumo} W`) : null,
-        pros.length ? el("ul", {class: "pros"}, ...pros.map(t => el("li", {}, t))) : null,
-        contras.length ? el("ul", {class: "contras"}, ...contras.map(t => el("li", {}, t))) : null,
+        graves.length ? el("div", {class: "caixa-alerta vermelho"}, el("b", {}, "✖ Problemas: corrija antes de comprar"), el("ul", {}, ...graves.map(t => el("li", {}, t)))) : null,
+        atencao.length ? el("div", {class: "caixa-alerta amarelo"}, el("b", {}, "! Atenção"), el("ul", {}, ...atencao.map(t => el("li", {}, t)))) : null,
+        pros.length ? el("div", {class: "caixa-alerta verde"}, el("b", {}, "✓ Pontos fortes"), el("ul", {}, ...pros.map(t => el("li", {}, t)))) : null,
         el("p", {class: "aviso-pc"}, "Preços das ofertas postadas nos canais nesta semana. Confira o valor e a compatibilidade na loja antes de comprar."))));
 }
 
@@ -1570,6 +1606,7 @@ function rota() {
   const p = h.startsWith("p-") ? porId.get(h.slice(2)) : null;
   if (h.startsWith("b-")) { $("busca").value = h.slice(2).replace(/-/g, " "); categoria = "Todos"; filtroV = "todos"; desenharFiltroV(); }
   aba = p ? "produto" : ["ofertas", "top", "quedas", "comparar", "montar", "como"].includes(h) ? h : "ofertas";
+  if (document.body.dataset.aba !== aba) { document.body.dataset.aba = aba; requestAnimationFrame(() => dispatchEvent(new Event("resize"))); }
   document.querySelectorAll(".vista").forEach(v => { v.hidden = v.id !== "v-" + aba; });
   document.querySelectorAll("nav.abas-topo a").forEach(a => { if (a.dataset.aba === aba) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   if (aba !== "produto") document.title = "Radar de preços";
