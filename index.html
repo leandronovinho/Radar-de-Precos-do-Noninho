@@ -280,7 +280,7 @@ a.peca-nome:hover{color:var(--neon)}
 .peca-info{grid-area:info;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.74rem;color:var(--suave)}
 .peca-info small{font-family:var(--mono)}
 .peca-info a{color:var(--neon);font-weight:600}
-.vazia-peca{opacity:.7}
+.vazia-peca .peca-nome{opacity:.6}
 @media (max-width:40rem){.peca{grid-template-columns:1fr auto;grid-template-areas:"tipo preco" "nome nome" "info info"}.peca:has(select){grid-template-areas:"tipo preco" "nome nome" "sel sel" "info info"}}
 .resumo-pc{position:sticky;top:7rem;border:1px solid var(--neon);background:linear-gradient(to bottom,var(--area),var(--papel) 40%);border-radius:.6rem;padding:1rem}
 .total-pc{display:block;font-family:var(--titulo);font-size:2.1rem;line-height:1.1;margin:.2rem 0 .3rem;color:var(--neon);text-shadow:0 0 18px var(--brilho)}
@@ -305,7 +305,16 @@ a.peca-nome:hover{color:var(--neon)}
 .dia7 small{color:var(--suave);margin-right:.25rem}
 .dia7.menor{border-color:var(--top);color:var(--top);font-weight:700}
 .faixa7{font-family:var(--mono);margin-left:.2rem}
-.escolha-box{grid-area:sel;display:flex;flex-direction:column;gap:.4rem;margin:.2rem 0}
+.escolha-box{grid-area:sel;display:flex;flex-direction:column;gap:.45rem;margin:.25rem 0}
+.busca-linha{display:grid;grid-template-columns:minmax(0,1fr) 12rem;gap:.5rem;align-items:end}
+.filtro-linha{display:flex;flex-wrap:wrap;align-items:end;gap:.5rem}
+.filtro-caixa{display:flex;flex-direction:column;gap:.2rem;min-width:0}
+.filtro-caixa .caps{font-size:.62rem;color:var(--suave)}
+.filtro-sel{font:inherit;font-size:.88rem;padding:.6rem .6rem;border:1.5px solid var(--linha);border-radius:.45rem;background:var(--papel);color:var(--tinta);cursor:pointer;width:100%}
+.filtro-sel:hover,.filtro-sel:focus{border-color:var(--neon);outline:none}
+.filtro-linha .filtro-caixa{width:13rem}
+.filtro-linha .dica-ram{align-self:center}
+@media (max-width:40rem){.busca-linha{grid-template-columns:minmax(0,1fr) 8.5rem}.filtro-linha .filtro-caixa{width:calc(50% - .25rem)}}
 .combo{position:relative}
 .combo-campo{width:100%;font:inherit;font-size:.92rem;padding:.6rem 2.4rem .6rem .75rem;border:1.5px solid var(--neon);border-radius:.45rem;background:var(--area);color:var(--tinta);cursor:pointer;text-overflow:ellipsis}
 .combo-campo:focus{outline:none;box-shadow:0 0 0 3px var(--brilho);cursor:text}
@@ -332,16 +341,19 @@ a.peca-nome:hover{color:var(--neon)}
 .orc-livre{display:inline-flex;align-items:center;gap:.3rem;margin-left:.4rem}
 .orc-livre input{width:7.5rem;font:inherit;padding:.35rem .5rem;border:1.5px solid var(--neon);border-radius:.4rem;background:var(--area);color:var(--tinta)}
 .orc-livre[hidden]{display:none}
-.perif-toggle{display:flex;align-items:center;gap:.9rem;margin-top:.9rem;padding:.9rem 1.2rem;border:2px solid var(--neon);border-radius:.7rem;background:var(--papel);cursor:pointer;
-  box-shadow:0 0 18px var(--brilho);transition:background .2s,transform .15s;max-width:34rem}
-.perif-toggle:hover{transform:translateY(-1px)}
-.perif-toggle:has(input:checked){background:color-mix(in srgb,var(--neon) 16%,var(--papel))}
-.perif-toggle input{width:1.7rem;height:1.7rem;accent-color:var(--neon);flex:none;margin:0;cursor:pointer}
-.perif-icones{font-size:1.6rem;letter-spacing:.15rem;flex:none}
-.perif-texto{display:flex;flex-direction:column;line-height:1.2}
-.perif-texto b{font-family:var(--titulo);font-size:1.25rem;color:var(--tinta)}
-.perif-texto small{font-size:.9rem;color:var(--suave)}
-@media (max-width:40rem){.perif-toggle{max-width:none;padding:.8rem}.perif-icones{font-size:1.25rem}.perif-texto b{font-size:1.1rem}
+.perif-toggle{--cor-perif:#FFB020;display:inline-flex;align-items:center;gap:.65rem;margin-top:.8rem;padding:.55rem 1rem .55rem .75rem;border:2px solid var(--cor-perif);border-radius:999px;
+  background:color-mix(in srgb,var(--cor-perif) 10%,var(--papel));cursor:pointer;box-shadow:0 0 14px color-mix(in srgb,var(--cor-perif) 35%,transparent);transition:background .2s,transform .15s}
+.perif-toggle:hover{transform:translateY(-1px);background:color-mix(in srgb,var(--cor-perif) 18%,var(--papel))}
+.perif-toggle:has(input:checked){background:var(--cor-perif)}
+.perif-toggle:has(input:checked) .perif-texto b,.perif-toggle:has(input:checked) .perif-texto small{color:#1a1200}
+.perif-toggle input{width:1.25rem;height:1.25rem;accent-color:#1a1200;flex:none;margin:0;cursor:pointer}
+.perif-icones{font-size:1rem;letter-spacing:.05rem;flex:none}
+.perif-texto{display:flex;align-items:baseline;gap:.45rem;flex-wrap:wrap;line-height:1.2}
+.perif-texto b{font-family:var(--titulo);font-size:1rem;color:color-mix(in srgb,var(--cor-perif) 78%,var(--tinta))}
+.perif-texto small{font-size:.8rem;color:var(--suave)}
+.perif-toggle .novo{font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.06em;padding:.12rem .4rem;border-radius:.3rem;background:var(--cor-perif);color:#1a1200}
+.perif-toggle:has(input:checked) .novo{background:#1a1200;color:var(--cor-perif)}
+@media (max-width:40rem){.perif-toggle{border-radius:.8rem}
   .peca,.peca:has(select),.peca:has(.combo){grid-template-areas:"tipo preco" "nome nome" "sel sel" "info info" "hist hist"}}
 
 /* como funciona */
@@ -508,6 +520,7 @@ a.peca-nome:hover{color:var(--neon)}
     <label class="perif-toggle"><input type="checkbox" id="montar-perif">
       <span class="perif-icones" aria-hidden="true">🖥️ ⌨️ 🖱️ 🎧</span>
       <span class="perif-texto"><b>Incluir periféricos</b><small>monitor, teclado, mouse e headset</small></span>
+      <span class="novo">OPCIONAL</span>
     </label>
     <div id="montar-conteudo"></div>
   </section>
@@ -1297,9 +1310,26 @@ const MARCAS_RAM = [["Corsair", /corsair/], ["Kingston Fury", /kingston|fury|\bk
   ["Next-Bit", /next-bit/], ["Gigabyte", /gigabyte|\bgbt\b/], ["Husky", /husky/], ["PCYes", /pcyes/], ["Juhor", /juhor/], ["Kingbank", /kingbank/], ["Puskill", /puskill/],
   ["Kingfast", /kingfast/], ["Jazer", /jazer/], ["Samsung", /samsung/], ["SK Hynix", /hynix/]];
 const marcaRam = o => (MARCAS_RAM.find(([, re]) => re.test(baixa(o.p))) || ["Outras"])[0];
+const MARCAS_GERAL = [["Asus", /\basus\b|\brog\b|\btuf\b/], ["MSI", /\bmsi\b/], ["Gigabyte", /gigabyte|aorus/], ["ASRock", /asrock/], ["Biostar", /biostar/], ["Galax", /galax/],
+  ["PNY", /\bpny\b/], ["Zotac", /zotac/], ["Sapphire", /sapphire/], ["PowerColor", /powercolor/], ["XFX", /\bxfx\b/], ["Palit", /palit/], ["Inno3D", /inno3d/], ["Gainward", /gainward/],
+  ["Corsair", /corsair/], ["XPG / Adata", /xpg|adata/], ["Kingston", /kingston|fury/], ["Western Digital", /western digital|\bwd\b/], ["Samsung", /samsung/], ["Crucial", /crucial/],
+  ["Lexar", /lexar/], ["Netac", /netac/], ["Hiksemi", /hiksemi/], ["Patriot", /patriot/], ["Kioxia", /kioxia/], ["Solidigm", /solidigm/], ["Husky", /husky/], ["Alphec", /alphec/],
+  ["Be Quiet", /be quiet/], ["Cooler Master", /cooler master/], ["Seasonic", /seasonic/], ["Montech", /montech/], ["Deepcool", /deepcool/], ["Thermaltake", /thermaltake/],
+  ["Lian Li", /lian li/], ["NZXT", /nzxt/], ["Rise Mode", /rise mode/], ["Redragon", /redragon/], ["Gamemax", /gamemax/], ["PCYes", /pcyes/], ["Mancer", /mancer/], ["Pichau", /pichau/],
+  ["Duex", /duex/], ["Mach1", /mach1/], ["Kalkan", /kalkan/], ["Aerocool", /aerocool/], ["Thermalright", /thermalright/], ["Arctic", /arctic/], ["Noctua", /noctua/], ["Ninja", /ninja/],
+  ["Liketec", /liketec/], ["Acegeek", /acegeek/], ["Logitech", /logitech/], ["Razer", /razer/], ["HyperX", /hyperx/], ["SteelSeries", /steelseries/], ["Attack Shark", /attack shark/],
+  ["Machenike", /machenike/], ["Aula", /\baula\b/], ["Havit", /havit/], ["Fortrek", /fortrek/], ["LG", /\blg\b/], ["AOC", /\baoc\b/], ["Samsung", /samsung|odyssey/], ["Dell", /\bdell\b/],
+  ["BenQ", /benq/], ["Philips", /philips/], ["Acer", /\bacer\b/], ["Lenovo", /lenovo/], ["Koorui", /koorui/], ["Jbl", /\bjbl\b/], ["Sony", /\bsony\b/]];
+function marcaDe(tipo, o) {
+  const n = baixa(o.p);
+  if (tipo === "ram") return marcaRam(o);
+  if (tipo === "cpu") return /ryzen|\bamd\b|athlon/.test(n) ? "AMD" : /core|intel|ultra|\bi[3579]-/.test(n) ? "Intel" : "Outras";
+  if (tipo === "gpu") { const m = MARCAS_GERAL.find(([, re]) => re.test(n)); return m ? m[0] : /\brtx|gtx/.test(n) ? "NVIDIA (sem marca no anúncio)" : /\brx\s*\d/.test(n) ? "AMD Radeon (sem marca no anúncio)" : /\barc\b/.test(n) ? "Intel Arc" : "Outras"; }
+  return (MARCAS_GERAL.find(([, re]) => re.test(n)) || ["Outras"])[0];
+}
 const CONF_RAM = [["", "Todas"], ["1x8", "1 pente de 8 GB"], ["1x16", "1 pente de 16 GB"], ["1x32", "1 pente de 32 GB"], ["2x8", "2 pentes de 8 GB"], ["2x16", "2 pentes de 16 GB"], ["2x32", "2 pentes de 32 GB"]];
 const confRam = o => o.i.pentes + "x" + o.i.gb / o.i.pentes;
-let filtroRam = {conf: "", marca: "", ddr: 0}; const buscaPeca = {};
+let filtroRam = {conf: "", ddr: 0}; const filtroMarca = {};
 const textoOpcao = (x, op) => `${reais(precoDe(op))} · ${op.qtd ? op.qtd + "× " : ""}${op.p.nome.slice(0, 64)}${op.p.u.loja ? " · " + op.p.u.loja : ""}${x.id === "ram" || x.id === "psu" ? " · " + rotuloPeca(x.id, op) : ""}`;
 function historico7(o) {
   const desde = referencia - 7 * DIA, pts = o.p.serie.filter(s => s.data >= desde);
@@ -1450,21 +1480,18 @@ function desenharMontar() {
     let escolha;
     if (montarModo === "meu") {
       const todas = opcoes(x.id).sort((a, b) => precoDe(a) - precoDe(b));
-      let extras = null, lista = todas;
-      if (x.id === "ram") {
-        lista = todas.filter(op => (!filtroRam.conf || confRam(op) === filtroRam.conf) && (!filtroRam.marca || marcaRam(op) === filtroRam.marca) && (!filtroRam.ddr || op.i.ddr === filtroRam.ddr));
-        const marcas = [...new Set(todas.map(marcaRam))].sort((a, b) => a === "Outras" ? 1 : b === "Outras" ? -1 : a.localeCompare(b));
-        const chip = (ativo, txt, fn) => el("button", {type: "button", class: "chip-ram", "aria-pressed": String(ativo), onclick: fn}, txt);
-        const marcaSel = el("select", {"aria-label": "Marca da memória", onchange: e => { filtroRam.marca = e.target.value; desenharMontar(); }},
-          el("option", {value: ""}, "Todas as marcas"), ...marcas.map(m => el("option", {value: m}, m)));
-        marcaSel.value = filtroRam.marca;
-        extras = el("div", {class: "filtro-ram"},
-          el("div", {class: "linha-chips"}, el("span", {class: "caps"}, "Quantos pentes"), ...CONF_RAM.map(([v, t]) => chip(filtroRam.conf === v, t, () => { filtroRam.conf = v; desenharMontar(); }))),
-          el("div", {class: "linha-chips"}, el("span", {class: "caps"}, "Tipo"), ...[[0, "Todas"], [4, "DDR4"], [5, "DDR5"]].map(([v, t]) => chip(filtroRam.ddr === v, t, () => { filtroRam.ddr = v; desenharMontar(); })),
-            el("span", {class: "caps", style: "margin-left:.6rem"}, "Marca"), marcaSel),
-          sel.mb && sel.mb.i.ddr ? el("small", {class: "dica-ram"}, `Sua placa-mãe usa DDR${sel.mb.i.ddr}.`) : null,
-          el("small", {class: "dica-ram"}, `${lista.length} ${lista.length === 1 ? "opção" : "opções"}`));
-      }
+      // filtros: marca para todas as peças; memória tem também quantidade de pentes e tipo
+      const marcas = [...new Set(todas.map(op => marcaDe(x.id, op)))].sort((a, b) => a === "Outras" ? 1 : b === "Outras" ? -1 : a.localeCompare(b));
+      if (filtroMarca[x.id] && !marcas.includes(filtroMarca[x.id])) delete filtroMarca[x.id];
+      const lista = todas.filter(op => (!filtroMarca[x.id] || marcaDe(x.id, op) === filtroMarca[x.id])
+        && (x.id !== "ram" || ((!filtroRam.conf || confRam(op) === filtroRam.conf) && (!filtroRam.ddr || op.i.ddr === filtroRam.ddr))));
+      const seletor = (rotulo, valor, opts, mudar) => { const s2 = el("select", {class: "filtro-sel", "aria-label": rotulo, onchange: e => { mudar(e.target.value); desenharMontar(); }},
+        ...opts.map(([v, t]) => el("option", {value: String(v)}, t))); s2.value = String(valor); return el("label", {class: "filtro-caixa"}, el("span", {class: "caps"}, rotulo), s2); };
+      const marcaSel = seletor("Marca", filtroMarca[x.id] || "", [["", "Todas as marcas"], ...marcas.map(m => [m, m])], v => { if (v) filtroMarca[x.id] = v; else delete filtroMarca[x.id]; });
+      const extras = x.id !== "ram" ? null : el("div", {class: "filtro-linha"},
+        seletor("Quantos pentes", filtroRam.conf, CONF_RAM.map(([v, t]) => [v, v ? t : "Todas as opções"]), v => { filtroRam.conf = v; }),
+        seletor("Tipo", filtroRam.ddr, [[0, "DDR4 e DDR5"], [4, "Só DDR4"], [5, "Só DDR5"]], v => { filtroRam.ddr = +v; }),
+        sel.mb && sel.mb.i.ddr ? el("small", {class: "dica-ram"}, `Sua placa-mãe usa DDR${sel.mb.i.ddr}.`) : null);
       // campo único: mostra a peça escolhida; ao clicar vira busca e abre a lista logo abaixo
       const exemplo = ({cpu: "5600", mb: "B550", ram: "corsair 16gb", gpu: "4060", ssd: "1tb", psu: "650w bronze", gab: "rise", cooler: "water", monitor: "27 165hz", teclado: "mecânico", mouse: "logitech", headset: "hyperx"})[x.id] || "marca";
       const textoAtual = o ? textoOpcao(x, o) : "";
@@ -1495,7 +1522,9 @@ function desenharMontar() {
         else if (e.key === "Escape") campo.blur();
       });
       const combo = el("div", {class: "combo"}, campo, el("span", {class: "combo-icone", "aria-hidden": "true"}, "🔍"), listaEl);
-      escolha = el("div", {class: "escolha-box"}, extras, combo);
+      escolha = el("div", {class: "escolha-box"}, extras,
+        el("div", {class: "busca-linha"}, combo, marcaSel),
+        el("small", {class: "dica-ram"}, `${lista.length} ${lista.length === 1 ? "opção" : "opções"}${filtroMarca[x.id] ? " da " + filtroMarca[x.id] : ""}`));
     }
     return el("div", {class: "peca realce" + (o ? "" : " vazia-peca")},
       el("span", {class: "caps peca-tipo"}, x.nome),
