@@ -296,6 +296,26 @@ a.peca-nome:hover{color:var(--neon)}
 .contras li::marker{content:"! ";color:var(--razoavel);font-weight:700}
 .aviso-pc{margin:.7rem 0 0;font-size:.72rem;color:var(--suave)}
 #v-montar .filtros label input{accent-color:var(--neon)}
+.peca{grid-template-areas:"tipo nome preco" "tipo info info" "tipo hist hist"}
+.peca:has(select){grid-template-areas:"tipo nome preco" "tipo sel sel" "tipo info info" "tipo hist hist"}
+.spec-peca{font-family:var(--mono);font-size:.74rem;color:var(--tinta);border:1px solid var(--linha);border-radius:.3rem;padding:.05rem .4rem}
+.hist7{grid-area:hist;display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;margin-top:.25rem;font-size:.72rem;color:var(--suave)}
+.hist7 .caps{margin-right:.2rem}
+.dia7{font-family:var(--mono);border:1px solid var(--linha);border-radius:.3rem;padding:.1rem .35rem;background:var(--area);color:var(--tinta)}
+.dia7 small{color:var(--suave);margin-right:.25rem}
+.dia7.menor{border-color:var(--top);color:var(--top);font-weight:700}
+.faixa7{font-family:var(--mono);margin-left:.2rem}
+.perif-toggle{display:flex;align-items:center;gap:.9rem;margin-top:.9rem;padding:.9rem 1.2rem;border:2px solid var(--neon);border-radius:.7rem;background:var(--papel);cursor:pointer;
+  box-shadow:0 0 18px var(--brilho);transition:background .2s,transform .15s;max-width:34rem}
+.perif-toggle:hover{transform:translateY(-1px)}
+.perif-toggle:has(input:checked){background:color-mix(in srgb,var(--neon) 16%,var(--papel))}
+.perif-toggle input{width:1.7rem;height:1.7rem;accent-color:var(--neon);flex:none;margin:0;cursor:pointer}
+.perif-icones{font-size:1.6rem;letter-spacing:.15rem;flex:none}
+.perif-texto{display:flex;flex-direction:column;line-height:1.2}
+.perif-texto b{font-family:var(--titulo);font-size:1.25rem;color:var(--tinta)}
+.perif-texto small{font-size:.9rem;color:var(--suave)}
+@media (max-width:40rem){.perif-toggle{max-width:none;padding:.8rem}.perif-icones{font-size:1.25rem}.perif-texto b{font-size:1.1rem}
+  .peca,.peca:has(select){grid-template-areas:"tipo preco" "nome nome" "sel sel" "info info" "hist hist"}}
 
 /* como funciona */
 .guia{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin-top:1rem}
@@ -456,8 +476,11 @@ a.peca-nome:hover{color:var(--neon)}
           <option value="10000">R$ 10.000</option><option value="15000">R$ 15.000</option>
         </select>
       </label>
-      <label class="ordem"><input type="checkbox" id="montar-perif"> Incluir periféricos (monitor, teclado, mouse, headset)</label>
     </div>
+    <label class="perif-toggle"><input type="checkbox" id="montar-perif">
+      <span class="perif-icones" aria-hidden="true">🖥️ ⌨️ 🖱️ 🎧</span>
+      <span class="perif-texto"><b>Incluir periféricos</b><small>monitor, teclado, mouse e headset</small></span>
+    </label>
     <div id="montar-conteudo"></div>
   </section>
 
@@ -1154,7 +1177,7 @@ const SOQUETE_PLACA = [
 ];
 const MARCAS = {
   bom: /\b(asus|msi|gigabyte|aorus|asrock|corsair|seasonic|evga|be quiet|cooler master|xpg|adata|super flower|lian li|nzxt|thermaltake|kingston|fury|crucial|g\.?skill|teamgroup|t-force|patriot|samsung|western digital|wd|lexar|kioxia|solidigm|sk hynix|logitech|razer|hyperx|steelseries|lg|dell|benq|philips|aoc|acer|sapphire|powercolor|xfx|zotac|pny|galax|inno3d|palit|deepcool|thermalright|noctua|arctic|montech|lenovo|amd|intel|nvidia)\b/,
-  medio: /\b(redragon|rise mode|gamemax|pcyes|mancer|aerocool|husky|netac|biostar|attack shark|machenike|aula|havit|fortrek|kalkan|mach1|tgt|hayom|duex|pichau|ninja|superframe|husky|cusu|lexar|ocpc|bluecase|k-mex|c3tech|soyo|colorfire|jazer)\b/,
+  medio: /\b(redragon|rise mode|gamemax|pcyes|mancer|aerocool|husky|netac|biostar|attack shark|machenike|aula|havit|fortrek|kalkan|mach1|tgt|hayom|duex|pichau|ninja|superframe|husky|cusu|lexar|ocpc|bluecase|k-mex|c3tech|soyo|colorfire|jazer|hiksemi|next-bit|juhor|puskill|kingbank)\b/,
 };
 const PECAS = [
   {id: "cpu", nome: "Processador", cat: "Processadores", obrigatoria: true},
@@ -1171,6 +1194,12 @@ const PECAS = [
   {id: "headset", nome: "Headset", cat: "Headsets e fones", perif: true},
 ];
 const baixa = p => semAcento(p.nome);
+// certificação de modelos conhecidos quando o anúncio não escreve o selo
+const SELO_FONTE = [
+  [/mag\s*a\d{3,4}g[lf]?\b|\brm\d{3,4}[ex]?\b|\brm[ex]\s*\d{3,4}|kyber|core reactor|\bud\d{3,4}gm|\bp\d{3,4}gm?\b|\bdq\d{3,4}|duex\s*pulse|montech century|focus g|toughpower gf|leadex|cluster/, 3],
+  [/mag\s*a\d{3,4}bn|\bcv\d{3}|\bcx\d{3}|pylon|elektra|electra|electro\s*v2|montech beta|\bbeta\s*2|\bmwe\b|system power|\bp\d{3,4}b\b|smart bx|\bgp\d{3}\b|stardust|steady|pk\d{3}d/, 2],
+];
+const NOME_SELO = ["sem selo 80 Plus", "80 Plus White", "80 Plus Bronze", "80 Plus Gold", "80 Plus Platinum"];
 const capsNome = n => new Set([...n.replace(/\(?\d\s*x\s*\d+\s*gb\)?/g, " ").matchAll(/(?<![\d.,])(\d{1,4})\s*(gb|tb)\b/g)].map(m => m[1] + m[2])).size;
 const KIT = /\+|\bkit\s+(upgrade|gamer)|\bcombo\b|processador.*placa|placa.*processador/;
 function infoPeca(p, tipo) {
@@ -1180,12 +1209,17 @@ function infoPeca(p, tipo) {
   if (tipo === "mb") { if (/processador|ryzen|core i\d/.test(n)) return null; const sq = SOQUETE_PLACA.find(([re]) => re.test(n)); if (!sq) return null; r.soq = sq[1];
     r.ddr = /ddr5|\bd5\b/.test(n) ? 5 : /ddr4|\bd4\b/.test(n) ? 4 : r.soq === "AM4" || r.soq === "LGA1200" ? 4 : r.soq === "AM5" || r.soq === "LGA1851" ? 5 : 0;
     r.wifi = /wi-?fi/.test(n); r.chip = /\b(x870e?|x670e?|z890|z790|z690|x570)/.test(n) ? 3 : /\b(b850|b650e?|b760|b660|b860|b550)/.test(n) ? 2 : 1; }
-  if (tipo === "ram") { if (!/ddr[45]/.test(n) || /notebook|sodimm|so-dimm|usad|ecc|servidor|impact|\bhx\d+s|\bkvr\d+s|\bsdram\b/.test(n) || capsNome(n) > 1) return null;
-    r.ddr = /ddr5/.test(n) ? 5 : 4; r.gb = sp.capacidade || 0; if (!r.gb || r.gb > 128) return null; r.kit = /\d\s*x\s*\d+\s*gb/.test(n); }
+  if (tipo === "ram") {
+    if (/notebook|sodimm|so-dimm|usad|\becc\b|servidor|registrad|\breg\b|impact|\bhx\d+s|\bkvr\d+s|\bsdram\b|ddr3|placa|processador|\bcpu\b|pc gamer|mesa|cartao|tablet|celular|x99|xeon/.test(n) || capsNome(n) > 1) return null;
+    const mhz = +(n.match(/(\d{4})\s*(mhz|mt)/) || [])[1] || 0;
+    r.ddr = /ddr5|\bd5\b/.test(n) ? 5 : /ddr4|\bd4\b/.test(n) ? 4 : mhz >= 4800 ? 5 : mhz >= 2133 && mhz <= 3600 ? 4 : 0; if (!r.ddr) return null;
+    const kit = n.match(/\b([2-4])\s*x\s*(4|8|16|24|32|48)\s*(gb|g)?\b/);
+    r.pentes = kit ? +kit[1] : 1; r.gb = kit ? +kit[1] * +kit[2] : (sp.capacidade || +(n.match(/\b(4|8|16|32)\s*g\b/) || [])[1] || 0); if (!r.gb || r.gb < 4 || r.gb > 128) return null;
+    r.kit = r.pentes >= 2; r.porPente = r.gb / r.pentes; r.mhz = mhz; }
   if (tipo === "ssd") { if (!/ssd|nvme|m\.?2/.test(n) || /externo|portatil|portátil|case|gaveta|adaptador/.test(n) || capsNome(n) > 1) return null;
     r.gb = sp.capacidade || 0; if (r.gb < 240 || r.gb > 8000) return null; r.nvme = /nvme|m\.?2/.test(n); }
   if (tipo === "psu") { if (!/fonte/.test(n) || /notebook|carregador|nobreak|externa/.test(n)) return null; r.watts = sp.watts || 0; if (r.watts < 400 || r.watts > 1650) return null;
-    r.selo = /titanium|platinum/.test(n) ? 4 : /gold/.test(n) ? 3 : /silver/.test(n) ? 2.5 : /bronze/.test(n) ? 2 : /white|standard|80\s*plus/.test(n) ? 1 : 0; }
+    r.selo = /titanium|platinum/.test(n) ? 4 : /gold/.test(n) ? 3 : /silver/.test(n) ? 2.5 : /bronze/.test(n) ? 2 : (SELO_FONTE.find(([re]) => re.test(n)) || [])[1] || (/white|standard|80\s*plus/.test(n) ? 1 : 0); }
   if (tipo === "gab") { if (!/(^|\s)gabinete\b/.test(n) || /^(kit|ventoinha|filtro|cabo)|filtro de linha|tomada|regua|ventoinhas? para|suporte|para gabinete/.test(n)) return null; }
   if (tipo === "cooler") { if (!/cooler|water/.test(n) || /notebook|base|suporte|pasta/.test(n)) return null; r.water = /water/.test(n); }
   if (tipo === "monitor") { if (!/monitor/.test(n)) return null; r.hz = sp.hz || 60; r.pol = sp.tela || 0; }
@@ -1195,8 +1229,10 @@ function infoPeca(p, tipo) {
 }
 function opcoes(tipo, dias = 7) {
   const peca = PECAS.find(x => x.id === tipo);
-  const lista = produtos.filter(p => p.cat === peca.cat && referencia - p.u.data <= dias * DIA)
+  const daCategoria = p => p.cat === peca.cat || (tipo === "ram" && p.cat === "PCs montados" && /^(memoria|kit de memoria|corsair|kingston|cusu)\b|memoria ram/.test(baixa(p)));
+  const lista = produtos.filter(p => daCategoria(p) && referencia - p.u.data <= dias * DIA)
     .map(p => ({p, i: infoPeca(p, tipo)})).filter(o => o.i);
+  if (tipo === "ram") for (const o of [...lista]) if (!o.i.kit && o.i.gb <= 32) lista.push({p: o.p, qtd: 2, i: {...o.i, gb: o.i.gb * 2, pentes: 2, kit: true}});
   return lista.length || dias > 7 ? lista : opcoes(tipo, 15);
 }
 function videoIntegrado(p) {
@@ -1217,7 +1253,25 @@ function compativel(sel) {
   if (c && !c.i.cooler && !sel.cooler) avisos.push("Este processador não vem com cooler na caixa: inclua um cooler.");
   return {avisos, consumo};
 }
-const precoDe = o => o ? o.p.u.preco : 0;
+const precoDe = o => o ? o.p.u.preco * (o.qtd || 1) : 0;
+const chaveOp = o => o.p.id + (o.qtd ? "#" + o.qtd : "");
+function rotuloPeca(tipo, o) {
+  const i = o.i;
+  if (tipo === "ram") return i.pentes >= 2 ? `${i.pentes} pentes de ${i.gb / i.pentes} GB = ${i.gb} GB · DDR${i.ddr} · dual channel` : `1 pente de ${i.gb} GB · DDR${i.ddr}`;
+  if (tipo === "psu") return `${i.watts}W · ${NOME_SELO[Math.floor(i.selo)]}`;
+  if (tipo === "ssd") return `${i.gb >= 1000 ? i.gb / 1000 + " TB" : i.gb + " GB"} · ${i.nvme ? "NVMe" : "SATA"}`;
+  if (tipo === "mb") return `${i.soq} · DDR${i.ddr || "?"}`;
+  if (tipo === "cpu") return `${i.soq}${i.cooler ? " · cooler na caixa" : ""}`;
+  return "";
+}
+function historico7(o) {
+  const desde = referencia - 7 * DIA, pts = o.p.serie.filter(s => s.data >= desde);
+  if (!pts.length) return null;
+  const menor = Math.min(...pts.map(s => s.preco)), maior = Math.max(...pts.map(s => s.preco));
+  return el("div", {class: "hist7"}, el("span", {class: "caps"}, "Últimos 7 dias" + (o.qtd ? " (preço de 1 pente)" : "")),
+    ...pts.slice(-7).map(s => el("span", {class: "dia7" + (s.preco === menor ? " menor" : ""), title: s.loja || ""}, el("small", {}, ddmm(s.data)), reaisRedondo(s.preco))),
+    pts.length > 1 && maior > menor ? el("span", {class: "faixa7"}, `menor ${reaisRedondo(menor)} · maior ${reaisRedondo(maior)}`) : null);
+}
 function montarAuto(modo, orcamento) {
   const op = Object.fromEntries(PECAS.map(x => [x.id, opcoes(x.id)]));
   const barato = (lista, filtro) => lista.filter(filtro).sort((a, b) => precoDe(a) - precoDe(b) || b.i.qualidade - a.i.qualidade)[0];
@@ -1229,8 +1283,8 @@ function montarAuto(modo, orcamento) {
     let melhor = null;
     for (const mb of mbs) {
       const rams = op.ram.filter(o => !mb.i.ddr || o.i.ddr === mb.i.ddr);
-      const ram = potente ? rams.filter(o => o.i.gb >= 32).sort((a, b) => b.i.qualidade - a.i.qualidade || precoDe(a) - precoDe(b))[0] || rams.sort((a, b) => b.i.gb - a.i.gb)[0]
-        : melhorValor(rams, o => o.i.gb >= 16, o => Math.min(o.i.gb, 32) * (1 + o.i.qualidade * .2)) || barato(rams, () => true);
+      const ram = potente ? rams.filter(o => o.i.gb >= 32 && o.i.kit).sort((a, b) => b.i.qualidade - a.i.qualidade || precoDe(a) - precoDe(b))[0] || rams.sort((a, b) => b.i.gb - a.i.gb)[0]
+        : melhorValor(rams, o => o.i.gb >= 16 && o.i.kit, o => Math.min(o.i.gb, 32) * (1 + o.i.qualidade * .2)) || melhorValor(rams, o => o.i.gb >= 16, o => Math.min(o.i.gb, 32)) || barato(rams, () => true);
       if (!ram) continue;
       const custo = precoDe(mb) * (potente ? .6 : 1) - mb.i.qualidade * (potente ? 120 : 25) - (potente ? mb.i.chip * 250 : (mb.i.chip >= 2 ? 40 : 0)) + precoDe(ram);
       if (!melhor || custo < melhor.custo) melhor = {mb, ram, custo};
@@ -1309,37 +1363,46 @@ function notaPC(sel) {
   return {nota: Math.max(0, Math.min(10, Math.round(nota * 2) / 2)), pros, contras};
 }
 
-let montagem = {}, montarModo = "custo", orcamento = 0, comPerifericos = false;
+let montagem = {}, minhaMontagem = null, montarModo = "custo", orcamento = 0, comPerifericos = false;
+function salvarMinha() { try { localStorage.setItem("radar-meu-pc", JSON.stringify(Object.fromEntries(Object.entries(minhaMontagem || {}).filter(([, o]) => o).map(([t, o]) => [t, chaveOp(o)])))); } catch (e) {} }
+function lerMinha() {
+  try { const s = JSON.parse(localStorage.getItem("radar-meu-pc") || "null"); if (!s) return null; const r = {};
+    for (const [t, k] of Object.entries(s)) { const o = opcoes(t).find(x => chaveOp(x) === k); if (o) r[t] = o; }
+    return Object.keys(r).length ? r : null; } catch (e) { return null; }
+}
 function desenharMontar() {
   const caixa = $("montar-conteudo");
   const modos = [["custo", "Melhor custo-benefício"], ["potente", "Mais potente"], ["meu", "Montar do meu jeito"]];
   $("montar-modos").replaceChildren(...modos.map(([id, txt]) => el("button", {type: "button", "aria-pressed": String(id === montarModo), onclick: () => {
-    montarModo = id; if (id !== "meu") montagem = {}; desenharMontar(); }}, txt)));
+    montarModo = id; desenharMontar(); }}, txt)));
   $("montar-orcamento").hidden = montarModo !== "custo";
   $("montar-perif").checked = comPerifericos;
   if (montarModo !== "meu") {
     const b = montarAuto(montarModo, orcamento);
     if (!b) { caixa.replaceChildren(el("p", {class: "vazio"}, orcamento ? `Não deu para montar um PC completo até ${reais(orcamento)} com as ofertas desta semana. Aumente o orçamento.` : "Ainda não há ofertas suficientes desta semana para montar um PC completo.")); return; }
     montagem = {...b, ...(comPerifericos ? perifericos(montarModo === "potente") : {})};
-  }
-  const sel = montagem, {avisos, consumo} = compativel(sel), {nota, pros, contras} = notaPC(sel);
-  const linhas = PECAS.filter(x => !x.perif || comPerifericos || sel[x.id]).map(x => {
+  } else if (!minhaMontagem) minhaMontagem = lerMinha() || {...montagem};
+  const base = montarModo === "meu" ? minhaMontagem : montagem;
+  const sel = Object.fromEntries(Object.entries(base).filter(([t, o]) => o && (comPerifericos || !PECAS.find(x => x.id === t).perif))), {avisos, consumo} = compativel(sel), {nota, pros, contras} = notaPC(sel);
+  const linhas = PECAS.filter(x => !x.perif || comPerifericos).map(x => {
     const o = sel[x.id];
     let escolha;
     if (montarModo === "meu") {
       const lista = opcoes(x.id).sort((a, b) => precoDe(a) - precoDe(b));
       escolha = el("select", {"aria-label": x.nome}, el("option", {value: ""}, x.perif || !x.obrigatoria ? "— nenhum —" : "Escolha…"),
-        ...lista.map(op => el("option", {value: op.p.id}, `${reais(op.p.u.preco)} · ${op.p.nome.slice(0, 70)}`)));
-      escolha.value = o ? o.p.id : "";
-      escolha.addEventListener("change", () => { const it = lista.find(op => op.p.id === escolha.value); if (it) montagem[x.id] = it; else delete montagem[x.id]; desenharMontar(); });
+        ...lista.map(op => el("option", {value: chaveOp(op)}, `${reais(precoDe(op))} · ${op.qtd ? op.qtd + "× " : ""}${op.p.nome.slice(0, 64)}${op.p.u.loja ? " · " + op.p.u.loja : ""}${x.id === "ram" || x.id === "psu" ? " · " + rotuloPeca(x.id, op) : ""}`)));
+      escolha.value = o ? chaveOp(o) : "";
+      escolha.addEventListener("change", () => { const it = lista.find(op => chaveOp(op) === escolha.value); if (it) minhaMontagem[x.id] = it; else delete minhaMontagem[x.id]; salvarMinha(); desenharMontar(); });
     }
     return el("div", {class: "peca realce" + (o ? "" : " vazia-peca")},
       el("span", {class: "caps peca-tipo"}, x.nome),
-      o ? el("a", {class: "peca-nome", href: "#p-" + o.p.id}, o.p.nome) : el("span", {class: "peca-nome", style: "color:var(--suave)"}, x.id === "cooler" ? "não precisa (vem na caixa)" : "—"),
+      o ? el("a", {class: "peca-nome", href: "#p-" + o.p.id}, (o.qtd ? o.qtd + "× " : "") + o.p.nome) : el("span", {class: "peca-nome", style: "color:var(--suave)"}, x.id === "cooler" && sel.cpu && sel.cpu.i.cooler ? "não precisa (vem na caixa)" : "—"),
       escolha || null,
       el("span", {class: "peca-preco"}, o ? reais(precoDe(o)) : ""),
       o ? el("span", {class: "peca-info"}, selo(o.p.v), el("small", {}, [o.p.u.loja, ddmm(o.p.u.data) + " " + hhmm(o.p.u.data)].filter(Boolean).join(" · ")),
-        linkSeguro(o.p.u.link) ? el("a", {href: o.p.u.link, target: "_blank", rel: "noopener noreferrer"}, "comprar") : null) : el("span"));
+        rotuloPeca(x.id, o) ? el("b", {class: "spec-peca"}, rotuloPeca(x.id, o)) : null,
+        linkSeguro(o.p.u.link) ? el("a", {href: o.p.u.link, target: "_blank", rel: "noopener noreferrer"}, "comprar") : null) : el("span"),
+      o ? historico7(o) : null);
   });
   const totalPc = PECAS.filter(x => !x.perif).reduce((s2, x) => s2 + precoDe(sel[x.id]), 0);
   const totalPerif = PECAS.filter(x => x.perif).reduce((s2, x) => s2 + precoDe(sel[x.id]), 0);
@@ -1360,7 +1423,7 @@ function desenharMontar() {
 }
 
 $("orcamento").addEventListener("change", () => { orcamento = +$("orcamento").value; desenharMontar(); });
-$("montar-perif").addEventListener("change", () => { comPerifericos = $("montar-perif").checked; if (!comPerifericos) for (const x of PECAS) if (x.perif) delete montagem[x.id]; desenharMontar(); });
+$("montar-perif").addEventListener("change", () => { comPerifericos = $("montar-perif").checked; desenharMontar(); });
 
 /* ---------- rotas ---------- */
 let aba = "ofertas";
