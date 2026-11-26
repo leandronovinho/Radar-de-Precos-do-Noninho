@@ -1,3 +1,0 @@
-busca: memoria ram 2x16
-avisar_quando: preco
-preco_maximo: 1200
