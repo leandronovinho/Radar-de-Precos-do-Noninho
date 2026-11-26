@@ -143,5 +143,20 @@
    "preco": 212.0,
    "enviado": "2026-11-25T22:41:56.249249+00:00"
   }
+ },
+ "umticopromos": {
+  "antes": 47407,
+  "completo": false,
+  "buracos_vistos": []
+ },
+ "canalrodrigomoreira": {
+  "antes": 63678,
+  "completo": false,
+  "buracos_vistos": []
+ },
+ "ofertasepromoaquibr": {
+  "antes": 73339,
+  "completo": false,
+  "buracos_vistos": []
  }
 }
