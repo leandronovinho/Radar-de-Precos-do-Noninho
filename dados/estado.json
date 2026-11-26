@@ -52,7 +52,8 @@
    "103324-103328",
    "104695-104703",
    "104829-104833",
-   "105035-105041"
+   "105035-105041",
+   "105378-105382"
   ]
  },
  "PROMOSGERAISTJ": {
@@ -155,7 +156,7 @@
   "buracos_vistos": []
  },
  "ofertasepromoaquibr": {
-  "antes": 51742,
+  "antes": 51240,
   "completo": false,
   "buracos_vistos": []
  }
