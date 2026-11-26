@@ -1,3 +1,0 @@
-busca: 5060 8gb
-avisar_quando: preco
-preco_maximo: 2500
