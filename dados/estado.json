@@ -11,14 +11,17 @@
  "HardTecPromocoes": {
   "antes": 239682,
   "completo": true,
-  "buracos_vistos": []
+  "buracos_vistos": [
+   "248375-248386"
+  ]
  },
  "grape_tec": {
   "antes": 193887,
   "completo": true,
   "buracos_vistos": [
    "225769-225773",
-   "232044-232049"
+   "232044-232049",
+   "232368-232377"
   ]
  },
  "IskandarSouza": {
