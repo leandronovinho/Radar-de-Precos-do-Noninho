@@ -145,17 +145,17 @@
   }
  },
  "umticopromos": {
-  "antes": 39271,
-  "completo": false,
+  "antes": 38863,
+  "completo": true,
   "buracos_vistos": []
  },
  "canalrodrigomoreira": {
-  "antes": 55415,
+  "antes": 54888,
   "completo": false,
   "buracos_vistos": []
  },
  "ofertasepromoaquibr": {
-  "antes": 65301,
+  "antes": 64796,
   "completo": false,
   "buracos_vistos": []
  }
